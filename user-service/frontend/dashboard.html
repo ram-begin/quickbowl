@@ -104,7 +104,7 @@
       padding: 4px 10px; border-radius: 20px;
       font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
     }
-    .badge-surge { background: rgba(220,38,38,0.92); color: white; }
+    /* Surge badge removed from customer view — only discount badge shown */
     .badge-discount { background: rgba(255,215,0,0.92); color: #1a0505; }
     .rest-body { padding: 16px; }
     .rest-name {
@@ -241,7 +241,7 @@
     }
     grid.innerHTML = list.map((r, i) => {
       const emoji       = EMOJIS[i % EMOJIS.length];
-      const isSurge     = r.is_surge || (r.surge_multiplier > 1);
+      // Surge is intentionally hidden from customers — prices silently reflect surge multiplier
       const hasDiscount = r.discount_active || r.discount_percent > 0;
       const rating      = r.rating ? r.rating.toFixed(1) : (4.0 + Math.random() * 0.9).toFixed(1);
       const delivery    = r.delivery_time || '30–45 min';
@@ -253,8 +253,7 @@
         <div class="rest-card" onclick="goToRestaurant('${r._id || r.id}')">
           <div class="rest-img">
             ${emoji}
-            ${isSurge     ? '<span class="badge badge-surge">🔥 Surge</span>' : ''}
-            ${hasDiscount && !isSurge ? '<span class="badge badge-discount">% OFF</span>' : ''}
+            ${hasDiscount ? '<span class="badge badge-discount">% OFF</span>' : ''}
           </div>
           <div class="rest-body">
             <div class="rest-name">${r.name}</div>

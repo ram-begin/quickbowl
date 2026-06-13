@@ -216,3 +216,23 @@ Pact files stored in api-gateway/pacts/.
 | Tracing | OpenTelemetry, Jaeger |
 | Containerization | Docker, Docker Compose |
 | Contract Testing | Pact (Consumer-Driven) |
+
+## 9. Surge Pricing Design
+
+### Current Implementation
+Surge pricing is **restaurant-controlled** — the restaurant owner manually toggles surge on/off from their dashboard. When active, a `surge_multiplier` field on the restaurant document adjusts menu item prices accordingly.
+
+### Customer-Facing Behaviour
+Surge pricing is **intentionally hidden from customers**. Item prices silently reflect the surge multiplier without any badge or label shown on the restaurant card. This follows the same approach used by Swiggy and Zomato — customers see the final price, not the reason for it. Only discount badges are shown to customers as those create a positive experience.
+
+### Production Recommendation
+In a production system, surge pricing should be **platform-controlled**, not restaurant-controlled. The QuickBowl platform would automatically trigger surge based on real-time signals:
+
+| Signal | Example Threshold |
+|---|---|
+| High order volume | 50+ orders in last 30 minutes |
+| Time of day | 12pm–2pm, 7pm–10pm |
+| Low delivery partner availability | Fewer than 10 drivers online |
+| Weather conditions | Rain detected via weather API |
+
+A scheduled background job (cron / Kafka Streams) would evaluate these signals every few minutes and set `surge_multiplier` automatically, removing the ability for individual restaurants to manipulate pricing unfairly. This ensures consistency, fairness, and a better customer experience across the platform.
