@@ -1,67 +1,62 @@
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const { withCircuitBreaker, getCircuitStatus } = require('../middleware/circuitBreaker');
 require('dotenv').config();
 
 const router = express.Router();
 
-// ── User Service ──────────────────────────────────────
-router.use('/users', createProxyMiddleware({
-    target: process.env.USER_SERVICE_URL,
-    changeOrigin: true,
-    pathRewrite: { '^/api/users': '/api/users' },
-    on: {
-        error: (err, req, res) => {
-            res.status(503).json({ success: false, message: 'User service unavailable' });
-        }
-    }
-}));
+// Circuit status endpoint
+router.get('/circuit-status', (req, res) => {
+    res.json({ success: true, data: getCircuitStatus() });
+});
 
-// ── Restaurant Service ────────────────────────────────
-router.use('/restaurants', createProxyMiddleware({
-    target: process.env.RESTAURANT_SERVICE_URL,
-    changeOrigin: true,
-    pathRewrite: { '^/api/restaurants': '/api/restaurants' },
-    on: {
-        error: (err, req, res) => {
-            res.status(503).json({ success: false, message: 'Restaurant service unavailable' });
+// Helper — creates a proxy function wrapped in a circuit breaker
+const makeProxy = (target, pathRewrite) => {
+    const proxy = createProxyMiddleware({
+        target,
+        changeOrigin: true,
+        pathRewrite,
+        on: {
+            error: (err, req, res) => {
+                if (!res.headersSent) {
+                    res.status(503).json({ success: false, message: 'Service unavailable' });
+                }
+            }
         }
-    }
-}));
+    });
 
-// ── Order Service ─────────────────────────────────────
-router.use('/orders', createProxyMiddleware({
-    target: process.env.ORDER_SERVICE_URL,
-    changeOrigin: true,
-    pathRewrite: { '^/api/orders': '/api/orders' },
-    on: {
-        error: (err, req, res) => {
-            res.status(503).json({ success: false, message: 'Order service unavailable' });
-        }
-    }
-}));
+    // opossum needs a plain function to wrap
+    return (req, res, next) => proxy(req, res, next);
+};
 
-// ── Payment Service ───────────────────────────────────
-router.use('/payments', createProxyMiddleware({
-    target: process.env.PAYMENT_SERVICE_URL,
-    changeOrigin: true,
-    pathRewrite: { '^/api/payments': '/api/payments' },
-    on: {
-        error: (err, req, res) => {
-            res.status(503).json({ success: false, message: 'Payment service unavailable' });
-        }
-    }
-}));
+// User Service
+router.use('/users', withCircuitBreaker(
+    'user-service',
+    makeProxy(process.env.USER_SERVICE_URL, { '^/api/users': '/api/users' })
+));
 
-// ── Notification Service ──────────────────────────────
-router.use('/notifications', createProxyMiddleware({
-    target: process.env.NOTIFICATION_SERVICE_URL,
-    changeOrigin: true,
-    pathRewrite: { '^/api/notifications': '/api/notifications' },
-    on: {
-        error: (err, req, res) => {
-            res.status(503).json({ success: false, message: 'Notification service unavailable' });
-        }
-    }
-}));
+// Restaurant Service
+router.use('/restaurants', withCircuitBreaker(
+    'restaurant-service',
+    makeProxy(process.env.RESTAURANT_SERVICE_URL, { '^/api/restaurants': '/api/restaurants' })
+));
+
+// Order Service
+router.use('/orders', withCircuitBreaker(
+    'order-service',
+    makeProxy(process.env.ORDER_SERVICE_URL, { '^/api/orders': '/api/orders' })
+));
+
+// Payment Service
+router.use('/payments', withCircuitBreaker(
+    'payment-service',
+    makeProxy(process.env.PAYMENT_SERVICE_URL, { '^/api/payments': '/api/payments' })
+));
+
+// Notification Service
+router.use('/notifications', withCircuitBreaker(
+    'notification-service',
+    makeProxy(process.env.NOTIFICATION_SERVICE_URL, { '^/api/notifications': '/api/notifications' })
+));
 
 module.exports = router;
