@@ -1,4 +1,4 @@
-package com.quickbowl.orderservice.kafka;
+package com.quickbowl.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

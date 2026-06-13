@@ -1,9 +1,9 @@
 package com.quickbowl.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quickbowl.dto.OrderItemDto;
 import com.quickbowl.dto.OrderRequest;
 import com.quickbowl.dto.OrderStatusUpdate;
+import com.quickbowl.kafka.OrderEventProducer;
 import com.quickbowl.model.Order;
 import com.quickbowl.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class OrderService {
@@ -26,6 +25,9 @@ public class OrderService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private OrderEventProducer orderEventProducer;
 
     @Value("${app.restaurant-service.url}")
     private String restaurantServiceUrl;
@@ -38,10 +40,9 @@ public class OrderService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // ── Place Order ───────────────────────────────────
+    // Place Order
     public Order placeOrder(OrderRequest req) throws Exception {
 
-        // Get surge + discount from Restaurant Service
         Map restaurantData = restTemplate.getForObject(
             restaurantServiceUrl + "/api/restaurants/" + req.getRestaurantId(),
             Map.class
@@ -51,15 +52,12 @@ public class OrderService {
         double surgeMultiplier = ((Number) data.getOrDefault("surge_multiplier", 1.0)).doubleValue();
         boolean isSurge = (boolean) data.getOrDefault("is_surge", false);
 
-        // Calculate subtotal
         double subtotal = req.getItems().stream()
             .mapToDouble(i -> i.getPrice() * i.getQuantity())
             .sum();
 
-        // Apply surge
         double surgeAmount = isSurge ? Math.round((subtotal * (surgeMultiplier - 1.0)) * 100.0) / 100.0 : 0.0;
 
-        // Apply discount if requested
         double discountPercent = 0;
         double discountAmount = 0;
         boolean discountUsed = false;
@@ -76,8 +74,6 @@ public class OrderService {
                 discountPercent = ((Number) discountData.getOrDefault("percent", 0)).doubleValue();
                 discountAmount = Math.round((subtotal * discountPercent / 100) * 100.0) / 100.0;
                 discountUsed = true;
-
-                // Notify restaurant service to use one slot
                 restTemplate.postForObject(
                     restaurantServiceUrl + "/api/restaurants/discount/use",
                     null, Map.class
@@ -85,26 +81,18 @@ public class OrderService {
             }
         }
 
-        // Delivery fee
-        double deliveryFee = 30.0;
-        if (subtotal > 500) deliveryFee = 0.0; // Free delivery above ₹500
+        double deliveryFee = subtotal > 500 ? 0.0 : 30.0;
+        double total = Math.round((subtotal + surgeAmount - discountAmount + deliveryFee) * 100.0) / 100.0;
 
-        // Total
-        double total = subtotal + surgeAmount - discountAmount + deliveryFee;
-        total = Math.round(total * 100.0) / 100.0;
-
-        // Scheduled order validation
         if (req.getIsScheduled() && req.getScheduledFor() != null) {
-            LocalDateTime maxSchedule = LocalDateTime.now().plusDays(7);
             if (req.getScheduledFor().isBefore(LocalDateTime.now().plusMinutes(30))) {
                 throw new Exception("Scheduled time must be at least 30 minutes from now");
             }
-            if (req.getScheduledFor().isAfter(maxSchedule)) {
+            if (req.getScheduledFor().isAfter(LocalDateTime.now().plusDays(7))) {
                 throw new Exception("Cannot schedule more than 7 days in advance");
             }
         }
 
-        // Build order
         Order order = new Order();
         order.setUserId(req.getUserId());
         order.setRestaurantId(req.getRestaurantId());
@@ -128,33 +116,48 @@ public class OrderService {
         order.setPenaltyApplied(false);
         order.setPenaltyAmount(0.0);
 
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+
+        try {
+            orderEventProducer.publishOrderPlaced(Map.of(
+                "type", "order_placed",
+                "user", Map.of("id", saved.getUserId()),
+                "orderDetails", Map.of(
+                    "orderId", saved.getId(),
+                    "restaurantName", saved.getRestaurantName(),
+                    "totalAmount", saved.getTotalAmount(),
+                    "status", saved.getStatus()
+                )
+            ));
+        } catch (Exception e) {
+            System.out.println("Kafka publish failed (non-fatal): " + e.getMessage());
+        }
+
+        return saved;
     }
 
-    // ── Get Order ─────────────────────────────────────
+    // Get Order
     public Order getOrder(Long id) throws Exception {
         return orderRepository.findById(id)
             .orElseThrow(() -> new Exception("Order not found"));
     }
 
-    // ── Get User Orders ───────────────────────────────
+    // Get User Orders
     public List<Order> getUserOrders(String userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
-    // ── Get Restaurant Orders ─────────────────────────
+    // Get Restaurant Orders
     public List<Order> getRestaurantOrders(String restaurantId) {
         return orderRepository.findByRestaurantIdOrderByCreatedAtDesc(restaurantId);
     }
 
-    // ── Update Order Status ───────────────────────────
+    // Update Order Status
     public Order updateStatus(Long id, OrderStatusUpdate update) throws Exception {
         Order order = getOrder(id);
         String newStatus = update.getStatus().toUpperCase();
 
-        // Validate transition
         validateStatusTransition(order.getStatus(), newStatus);
-
         order.setStatus(newStatus);
 
         if (newStatus.equals("DELIVERED")) {
@@ -162,29 +165,41 @@ public class OrderService {
             if (update.getDeliveryMinutes() != null) {
                 order.setActualDeliveryMinutes(update.getDeliveryMinutes());
             }
-            // Notify restaurant service to update stats
             notifyRestaurantStats(order, true);
         }
 
         if (newStatus.equals("CANCELLED")) {
             order.setCancellationReason(update.getReason());
             order.setCancelledAt(LocalDateTime.now());
-
-            // Check penalty
             long minutesSinceOrder = ChronoUnit.MINUTES.between(order.getCreatedAt(), LocalDateTime.now());
             if (minutesSinceOrder > freeCancellationMinutes && !order.getIsScheduled()) {
                 double penalty = Math.round((order.getTotalAmount() * penaltyPercent / 100) * 100.0) / 100.0;
                 order.setPenaltyApplied(true);
                 order.setPenaltyAmount(penalty);
             }
-
             notifyRestaurantStats(order, false);
         }
 
-        return orderRepository.save(order);
+        Order updated = orderRepository.save(order);
+
+        try {
+            orderEventProducer.publishOrderStatusUpdated(Map.of(
+                "type", "order_status_updated",
+                "user", Map.of("id", updated.getUserId()),
+                "orderDetails", Map.of(
+                    "orderId", updated.getId(),
+                    "status", updated.getStatus(),
+                    "restaurantName", updated.getRestaurantName()
+                )
+            ));
+        } catch (Exception e) {
+            System.out.println("Kafka publish failed (non-fatal): " + e.getMessage());
+        }
+
+        return updated;
     }
 
-    // ── Cancel Order ──────────────────────────────────
+    // Cancel Order
     public Order cancelOrder(Long id, String reason) throws Exception {
         OrderStatusUpdate update = new OrderStatusUpdate();
         update.setStatus("CANCELLED");
@@ -192,7 +207,7 @@ public class OrderService {
         return updateStatus(id, update);
     }
 
-    // ── Validate Status Transition ────────────────────
+    // Validate Status Transition
     private void validateStatusTransition(String current, String next) throws Exception {
         Map<String, List<String>> allowed = Map.of(
             "PENDING",          List.of("CONFIRMED", "CANCELLED"),
@@ -203,30 +218,25 @@ public class OrderService {
             "DELIVERED",        List.of(),
             "CANCELLED",        List.of()
         );
-
-        List<String> allowedNext = allowed.getOrDefault(current, List.of());
-        if (!allowedNext.contains(next)) {
+        if (!allowed.getOrDefault(current, List.of()).contains(next)) {
             throw new Exception("Cannot transition from " + current + " to " + next);
         }
     }
 
-    // ── Notify Restaurant Stats ───────────────────────
+    // Notify Restaurant Stats
     private void notifyRestaurantStats(Order order, boolean completed) {
         try {
-            boolean isPeakHour = isPeakHour();
             Map<String, Object> stats = Map.of(
                 "order_completed",  completed,
                 "order_cancelled",  !completed,
                 "order_amount",     order.getTotalAmount(),
-                "is_peak_hour",     isPeakHour,
+                "is_peak_hour",     isPeakHour(),
                 "delivery_minutes", order.getActualDeliveryMinutes() != null
                     ? order.getActualDeliveryMinutes() : 35
             );
-
             restTemplate.postForObject(
                 restaurantServiceUrl + "/api/restaurants/" + order.getRestaurantId() + "/stats",
-                stats,
-                Map.class
+                stats, Map.class
             );
         } catch (Exception e) {
             System.out.println("Warning: Could not notify restaurant stats: " + e.getMessage());
@@ -238,16 +248,15 @@ public class OrderService {
         return (hour >= 12 && hour <= 14) || (hour >= 19 && hour <= 21);
     }
 
-    // ── Process Scheduled Orders (runs every minute) ──
+    // Process Scheduled Orders (runs every minute)
     @Scheduled(fixedRate = 60000)
     public void processScheduledOrders() {
         List<Order> due = orderRepository
             .findByIsScheduledTrueAndStatusAndScheduledForBefore("SCHEDULED", LocalDateTime.now());
-
         for (Order order : due) {
             order.setStatus("PENDING");
             orderRepository.save(order);
-            System.out.println("✅ Scheduled order #" + order.getId() + " activated");
+            System.out.println("Scheduled order #" + order.getId() + " activated");
         }
     }
 }
