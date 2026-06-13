@@ -2,6 +2,8 @@ const { pool } = require('../config/db');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const { publishPaymentEvent } = require('../kafka/producer');
+
 require('dotenv').config();
 
 const razorpay = new Razorpay({
@@ -59,11 +61,12 @@ const verifyPayment = async (req, res) => {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
-        payment_method
+        payment_method,
+        user_email,   // pass these from frontend at verify time
+        user_phone,
     } = req.body;
 
     try {
-        // Verify signature
         const body = razorpay_order_id + '|' + razorpay_payment_id;
         const expectedSignature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -81,7 +84,6 @@ const verifyPayment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Payment verification failed' });
         }
 
-        // Update payment as SUCCESS
         const result = await pool.query(
             `UPDATE payments SET 
                 status='SUCCESS',
@@ -93,53 +95,29 @@ const verifyPayment = async (req, res) => {
             [razorpay_payment_id, razorpay_signature, payment_method, razorpay_order_id]
         );
 
+        const payment = result.rows[0];
+
+        // Publish to Kafka (fire-and-forget — don't fail the response if Kafka is down)
+        publishPaymentEvent('payment.completed', {
+            type: 'payment_success',
+            user: {
+                id: payment.user_id,
+                email: user_email || null,
+                phone: user_phone || null,
+            },
+            paymentDetails: {
+                orderId: payment.order_id,
+                amount: payment.amount,
+                paymentId: payment.razorpay_payment_id,
+                method: payment_method,
+            },
+        }).catch(err => console.error('Kafka publish failed (non-fatal):', err.message));
+
         res.json({
             success: true,
             message: 'Payment verified successfully',
-            data: result.rows[0]
+            data: payment,
         });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-};
-
-// ── Get Payment by ID ─────────────────────────────────
-const getPayment = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const result = await pool.query('SELECT * FROM payments WHERE id=$1', [id]);
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Payment not found' });
-        }
-        res.json({ success: true, data: result.rows[0] });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-};
-
-// ── Get Payments by Order ─────────────────────────────
-const getPaymentByOrder = async (req, res) => {
-    const { orderId } = req.params;
-    try {
-        const result = await pool.query(
-            'SELECT * FROM payments WHERE order_id=$1 ORDER BY created_at DESC',
-            [orderId]
-        );
-        res.json({ success: true, count: result.rows.length, data: result.rows });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-};
-
-// ── Get Payments by User ──────────────────────────────
-const getPaymentsByUser = async (req, res) => {
-    const { userId } = req.params;
-    try {
-        const result = await pool.query(
-            'SELECT * FROM payments WHERE user_id=$1 ORDER BY created_at DESC',
-            [userId]
-        );
-        res.json({ success: true, count: result.rows.length, data: result.rows });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -148,7 +126,7 @@ const getPaymentsByUser = async (req, res) => {
 // ── Refund Payment ────────────────────────────────────
 const refundPayment = async (req, res) => {
     const { id } = req.params;
-    const { reason, amount } = req.body;
+    const { reason, amount, user_email, user_phone } = req.body;
 
     try {
         const paymentResult = await pool.query('SELECT * FROM payments WHERE id=$1', [id]);
@@ -168,13 +146,11 @@ const refundPayment = async (req, res) => {
 
         const refundAmount = amount || payment.amount;
 
-        // Process refund via Razorpay
         const refund = await razorpay.payments.refund(payment.razorpay_payment_id, {
             amount: Math.round(refundAmount * 100),
-            notes: { reason: reason || 'Order cancelled' }
+            notes: { reason: reason || 'Order cancelled' },
         });
 
-        // Update DB
         const result = await pool.query(
             `UPDATE payments SET
                 refund_id=$1,
@@ -188,25 +164,83 @@ const refundPayment = async (req, res) => {
             [refund.id, refundAmount, reason, id]
         );
 
+        const updatedPayment = result.rows[0];
+
+        // Publish to Kafka
+        publishPaymentEvent('payment.refunded', {
+            type: 'payment_refund',
+            user: {
+                id: updatedPayment.user_id,
+                email: user_email || null,
+                phone: user_phone || null,
+            },
+            paymentDetails: {
+                orderId: updatedPayment.order_id,
+                amount: refundAmount,
+                refundId: refund.id,
+                reason: reason || 'Order cancelled',
+            },
+        }).catch(err => console.error('Kafka publish failed (non-fatal):', err.message));
+
         res.json({
             success: true,
             message: `Refund of ₹${refundAmount} processed successfully`,
-            data: result.rows[0]
+            data: updatedPayment,
         });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
 };
 
-// ── Settlement Report ─────────────────────────────────
+// Get Payment by ID
+const getPayment = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('SELECT * FROM payments WHERE id=$1', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Payment not found' });
+        }
+        res.json({ success: true, data: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// Get Payments by Order
+const getPaymentByOrder = async (req, res) => {
+    const { orderId } = req.params;
+    try {
+        const result = await pool.query(
+            'SELECT * FROM payments WHERE order_id=$1 ORDER BY created_at DESC',
+            [orderId]
+        );
+        res.json({ success: true, count: result.rows.length, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// Get Payments by User
+const getPaymentsByUser = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const result = await pool.query(
+            'SELECT * FROM payments WHERE user_id=$1 ORDER BY created_at DESC',
+            [userId]
+        );
+        res.json({ success: true, count: result.rows.length, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// Settlement Report
 const getSettlementReport = async (req, res) => {
     const { restaurantId } = req.params;
     const { start, end } = req.query;
-
     try {
         const startDate = start || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         const endDate = end || new Date().toISOString();
-
         const result = await pool.query(
             `SELECT 
                 COUNT(*) as total_orders,
@@ -220,7 +254,6 @@ const getSettlementReport = async (req, res) => {
              AND status = 'SUCCESS'`,
             [process.env.PLATFORM_FEE_PERCENT || 2, startDate, endDate]
         );
-
         res.json({
             success: true,
             restaurant_id: restaurantId,
