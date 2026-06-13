@@ -1,0 +1,293 @@
+openapi: 3.0.3
+info:
+  title: QuickBowl Order Service
+  description: Manages order creation and state transitions (Pending → Accepted → Out for Delivery → Delivered)
+  version: 1.0.0
+servers:
+  - url: http://localhost:8002/api/orders
+    description: Local development
+  - url: http://localhost:3000/api/orders
+    description: Via API Gateway
+
+paths:
+  /:
+    post:
+      summary: Place a new order
+      tags: [Orders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '200':
+          description: Order placed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /{id}:
+    get:
+      summary: Get an order by ID
+      tags: [Orders]
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /{id}/status:
+    put:
+      summary: Update order status
+      tags: [Orders]
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusUpdate'
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /{id}/cancel:
+    post:
+      summary: Cancel an order (penalty applied for late cancellation)
+      tags: [Orders]
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  example: Changed my mind
+      responses:
+        '200':
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  penalty_applied:
+                    type: boolean
+                  penalty_amount:
+                    type: number
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /user/{userId}:
+    get:
+      summary: Get all orders for a user
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+
+  /restaurant/{restaurantId}:
+    get:
+      summary: Get all orders for a restaurant
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: restaurantId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+
+  /health:
+    get:
+      summary: Health check
+      tags: [Health]
+      responses:
+        '200':
+          description: Service is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  service:
+                    type: string
+                  status:
+                    type: string
+                  port:
+                    type: integer
+
+components:
+  parameters:
+    OrderId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Order ID (PostgreSQL auto-increment)
+
+  schemas:
+    OrderItemDto:
+      type: object
+      required: [itemId, name, price, quantity]
+      properties:
+        itemId:
+          type: string
+        name:
+          type: string
+          example: Chicken Biryani
+        price:
+          type: number
+          example: 220.00
+        quantity:
+          type: integer
+          example: 2
+
+    OrderRequest:
+      type: object
+      required: [userId, restaurantId, items, deliveryAddress]
+      properties:
+        userId:
+          type: string
+        restaurantId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemDto'
+        deliveryAddress:
+          type: string
+          example: 12 MG Road, Bangalore
+
+    OrderStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [PENDING, ACCEPTED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED]
+        updatedBy:
+          type: string
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        restaurantId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemDto'
+        status:
+          type: string
+          enum: [PENDING, ACCEPTED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED]
+        totalAmount:
+          type: number
+        deliveryAddress:
+          type: string
+        penaltyApplied:
+          type: boolean
+        penaltyAmount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    OrderResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Order'
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request or business rule violation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

@@ -1,0 +1,265 @@
+openapi: 3.0.3
+info:
+  title: QuickBowl Payment Service
+  description: Simulates a payment gateway integration with idempotent payment API and refund support
+  version: 1.0.0
+servers:
+  - url: http://localhost:8003/api/payments
+    description: Local development
+  - url: http://localhost:3000/api/payments
+    description: Via API Gateway
+
+paths:
+  /:
+    post:
+      summary: Create a payment order (initiate payment)
+      tags: [Payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '200':
+          description: Payment order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /verify:
+    post:
+      summary: Verify payment after gateway callback (idempotent)
+      tags: [Payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyPaymentRequest'
+      responses:
+        '200':
+          description: Payment verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /{id}:
+    get:
+      summary: Get payment by ID
+      tags: [Payments]
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /{id}/refund:
+    post:
+      summary: Refund a payment
+      tags: [Payments]
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  example: Order cancelled by user
+      responses:
+        '200':
+          description: Refund initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /order/{orderId}:
+    get:
+      summary: Get payment by order ID
+      tags: [Payments]
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment for the given order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /user/{userId}:
+    get:
+      summary: Get all payments for a user
+      tags: [Payments]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payment'
+
+  /settlement/{restaurantId}:
+    get:
+      summary: Get settlement report for a restaurant
+      tags: [Payments]
+      parameters:
+        - in: path
+          name: restaurantId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Settlement report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      restaurantId:
+                        type: string
+                      totalSettled:
+                        type: number
+                      totalRefunded:
+                        type: number
+                      transactions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payment'
+
+components:
+  parameters:
+    PaymentId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: Payment UUID
+
+  schemas:
+    CreatePaymentRequest:
+      type: object
+      required: [orderId, userId, amount]
+      properties:
+        orderId:
+          type: string
+        userId:
+          type: string
+        amount:
+          type: number
+          example: 440.00
+        currency:
+          type: string
+          default: INR
+
+    VerifyPaymentRequest:
+      type: object
+      required: [paymentId, orderId, signature]
+      properties:
+        paymentId:
+          type: string
+        orderId:
+          type: string
+        signature:
+          type: string
+          description: HMAC signature from payment gateway callback
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+        userId:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED, REFUNDED]
+        gatewayPaymentId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Payment'
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

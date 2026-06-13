@@ -1,0 +1,407 @@
+openapi: 3.0.3
+info:
+  title: QuickBowl Restaurant Service
+  description: Manages restaurant listings, menus, search, analytics, and dynamic pricing
+  version: 1.0.0
+servers:
+  - url: http://localhost:8001/api/restaurants
+    description: Local development
+  - url: http://localhost:3000/api/restaurants
+    description: Via API Gateway
+
+paths:
+  /:
+    get:
+      summary: List all restaurants
+      tags: [Restaurants]
+      parameters:
+        - in: query
+          name: city
+          schema:
+            type: string
+          description: Filter by city
+        - in: query
+          name: cuisine
+          schema:
+            type: string
+          description: Filter by cuisine type
+      responses:
+        '200':
+          description: List of restaurants grouped by boosted and normal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  customer_favourites:
+                    type: object
+                    properties:
+                      count:
+                        type: integer
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Restaurant'
+                  all_restaurants:
+                    type: object
+                    properties:
+                      count:
+                        type: integer
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Restaurant'
+
+    post:
+      summary: Create a new restaurant
+      tags: [Restaurants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestaurantCreate'
+      responses:
+        '200':
+          description: Restaurant created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestaurantResponse'
+
+  /search:
+    get:
+      summary: Search restaurants by name, cuisine, city, or food item
+      tags: [Restaurants]
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+          description: Search query
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  query:
+                    type: string
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Restaurant'
+
+  /discount:
+    get:
+      summary: Get current discount information
+      tags: [Discounts]
+      responses:
+        '200':
+          description: Discount info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+
+  /discount/active:
+    get:
+      summary: Check if a discount is currently active
+      tags: [Discounts]
+      responses:
+        '200':
+          description: Discount active status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      active:
+                        type: boolean
+
+  /{id}:
+    get:
+      summary: Get a restaurant by ID
+      tags: [Restaurants]
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+      responses:
+        '200':
+          description: Restaurant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestaurantResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update a restaurant
+      tags: [Restaurants]
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestaurantUpdate'
+      responses:
+        '200':
+          description: Restaurant updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestaurantResponse'
+
+    delete:
+      summary: Delete a restaurant
+      tags: [Restaurants]
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+      responses:
+        '200':
+          description: Restaurant deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+
+  /{id}/menu:
+    post:
+      summary: Add a menu item to a restaurant
+      tags: [Menu]
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuItem'
+      responses:
+        '200':
+          description: Menu item added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestaurantResponse'
+
+  /{id}/menu/{item_id}:
+    delete:
+      summary: Remove a menu item from a restaurant
+      tags: [Menu]
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+        - in: path
+          name: item_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Menu item removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestaurantResponse'
+
+  /{id}/boost:
+    post:
+      summary: Boost a restaurant to Customer Favourites
+      tags: [Restaurants]
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+      responses:
+        '200':
+          description: Restaurant boosted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+
+  /{id}/analytics:
+    get:
+      summary: Get analytics for a restaurant
+      tags: [Analytics]
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+      responses:
+        '200':
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+
+  /{id}/stats:
+    post:
+      summary: Update order stats for a restaurant (called by Order Service)
+      tags: [Internal]
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Stats updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+
+components:
+  parameters:
+    RestaurantId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: MongoDB ObjectId of the restaurant
+
+  schemas:
+    MenuItem:
+      type: object
+      required: [name, price]
+      properties:
+        name:
+          type: string
+          example: Chicken Biryani
+        description:
+          type: string
+        price:
+          type: number
+          example: 220
+        category:
+          type: string
+          example: Main Course
+        is_veg:
+          type: boolean
+
+    RestaurantCreate:
+      type: object
+      required: [name, city, cuisine]
+      properties:
+        name:
+          type: string
+          example: Spice Garden
+        city:
+          type: string
+          example: Hyderabad
+        cuisine:
+          type: string
+          example: Indian
+        owner_id:
+          type: string
+        menu:
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuItem'
+
+    RestaurantUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        city:
+          type: string
+        cuisine:
+          type: string
+        is_open:
+          type: boolean
+
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        city:
+          type: string
+        cuisine:
+          type: string
+        is_open:
+          type: boolean
+        boost_active:
+          type: boolean
+        menu:
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuItem'
+
+    RestaurantResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Restaurant'
+
+    SuccessMessage:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

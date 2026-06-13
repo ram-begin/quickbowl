@@ -1,0 +1,170 @@
+openapi: 3.0.3
+info:
+  title: QuickBowl Notification Service
+  description: Dispatches email and SMS notifications for order and payment domain events
+  version: 1.0.0
+servers:
+  - url: http://localhost:8004/api/notifications
+    description: Local development
+  - url: http://localhost:3000/api/notifications
+    description: Via API Gateway
+
+paths:
+  /order:
+    post:
+      summary: Send order status notification (placed, accepted, out for delivery, delivered)
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderNotificationRequest'
+      responses:
+        '200':
+          description: Notification sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /payment:
+    post:
+      summary: Send payment notification (success or refund)
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentNotificationRequest'
+      responses:
+        '200':
+          description: Notification sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /custom:
+    post:
+      summary: Send a custom notification
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomNotificationRequest'
+      responses:
+        '200':
+          description: Notification sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  schemas:
+    OrderNotificationRequest:
+      type: object
+      required: [userId, orderId, status]
+      properties:
+        userId:
+          type: string
+        orderId:
+          type: string
+        status:
+          type: string
+          enum: [PLACED, ACCEPTED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED]
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        restaurantName:
+          type: string
+        totalAmount:
+          type: number
+
+    PaymentNotificationRequest:
+      type: object
+      required: [userId, paymentId, type]
+      properties:
+        userId:
+          type: string
+        paymentId:
+          type: string
+        type:
+          type: string
+          enum: [SUCCESS, REFUND, FAILED]
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        amount:
+          type: number
+        orderId:
+          type: string
+
+    CustomNotificationRequest:
+      type: object
+      required: [userId, message]
+      properties:
+        userId:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        subject:
+          type: string
+        message:
+          type: string
+        channel:
+          type: string
+          enum: [email, sms, both]
+          default: both
+
+    NotificationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            notificationId:
+              type: string
+            channel:
+              type: string
+            sentAt:
+              type: string
+              format: date-time
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
