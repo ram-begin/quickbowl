@@ -15,6 +15,7 @@ const makeProxy = (target, pathRewrite) => {
     const proxy = createProxyMiddleware({
         target,
         changeOrigin: true,
+        followRedirects: true,
         pathRewrite,
         on: {
             error: (err, req, res) => {
@@ -24,8 +25,6 @@ const makeProxy = (target, pathRewrite) => {
             }
         }
     });
-
-    // opossum needs a plain function to wrap
     return (req, res, next) => proxy(req, res, next);
 };
 

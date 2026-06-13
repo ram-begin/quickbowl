@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuickBowl — My Orders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --red: #dc2626; --red-dark: #991b1b;
+      --gold: #FFD700; --gold-dark: #FFA500;
+      --bg: #0f0505; --bg-card: #1a0808;
+      --border: #2a0a0a; --border-mid: #2a1010;
+      --white: #ffffff; --text-muted: #aaaaaa; --text-dim: #666666;
+      --font-display: 'Sora', sans-serif; --font-body: 'DM Sans', sans-serif;
+      --radius-sm: 8px; --radius-md: 10px; --radius-lg: 16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--bg); min-height: 100vh; color: var(--white); }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 28px; background: #0f0505;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .back-btn {
+      padding: 8px 14px; background: transparent;
+      border: 1px solid var(--border-mid); border-radius: var(--radius-sm);
+      color: var(--text-muted); font-family: var(--font-body);
+      font-size: 13px; cursor: pointer; transition: all 0.2s;
+    }
+    .back-btn:hover { color: var(--white); border-color: #444; }
+    .logo-name { font-family: var(--font-display); font-size: 20px; font-weight: 800; }
+    .logo-name .q { color: var(--gold); } .logo-name .b { color: var(--white); }
+
+    /* MAIN */
+    .main { max-width: 800px; margin: 0 auto; padding: 32px 24px; }
+    .page-title {
+      font-family: var(--font-display); font-size: 24px; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .page-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+
+    /* ORDER CARD */
+    .order-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); margin-bottom: 16px;
+      overflow: hidden; transition: border-color 0.2s;
+    }
+    .order-card:hover { border-color: var(--border-mid); }
+
+    .order-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px; border-bottom: 1px solid var(--border);
+      flex-wrap: wrap; gap: 10px;
+    }
+    .order-id { font-family: var(--font-display); font-size: 14px; font-weight: 700; }
+    .order-id span { color: var(--text-muted); font-weight: 400; font-size: 12px; }
+    .order-date { font-size: 12px; color: var(--text-muted); }
+
+    /* STATUS BADGE */
+    .status-badge {
+      padding: 5px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+    }
+    .status-PENDING          { background: rgba(255,165,0,0.15);  color: #FFA500;  border: 1px solid rgba(255,165,0,0.3); }
+    .status-CONFIRMED        { background: rgba(59,130,246,0.15); color: #60a5fa;  border: 1px solid rgba(59,130,246,0.3); }
+    .status-PREPARING        { background: rgba(168,85,247,0.15); color: #c084fc;  border: 1px solid rgba(168,85,247,0.3); }
+    .status-OUT_FOR_DELIVERY { background: rgba(255,215,0,0.15);  color: #FFD700;  border: 1px solid rgba(255,215,0,0.3); }
+    .status-DELIVERED        { background: rgba(74,222,128,0.15); color: #4ade80;  border: 1px solid rgba(74,222,128,0.3); }
+    .status-CANCELLED        { background: rgba(220,38,38,0.15);  color: #ff6b6b;  border: 1px solid rgba(220,38,38,0.3); }
+    .status-SCHEDULED        { background: rgba(99,102,241,0.15); color: #a5b4fc;  border: 1px solid rgba(99,102,241,0.3); }
+
+    .order-body { padding: 16px 20px; }
+    .order-restaurant {
+      font-family: var(--font-display); font-size: 15px; font-weight: 700;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* PROGRESS BAR */
+    .progress-wrap { margin-bottom: 16px; }
+    .progress-steps { display: flex; align-items: center; gap: 0; margin-bottom: 8px; }
+    .step {
+      display: flex; flex-direction: column; align-items: center; flex: 1;
+    }
+    .step-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--border-mid); border: 2px solid var(--border-mid);
+      margin-bottom: 4px; transition: all 0.3s;
+    }
+    .step-dot.active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 8px rgba(255,215,0,0.5); }
+    .step-dot.done   { background: #4ade80; border-color: #4ade80; }
+    .step-dot.cancelled { background: var(--red); border-color: var(--red); }
+    .step-label { font-size: 9px; color: var(--text-dim); text-align: center; }
+    .step-label.active { color: var(--gold); font-weight: 600; }
+    .step-label.done   { color: #4ade80; }
+    .step-connector { flex: 1; height: 2px; background: var(--border-mid); margin-bottom: 14px; transition: background 0.3s; }
+    .step-connector.done { background: #4ade80; }
+
+    /* ITEMS */
+    .order-items { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .order-item {
+      display: flex; justify-content: space-between;
+      font-size: 13px; color: var(--text-muted);
+    }
+    .order-item-name { display: flex; align-items: center; gap: 6px; }
+    .order-item-price { color: var(--white); font-weight: 600; }
+
+    .order-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 14px; border-top: 1px solid var(--border);
+      flex-wrap: wrap; gap: 10px;
+    }
+    .order-total { font-family: var(--font-display); font-size: 15px; font-weight: 700; }
+    .order-total span { color: var(--gold); }
+    .order-address { font-size: 12px; color: var(--text-muted); }
+
+    .cancel-btn {
+      padding: 7px 16px; background: transparent;
+      border: 1px solid rgba(220,38,38,0.3); border-radius: var(--radius-sm);
+      color: var(--red); font-family: var(--font-body);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cancel-btn:hover { background: rgba(220,38,38,0.1); }
+
+    /* LOADING / EMPTY */
+    .loading-state, .empty-state {
+      text-align: center; padding: 70px 20px; color: var(--text-muted);
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border); border-top-color: var(--gold);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-icon { font-size: 52px; margin-bottom: 16px; }
+    .empty-state h3 { font-family: var(--font-display); font-size: 16px; color: var(--white); margin-bottom: 8px; }
+    .browse-btn {
+      margin-top: 16px; padding: 12px 24px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #1a0505; border: none; border-radius: var(--radius-md);
+      font-family: var(--font-display); font-size: 13px; font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--bg-card); border: 1px solid var(--border-mid);
+      border-radius: var(--radius-md); padding: 12px 20px;
+      font-size: 13px; font-weight: 600; color: var(--white);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      transition: transform 0.3s ease; z-index: 999;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(255,215,0,0.4); color: var(--gold); }
+    .toast.error   { border-color: rgba(220,38,38,0.4);  color: #ff6b6b; }
+
+    @media (max-width: 600px) {
+      .main { padding: 24px 16px; }
+      nav { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <button class="back-btn" onclick="location.href='/dashboard.html'">← Back</button>
+  <div class="logo-name"><span class="q">Quick</span><span class="b">Bowl</span></div>
+</nav>
+
+<div class="main">
+  <div class="page-title">My Orders</div>
+  <div class="page-sub">Track your current and past orders</div>
+  <div id="orders-list">
+    <div class="loading-state"><div class="spinner"></div>Loading your orders...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API   = 'http://localhost:3000/api';
+  const token = localStorage.getItem('token');
+  const user  = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!token) location.href = '/';
+
+  const STATUS_STEPS = ['PENDING','CONFIRMED','PREPARING','OUT_FOR_DELIVERY','DELIVERED'];
+  const STATUS_LABELS = {
+    PENDING:          '⏳ Pending',
+    CONFIRMED:        '✅ Confirmed',
+    PREPARING:        '👨‍🍳 Preparing',
+    OUT_FOR_DELIVERY: '🛵 On the way',
+    DELIVERED:        '🎉 Delivered',
+    CANCELLED:        '❌ Cancelled',
+    SCHEDULED:        '📅 Scheduled',
+  };
+
+  async function loadOrders() {
+    try {
+      const userId = user.id || user._id;
+      const res    = await fetch(`${API}/orders/user/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const data   = await res.json();
+      const orders = data.data || data.orders || data || [];
+      renderOrders(Array.isArray(orders) ? orders : []);
+    } catch (e) {
+      document.getElementById('orders-list').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">⚠️</div>
+          <h3>Could not load orders</h3>
+          <p>Make sure all services are running</p>
+        </div>`;
+    }
+  }
+
+  function renderOrders(orders) {
+    const el = document.getElementById('orders-list');
+    if (!orders.length) {
+      el.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🍽️</div>
+          <h3>No orders yet</h3>
+          <p>Place your first order and it will appear here</p>
+          <button class="browse-btn" onclick="location.href='/dashboard.html'">Browse Restaurants</button>
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = orders.map(order => {
+      const status     = order.status || 'PENDING';
+      const isCancelled = status === 'CANCELLED';
+      const isDelivered = status === 'DELIVERED';
+      const stepIndex   = STATUS_STEPS.indexOf(status);
+      const items       = parseItems(order.items);
+      const date        = new Date(order.created_at || order.createdAt).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+
+      // Progress bar
+      let progressHtml = '';
+      if (!isCancelled) {
+        progressHtml = `<div class="progress-wrap"><div class="progress-steps">`;
+        STATUS_STEPS.forEach((step, i) => {
+          const isDone   = i < stepIndex;
+          const isActive = i === stepIndex;
+          const dotClass = isDone ? 'done' : isActive ? 'active' : '';
+          const lblClass = isDone ? 'done' : isActive ? 'active' : '';
+          const stepLabels = ['Placed','Confirmed','Preparing','On way','Delivered'];
+          if (i > 0) {
+            progressHtml += `<div class="step-connector ${isDone ? 'done' : ''}"></div>`;
+          }
+          progressHtml += `
+            <div class="step">
+              <div class="step-dot ${dotClass}"></div>
+              <div class="step-label ${lblClass}">${stepLabels[i]}</div>
+            </div>`;
+        });
+        progressHtml += `</div></div>`;
+      }
+
+      const canCancel = ['PENDING','CONFIRMED'].includes(status);
+
+      return `
+        <div class="order-card">
+          <div class="order-header">
+            <div>
+              <div class="order-id">Order #${order.id || order._id} <span>· ${date}</span></div>
+            </div>
+            <span class="status-badge status-${status}">${STATUS_LABELS[status] || status}</span>
+          </div>
+          <div class="order-body">
+            <div class="order-restaurant">🍽️ ${order.restaurant_name || order.restaurantName || 'Restaurant'}</div>
+            ${progressHtml}
+            <div class="order-items">
+              ${items.map(item => `
+                <div class="order-item">
+                  <span class="order-item-name">
+                    <span style="color:var(--text-dim)">×${item.quantity || item.qty || 1}</span>
+                    ${item.name}
+                  </span>
+                  <span class="order-item-price">₹${(item.price * (item.quantity || item.qty || 1)).toFixed(0)}</span>
+                </div>`).join('')}
+            </div>
+            <div class="order-footer">
+              <div>
+                <div class="order-total">Total: <span>₹${order.total_amount || order.totalAmount || 0}</span></div>
+                <div class="order-address">📍 ${order.delivery_address || order.deliveryAddress || ''}</div>
+              </div>
+              ${canCancel ? `<button class="cancel-btn" onclick="cancelOrder('${order.id || order._id}')">Cancel Order</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function parseItems(items) {
+    if (!items) return [];
+    if (Array.isArray(items)) return items;
+    try { return JSON.parse(items); } catch { return []; }
+  }
+
+  async function cancelOrder(orderId) {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      const res = await fetch(`${API}/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'CANCELLED', reason: 'Cancelled by customer' }),
+      });
+      const data = await res.json();
+      if (data.success || data.id) {
+        showToast('Order cancelled', 'success');
+        setTimeout(loadOrders, 800);
+      } else {
+        showToast(data.message || 'Could not cancel order', 'error');
+      }
+    } catch (e) {
+      showToast('Could not cancel order', 'error');
+    }
+  }
+
+  let toastTimer;
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type} show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.className = `toast ${type}`, 2500);
+  }
+
+  loadOrders();
+  // Auto-refresh every 30 seconds for live tracking
+  setInterval(loadOrders, 30000);
+</script>
+</body>
+</html>

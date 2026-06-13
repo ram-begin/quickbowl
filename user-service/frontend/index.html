@@ -715,7 +715,7 @@
         if (data.user.role === 'restaurant_owner') {
           window.location.href = '/restaurant-dashboard';
         } else {
-          window.location.href = '/dashboard';
+          window.location.href = '/dashboard.html';
         }
       } else {
         err.textContent = '⚠ ' + data.message;
@@ -803,7 +803,7 @@
         success.classList.add('show');
         setTimeout(() => {
           if (currentRole === 'owner') {
-            window.location.href = '/restaurant-dashboard';
+            window.location.href = '/dashboard.html';
           } else {
             window.location.href = '/dashboard';
           }
