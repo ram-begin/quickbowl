@@ -124,6 +124,70 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
+
+  # Observability
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.97.0
+    container_name: qb-otel-collector
+    command: ["--config=/etc/otel/otel-collector-config.yaml"]
+    volumes:
+      - ./observability/otel/otel-collector-config.yaml:/etc/otel/otel-collector-config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      - jaeger
+    networks:
+      - quickbowl-network
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    container_name: qb-jaeger
+    ports:
+      - "16686:16686"
+      - "14250:14250"
+      - "4317:4317"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - quickbowl-network
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: qb-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - quickbowl-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: qb-grafana
+    ports:
+      - "3002:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: quickbowl
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - quickbowl-network
+    restart: unless-stopped
+
   # Services
   user-service:
     build:
@@ -140,6 +204,8 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       JWT_SECRET: your_jwt_secret_key
+      SERVICE_NAME: user-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       postgres-user:
         condition: service_healthy
@@ -157,6 +223,7 @@ services:
     environment:
       MONGODB_URL: mongodb://mongodb:27017/restaurantdb
       JWT_SECRET: your_jwt_secret_key
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       mongodb:
         condition: service_healthy
@@ -178,6 +245,8 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_PORT: 8002
       KAFKA_BROKER: kafka:9092
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: order-service
     depends_on:
       postgres-order:
         condition: service_healthy
@@ -203,6 +272,8 @@ services:
       DB_PASSWORD: postgres
       JWT_SECRET: your_jwt_secret_key
       KAFKA_BROKER: kafka:9092
+      SERVICE_NAME: payment-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       postgres-payment:
         condition: service_healthy
@@ -225,6 +296,8 @@ services:
       REDIS_PORT: 6379
       JWT_SECRET: your_jwt_secret_key
       KAFKA_BROKER: kafka:9092
+      SERVICE_NAME: notification-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       redis:
         condition: service_healthy
@@ -251,6 +324,8 @@ services:
       JWT_SECRET: your_jwt_secret_key
       RATE_LIMIT_WINDOW_MS: 900000
       RATE_LIMIT_MAX: 100
+      SERVICE_NAME: api-gateway
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       - user-service
       - restaurant-service
@@ -267,6 +342,8 @@ volumes:
   postgres_payment_data:
   mongo_data:
   redis_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   quickbowl-network:

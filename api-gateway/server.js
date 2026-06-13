@@ -1,9 +1,9 @@
+const { metricsMiddleware, metricsEndpoint } = require('./src/telemetry');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
-
 const routes = require('./src/routes');
 const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 const rateLimiter = require('./src/middleware/rateLimiter');
@@ -16,6 +16,10 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(rateLimiter);
+app.use(metricsMiddleware);
+
+// Metrics endpoint
+app.get('/metrics', metricsEndpoint);
 
 // Routes
 app.use('/api', routes);
