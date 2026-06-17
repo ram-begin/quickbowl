@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><defs><linearGradient id='lb' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23dc2626'/><stop offset='100%25' stop-color='%237f1d1d'/></linearGradient><linearGradient id='lg' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23FFD700'/><stop offset='100%25' stop-color='%23FFA500'/></linearGradient></defs><path d='M13 38 Q13 58 36 58 Q59 58 59 38 Z' fill='url(%23lb)'/><rect x='11' y='33' width='50' height='8' rx='4' fill='url(%23lg)'/><line x1='24' y1='31' x2='16' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='32' y1='31' x2='26' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='40' y1='31' x2='46' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/><line x1='48' y1='31' x2='56' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/></svg>"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>QuickBowl — Profile</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -215,11 +216,23 @@
 
   <!-- EDIT PROFILE -->
   <div class="form-card">
-    <div class="form-card-title">👤 Personal Information</div>
+  <div class="form-card-title">👤 Personal Information
+    <button class="btn btn-outline" style="margin-left:auto;padding:6px 14px;font-size:12px" onclick="toggleEdit()">✏️ Edit</button>
+  </div>
 
+  <!-- VIEW MODE -->
+  <div id="info-view">
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+      <div><span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Full Name</span><div style="margin-top:4px;font-size:14px" id="view-name">—</div></div>
+      <div><span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Email</span><div style="margin-top:4px;font-size:14px" id="view-email">—</div></div>
+      <div><span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Phone</span><div style="margin-top:4px;font-size:14px" id="view-phone">—</div></div>
+    </div>
+  </div>
+
+  <!-- EDIT MODE -->
+  <div id="info-edit" style="display:none">
     <div class="alert success" id="profile-success">✅ Profile updated successfully!</div>
     <div class="alert error"   id="profile-error"></div>
-
     <div class="field-row">
       <div class="field">
         <label>First Name</label>
@@ -238,16 +251,18 @@
       <label>Phone Number</label>
       <input type="tel" id="edit-phone" placeholder="Phone number"/>
     </div>
-
     <div class="btn-row">
-      <button class="btn btn-outline" onclick="loadProfile()">Reset</button>
+      <button class="btn btn-outline" onclick="toggleEdit()">Cancel</button>
       <button class="btn btn-gold" onclick="saveProfile()" id="save-btn">Save Changes</button>
     </div>
   </div>
-
+</div>
   <!-- CHANGE PASSWORD -->
   <div class="form-card">
-    <div class="form-card-title">🔒 Change Password</div>
+    <div class="form-card-title">🔒 Change Password
+  <button class="btn btn-outline" style="margin-left:auto;padding:6px 14px;font-size:12px" onclick="togglePassword()">Change</button>
+</div>
+<div id="pw-form" style="display:none">
 
     <div class="alert success" id="pw-success">✅ Password changed successfully!</div>
     <div class="alert error"   id="pw-error"></div>
@@ -269,6 +284,7 @@
       <button class="btn btn-gold" onclick="changePassword()" id="pw-btn">Update Password</button>
     </div>
   </div>
+</div>
 
   <!-- DANGER ZONE -->
   <div class="danger-zone">
@@ -308,6 +324,9 @@
       document.getElementById('edit-lastname').value  = lastName;
       document.getElementById('edit-email').value     = email;
       document.getElementById('edit-phone').value     = phone;
+document.getElementById('view-name').textContent  = fullName || '—';
+document.getElementById('view-email').textContent = email || '—';
+document.getElementById('view-phone').textContent = phone || 'Not set';
 
       loadStats(u.id || u._id || user.id);
     } catch (e) {
@@ -322,6 +341,9 @@
       document.getElementById('edit-lastname').value  = lastName;
       document.getElementById('edit-email').value     = user.email || '';
       document.getElementById('edit-phone').value     = user.phone || '';
+      document.getElementById('view-name').textContent  = `${firstName} ${lastName}`.trim() || user.email || '—';
+    document.getElementById('view-email').textContent = user.email || '—';
+    document.getElementById('view-phone').textContent = user.phone || 'Not set';
     }
   }
 
@@ -378,7 +400,9 @@
         document.getElementById('avatar-initials').textContent =
           (firstName[0] + (lastName ? lastName[0] : '')).toUpperCase();
         document.getElementById('profile-name').textContent = `${firstName} ${lastName}`.trim();
-        setTimeout(() => sucEl.classList.remove('show'), 3000);
+document.getElementById('view-name').textContent  = `${firstName} ${lastName}`.trim();
+document.getElementById('view-phone').textContent = phone || 'Not set';
+setTimeout(() => { sucEl.classList.remove('show'); toggleEdit(); }, 3000);
       } else {
         errEl.textContent = '⚠️ ' + (data.message || 'Could not update profile');
         errEl.classList.add('show');
@@ -389,6 +413,18 @@
     }
     btn.textContent = 'Save Changes'; btn.disabled = false;
   }
+  function toggleEdit() {
+  const view = document.getElementById('info-view');
+  const edit = document.getElementById('info-edit');
+  const isEditing = edit.style.display !== 'none';
+  view.style.display = isEditing ? 'block' : 'none';
+  edit.style.display = isEditing ? 'none' : 'block';
+}
+
+function togglePassword() {
+  const el = document.getElementById('pw-form');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
 
   // ── Change Password ────────────────────────────────
   async function changePassword() {

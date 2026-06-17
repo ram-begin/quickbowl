@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><defs><linearGradient id='lb' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23dc2626'/><stop offset='100%25' stop-color='%237f1d1d'/></linearGradient><linearGradient id='lg' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23FFD700'/><stop offset='100%25' stop-color='%23FFA500'/></linearGradient></defs><path d='M13 38 Q13 58 36 58 Q59 58 59 38 Z' fill='url(%23lb)'/><rect x='11' y='33' width='50' height='8' rx='4' fill='url(%23lg)'/><line x1='24' y1='31' x2='16' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='32' y1='31' x2='26' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='40' y1='31' x2='46' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/><line x1='48' y1='31' x2='56' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/></svg>"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>QuickBowl — Restaurants</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -20,12 +21,12 @@
     body { font-family: var(--font-body); background: var(--bg); min-height: 100vh; color: var(--white); }
 
     /* NAV */
-    nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 28px; background: #0f0505;
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 100;
-    }
+   nav {
+  padding: 14px 0;
+  background: #0f0505;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
     .logo-name { font-family: var(--font-display); font-size: 20px; font-weight: 800; }
     .logo-name .q { color: var(--gold); } .logo-name .b { color: var(--white); }
     .nav-right { display: flex; align-items: center; gap: 12px; }
@@ -44,10 +45,15 @@
 
     /* HERO */
     .hero {
-      padding: 44px 28px 36px;
-      background: linear-gradient(135deg, #1a0505 0%, #0f0505 100%);
-      border-bottom: 1px solid var(--border);
-    }
+  padding: 44px 0 36px;
+  background: linear-gradient(135deg, #1a0505 0%, #0f0505 100%);
+  border-bottom: 1px solid var(--border);
+}
+.hero-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
     .hero h1 { font-family: var(--font-display); font-size: 30px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
     .hero h1 span { color: var(--gold); }
     .hero p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
@@ -71,7 +77,7 @@
     .search-wrap button:hover { box-shadow: 0 4px 16px rgba(255,215,0,0.35); }
 
     /* MAIN */
-    .main { padding: 32px 28px; max-width: 1140px; margin: 0 auto; }
+    .main { padding: 32px 28px; max-width: 1140px; margin: 0 auto;  }
     .section-title {
       font-family: var(--font-display); font-size: 15px; font-weight: 700;
       color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
@@ -160,21 +166,25 @@
 <body>
 
 <nav>
-  <div class="logo-name"><span class="q">Quick</span><span class="b">Bowl</span></div>
-  <div class="nav-right">
-    <span class="nav-user" id="nav-user"></span>
-    <button class="nav-btn btn-orders" onclick="location.href='/orders.html'">My Orders</button>
-    <button class="nav-btn btn-profile" onclick="location.href='/profile.html'">Profile</button>
-    <button class="nav-btn btn-logout" onclick="logout()">Logout</button>
+  <div style="max-width:1140px;margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;width:100%">
+    <div class="logo-name"><span class="q">Quick</span><span class="b">Bowl</span></div>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="nav-btn btn-orders" onclick="location.href='/orders.html'">My Orders</button>
+      <button class="nav-btn btn-profile" onclick="location.href='/profile.html'">Profile</button>
+      <button class="nav-btn btn-logout" onclick="logout()">Logout</button>
+    </div>
   </div>
 </nav>
 
 <div class="hero">
-  <h1>What are you <span>craving</span> today?</h1>
-  <p>Fresh food from the best restaurants, delivered fast</p>
-  <div class="search-wrap">
-    <input type="text" id="search-input" placeholder="Search restaurants or cuisines..." oninput="filterRestaurants()"/>
-    <button onclick="filterRestaurants()">Search</button>
+  <div class="hero-inner">
+    <h1>What are you <span>craving</span> today?</h1>
+    <p>Fresh food from the best restaurants, delivered fast</p>
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="Search restaurants or cuisines..." oninput="filterRestaurants()"/>
+      <button onclick="filterRestaurants()">Search</button>
+    </div>
   </div>
 </div>
 

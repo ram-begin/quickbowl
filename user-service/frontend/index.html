@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><defs><linearGradient id='lb' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23dc2626'/><stop offset='100%25' stop-color='%237f1d1d'/></linearGradient><linearGradient id='lg' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23FFD700'/><stop offset='100%25' stop-color='%23FFA500'/></linearGradient></defs><path d='M13 38 Q13 58 36 58 Q59 58 59 38 Z' fill='url(%23lb)'/><rect x='11' y='33' width='50' height='8' rx='4' fill='url(%23lg)'/><line x1='24' y1='31' x2='16' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='32' y1='31' x2='26' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='40' y1='31' x2='46' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/><line x1='48' y1='31' x2='56' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/></svg>"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>QuickBowl — hot food, fast delivery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -712,8 +713,10 @@
         localStorage.setItem('token', data.token);
         localStorage.setItem('user',  JSON.stringify(data.user));
         // Redirect based on role
-        if (data.user.role === 'restaurant_owner') {
-          window.location.href = '/restaurant-dashboard';
+       if (data.user.role === 'restaurant_owner') {
+          const t = encodeURIComponent(data.token);
+          const u = encodeURIComponent(JSON.stringify(data.user));
+          window.location.href = `http://localhost:8001?token=${t}&user=${u}`;
         } else {
           window.location.href = '/dashboard.html';
         }
@@ -756,10 +759,10 @@
       err.textContent = '⚠ Please enter a valid email address';
       err.classList.add('show'); return;
     }
-    if (!phone || phone.length < 10) {
-      err.textContent = '⚠ Please enter a valid phone number';
-      err.classList.add('show'); return;
-    }
+    if (!phone || !/^\d{10}$/.test(phone)) {
+  err.textContent = '⚠ Please enter a valid 10-digit phone number (digits only)';
+  err.classList.add('show'); return;
+}
     if (!pass) {
       err.textContent = '⚠ Password is required';
       err.classList.add('show'); return;
@@ -802,18 +805,20 @@
         localStorage.setItem('user',  JSON.stringify(data.user));
         success.classList.add('show');
         setTimeout(() => {
-          if (currentRole === 'owner') {
-            window.location.href = '/dashboard.html';
-          } else {
-            window.location.href = '/dashboard';
-          }
-        }, 1200);
+  if (currentRole === 'owner') {
+    const token = localStorage.getItem('token');
+    const user  = encodeURIComponent(localStorage.getItem('user'));
+    window.location.href = `http://localhost:8001?token=${token}&user=${user}`;
+  } else {
+    window.location.href = '/dashboard.html';
+  }
+}, 1200);
       } else {
-        err.textContent = '⚠ ' + data.message;
-        err.classList.add('show');
-        btn.textContent = 'Create account';
-        btn.disabled    = false;
-      }
+  err.textContent = '⚠ ' + (data.message || data.detail || 'Email already exists. Please use a different email.');
+  err.classList.add('show');
+  btn.textContent = 'Create account';
+  btn.disabled    = false;
+}
     } catch (e) {
       err.textContent = '⚠ Server error. Please try again.';
       err.classList.add('show');

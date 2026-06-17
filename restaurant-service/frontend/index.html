@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><defs><linearGradient id='lb' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23dc2626'/><stop offset='100%25' stop-color='%237f1d1d'/></linearGradient><linearGradient id='lg' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23FFD700'/><stop offset='100%25' stop-color='%23FFA500'/></linearGradient></defs><path d='M13 38 Q13 58 36 58 Q59 58 59 38 Z' fill='url(%23lb)'/><rect x='11' y='33' width='50' height='8' rx='4' fill='url(%23lg)'/><line x1='24' y1='31' x2='16' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='32' y1='31' x2='26' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='40' y1='31' x2='46' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/><line x1='48' y1='31' x2='56' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/></svg>"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>QuickBowl — Restaurant Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -26,10 +27,18 @@
       border-bottom: 1px solid var(--border);
       position: sticky; top: 0; z-index: 100;
     }
+    .nav-left { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 34px; height: 34px;
+      background: rgba(255,255,255,0.06);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
     .logo-name { font-family: var(--font-display); font-size: 20px; font-weight: 800; }
     .logo-name .q { color: var(--gold); } .logo-name .b { color: var(--white); }
-    .nav-tag { font-size: 11px; color: var(--text-muted); margin-left: 8px; padding: 2px 8px; border: 1px solid var(--border-mid); border-radius: 20px; }
-    .nav-right { display: flex; gap: 10px; }
+    .nav-tag { font-size: 11px; color: var(--text-muted); margin-left: 6px; padding: 2px 8px; border: 1px solid var(--border-mid); border-radius: 20px; }
+    .nav-right { display: flex; gap: 10px; align-items: center; }
     .nav-btn {
       padding: 8px 16px; border-radius: var(--radius-sm);
       font-family: var(--font-body); font-size: 13px; font-weight: 600;
@@ -37,6 +46,11 @@
     }
     .btn-logout { background: rgba(220,38,38,0.12); color: var(--red); border: 1px solid rgba(220,38,38,0.25); }
     .btn-logout:hover { background: rgba(220,38,38,0.22); }
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; padding: 4px; background: none; border: none;
+    }
+    .hamburger span { width: 22px; height: 2px; background: var(--white); border-radius: 2px; transition: all 0.2s; }
 
     /* LAYOUT */
     .layout { display: flex; min-height: calc(100vh - 57px); }
@@ -45,7 +59,7 @@
     .sidebar {
       width: 220px; flex-shrink: 0;
       background: var(--bg-card); border-right: 1px solid var(--border);
-      padding: 20px 0;
+      padding: 20px 0; transition: transform 0.3s ease;
     }
     .sidebar-item {
       display: flex; align-items: center; gap: 10px;
@@ -80,7 +94,7 @@
     }
 
     /* STATS */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
     .stat-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: var(--radius-md); padding: 18px;
@@ -181,9 +195,16 @@
     }
     .toggle.on::after { left: 23px; }
 
-    /* EMPTY */
+    /* EMPTY / NO RESTAURANT */
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
     .empty-icon { font-size: 40px; margin-bottom: 10px; }
+    .no-restaurant {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 60vh; text-align: center; padding: 40px 20px;
+    }
+    .no-restaurant .big-icon { font-size: 72px; margin-bottom: 20px; }
+    .no-restaurant h2 { font-family: var(--font-display); font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .no-restaurant p { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; max-width: 360px; }
 
     /* SPINNER */
     .spinner {
@@ -205,17 +226,64 @@
     .toast.success { border-color: rgba(255,215,0,0.4); color: var(--gold); }
     .toast.error   { border-color: rgba(220,38,38,0.4);  color: #ff6b6b; }
 
+    /* MOBILE OVERLAY */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); z-index: 99;
+    }
+    .sidebar-overlay.show { display: block; }
+
+    /* RESPONSIVE */
     @media (max-width: 768px) {
-      .sidebar { display: none; }
+      nav { padding: 12px 16px; }
+      .hamburger { display: flex; }
+      .nav-tag { display: none; }
+      .sidebar {
+        position: fixed; top: 57px; left: 0; bottom: 0;
+        z-index: 100; transform: translateX(-100%);
+      }
+      .sidebar.open { transform: translateX(0); }
       .form-grid { grid-template-columns: 1fr; }
       .main { padding: 20px 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .rest-banner { flex-direction: column; align-items: flex-start; }
+      .rest-banner-actions { width: 100%; }
+      .rest-banner-actions .btn { flex: 1; text-align: center; }
+      .page-title { font-size: 18px; }
+    }
+
+    @media (max-width: 400px) {
+      .stats-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
 <nav>
-  <div style="display:flex;align-items:center">
+  <div class="nav-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="logo-icon">
+      <svg width="22" height="22" viewBox="0 0 72 72" fill="none">
+        <defs>
+          <linearGradient id="lb" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#dc2626"/>
+            <stop offset="100%" stop-color="#7f1d1d"/>
+          </linearGradient>
+          <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#FFD700"/>
+            <stop offset="100%" stop-color="#FFA500"/>
+          </linearGradient>
+        </defs>
+        <path d="M13 38 Q13 58 36 58 Q59 58 59 38 Z" fill="url(#lb)"/>
+        <rect x="11" y="33" width="50" height="8" rx="4" fill="url(#lg)"/>
+        <line x1="24" y1="31" x2="16" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="32" y1="31" x2="26" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="31" x2="46" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+        <line x1="48" y1="31" x2="56" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
     <div class="logo-name"><span class="q">Quick</span><span class="b">Bowl</span></div>
     <span class="nav-tag">Restaurant Panel</span>
   </div>
@@ -224,33 +292,30 @@
   </div>
 </nav>
 
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <div class="layout">
   <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sidebar-item active" onclick="showPage('overview')"  id="nav-overview">
-      <span class="sidebar-icon">📊</span> Overview
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-item active" onclick="showPage('overview')" id="nav-overview">
+      <span class="sidebar-icon">📊</span> Dashboard
     </div>
     <div class="sidebar-item" onclick="showPage('restaurant')" id="nav-restaurant">
       <span class="sidebar-icon">🏪</span> My Restaurant
     </div>
-    <div class="sidebar-item" onclick="showPage('menu')"       id="nav-menu">
+    <div class="sidebar-item" onclick="showPage('menu')" id="nav-menu">
       <span class="sidebar-icon">🍽️</span> Menu
     </div>
-    <div class="sidebar-item" onclick="showPage('settings')"   id="nav-settings">
+    <div class="sidebar-item" onclick="showPage('settings')" id="nav-settings">
       <span class="sidebar-icon">⚙️</span> Settings
-    </div>
-    <div class="sidebar-item" onclick="showPage('register')"   id="nav-register">
-      <span class="sidebar-icon">➕</span> Add Restaurant
     </div>
   </div>
 
   <!-- MAIN CONTENT -->
   <div class="main">
 
-    <!-- OVERVIEW PAGE -->
+    <!-- DASHBOARD PAGE -->
     <div class="page active" id="page-overview">
-      <div class="page-title">Overview</div>
-      <div class="page-sub">Your restaurant at a glance</div>
       <div id="overview-content"><div class="spinner"></div></div>
     </div>
 
@@ -265,8 +330,6 @@
     <div class="page" id="page-menu">
       <div class="page-title">Menu</div>
       <div class="page-sub">Add and manage your menu items</div>
-
-      <!-- Add Menu Item Form -->
       <div class="card">
         <div class="card-title">➕ Add Menu Item</div>
         <div class="alert error" id="menu-error"></div>
@@ -313,8 +376,6 @@
           <button class="btn btn-gold" onclick="addMenuItem()" id="add-item-btn">Add Item</button>
         </div>
       </div>
-
-      <!-- Menu List -->
       <div class="card">
         <div class="card-title">🍽️ Current Menu</div>
         <div id="menu-list"><div class="spinner"></div></div>
@@ -331,7 +392,7 @@
       </div>
     </div>
 
-    <!-- REGISTER PAGE -->
+    <!-- REGISTER PAGE (shown inline in dashboard when no restaurant) -->
     <div class="page" id="page-register">
       <div class="page-title">Register Restaurant</div>
       <div class="page-sub">Add your restaurant to QuickBowl</div>
@@ -389,389 +450,407 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const API  = 'http://localhost:3000/api';
-  const RAPI = 'http://localhost:8001/api';
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const token = localStorage.getItem('token') || '';
+const API  = 'http://localhost:3000/api';
+const RAPI = 'http://localhost:8001/api';
 
-  let myRestaurant = null;
+// Read token/user from URL params (passed after registration) or localStorage
+const params = new URLSearchParams(window.location.search);
+if (params.get('token')) {
+  localStorage.setItem('token', params.get('token'));
+  localStorage.setItem('user', decodeURIComponent(params.get('user')));
+  window.history.replaceState({}, '', '/');
+}
 
-  // ── Navigation ─────────────────────────────────────
-  function showPage(name) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-    document.getElementById(`page-${name}`).classList.add('active');
-    document.getElementById(`nav-${name}`).classList.add('active');
-    if (name === 'overview')    loadOverview();
-    if (name === 'restaurant')  loadRestaurantPage();
-    if (name === 'menu')        loadMenuPage();
-    if (name === 'settings')    loadSettings();
-  }
+const user  = JSON.parse(localStorage.getItem('user') || '{}');
+const token = localStorage.getItem('token') || '';
 
-  function logout() { localStorage.clear(); location.href = '/'; }
+if (!token || user.role !== 'restaurant_owner') {
+  window.location.href = 'http://localhost:3001';
+}
 
-  // ── Load restaurant by owner ────────────────────────
-  async function fetchMyRestaurant() {
-    try {
-      const res  = await fetch(`${RAPI}/restaurants`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      const all  = [
-        ...(data.all_restaurants?.data || []),
-        ...(data.customer_favourites?.data || [])
-      ];
-      const ownerId = user.id || user._id;
-      myRestaurant  = all.find(r => r.owner_id === ownerId) || all[0] || null;
-      return myRestaurant;
-    } catch (e) { return null; }
-  }
+let myRestaurant = null;
 
-  // ── OVERVIEW ───────────────────────────────────────
-  async function loadOverview() {
-    const el = document.getElementById('overview-content');
-    el.innerHTML = '<div class="spinner"></div>';
-    const r = await fetchMyRestaurant();
-    if (!r) {
-      el.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">🏪</div>
-          <p style="margin-bottom:16px">You haven't registered a restaurant yet</p>
-          <button class="btn btn-gold" onclick="showPage('register')">Register Now</button>
-        </div>`;
-      return;
-    }
+// ── Mobile sidebar toggle ───────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+}
 
-    // Load analytics
-    let analytics = {};
-    try {
-      const ares = await fetch(`${RAPI}/restaurants/${r._id}/analytics`, { headers: { Authorization: `Bearer ${token}` } });
-      const adata = await ares.json();
-      analytics = adata.data || {};
-    } catch (e) {}
+// ── Navigation ──────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  const navEl = document.getElementById(`nav-${name}`);
+  if (navEl) navEl.classList.add('active');
+  if (name === 'overview')   loadOverview();
+  if (name === 'restaurant') loadRestaurantPage();
+  if (name === 'menu')       loadMenuPage();
+  if (name === 'settings')   loadSettings();
+  // Close sidebar on mobile after navigation
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
 
+function logout() {
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = 'http://localhost:3001';
+}
+
+// ── Load restaurant by owner ────────────────────────
+async function fetchMyRestaurant() {
+  try {
+    const res  = await fetch(`${RAPI}/restaurants`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    const all  = [
+      ...(data.all_restaurants?.data || []),
+      ...(data.customer_favourites?.data || [])
+    ];
+    const ownerId = user.id || user._id;
+    myRestaurant  = all.find(r => r.owner_id === ownerId) || null;
+    return myRestaurant;
+  } catch (e) { return null; }
+}
+
+// ── DASHBOARD / OVERVIEW ────────────────────────────
+async function loadOverview() {
+  const el = document.getElementById('overview-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  const r = await fetchMyRestaurant();
+
+  if (!r) {
+    // No restaurant — show registration prompt in the middle
     el.innerHTML = `
-      <div class="rest-banner">
-        <div class="rest-banner-info">
-          <h2>🍽️ ${r.name}</h2>
-          <p>${r.cuisine} • ${r.city} • ${r.opening_time || '09:00'} – ${r.closing_time || '23:00'}</p>
-        </div>
-        <div class="rest-banner-actions">
-          <button class="btn btn-outline btn-sm" onclick="showPage('restaurant')">Edit Details</button>
-          <button class="btn btn-gold btn-sm" onclick="showPage('menu')">Manage Menu</button>
-        </div>
-      </div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value">${analytics.total_orders || 0}</div>
-          <div class="stat-label">Total Orders</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${analytics.completed_orders || 0}</div>
-          <div class="stat-label">Completed</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">₹${Math.round(analytics.total_revenue || 0)}</div>
-          <div class="stat-label">Revenue</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${r.menu?.length || 0}</div>
-          <div class="stat-label">Menu Items</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${r.boost_active ? '🔥 ON' : 'OFF'}</div>
-          <div class="stat-label">Boosted</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${r.is_surge ? '⚡ ON' : 'OFF'}</div>
-          <div class="stat-label">Surge</div>
-        </div>
-      </div>`;
-  }
-
-  // ── RESTAURANT PAGE ────────────────────────────────
-  async function loadRestaurantPage() {
-    const el = document.getElementById('restaurant-content');
-    el.innerHTML = '<div class="spinner"></div>';
-    const r = await fetchMyRestaurant();
-    if (!r) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>No restaurant found. <button class="btn btn-gold btn-sm" onclick="showPage('register')">Register one</button></p></div>`;
-      return;
-    }
-    el.innerHTML = `
-      <div class="alert error"   id="edit-error"></div>
-      <div class="alert success" id="edit-success"></div>
-      <div class="form-grid">
-        <div class="field"><label>Restaurant Name</label><input type="text" id="e-name" value="${r.name || ''}"/></div>
-        <div class="field"><label>Cuisine</label><input type="text" id="e-cuisine" value="${r.cuisine || ''}"/></div>
-        <div class="field"><label>City</label><input type="text" id="e-city" value="${r.city || ''}"/></div>
-        <div class="field"><label>Phone</label><input type="tel" id="e-phone" value="${r.phone || ''}"/></div>
-        <div class="field"><label>Opening Time</label><input type="time" id="e-open" value="${r.opening_time || '09:00'}"/></div>
-        <div class="field"><label>Closing Time</label><input type="time" id="e-close" value="${r.closing_time || '23:00'}"/></div>
-        <div class="field full"><label>Address</label><input type="text" id="e-address" value="${r.address || ''}"/></div>
-        <div class="field full"><label>Description</label><textarea id="e-desc">${r.description || ''}</textarea></div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-gold" onclick="saveRestaurant('${r._id}')">Save Changes</button>
-      </div>`;
-  }
-
-  async function saveRestaurant(id) {
-    const errEl = document.getElementById('edit-error');
-    const sucEl = document.getElementById('edit-success');
-    errEl.classList.remove('show'); sucEl.classList.remove('show');
-    try {
-      const res = await fetch(`${RAPI}/restaurants/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name:         document.getElementById('e-name').value,
-          cuisine:      document.getElementById('e-cuisine').value,
-          city:         document.getElementById('e-city').value,
-          phone:        document.getElementById('e-phone').value,
-          address:      document.getElementById('e-address').value,
-          description:  document.getElementById('e-desc').value,
-          opening_time: document.getElementById('e-open').value,
-          closing_time: document.getElementById('e-close').value,
-        })
-      });
-      const data = await res.json();
-      if (data.success) { sucEl.classList.add('show'); showToast('Restaurant updated!', 'success'); }
-      else { errEl.textContent = data.detail || data.message || 'Update failed'; errEl.classList.add('show'); }
-    } catch (e) { errEl.textContent = 'Server error'; errEl.classList.add('show'); }
-  }
-
-  // ── MENU PAGE ──────────────────────────────────────
-  async function loadMenuPage() {
-    const r = await fetchMyRestaurant();
-    if (!r) {
-      document.getElementById('menu-list').innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>Register a restaurant first</p></div>`;
-      return;
-    }
-    renderMenuList(r.menu || [], r._id);
-  }
-
-  function renderMenuList(menu, restId) {
-    const el = document.getElementById('menu-list');
-    if (!menu.length) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><p>No menu items yet. Add your first item above!</p></div>`;
-      return;
-    }
-    el.innerHTML = `
-      <table class="menu-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Meal Type</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${menu.map(item => `
-            <tr>
-              <td class="item-name-cell">${item.name}<br><span style="font-size:11px;color:var(--text-dim);font-weight:400">${item.description || ''}</span></td>
-              <td><span class="item-cat">${item.category || '—'}</span></td>
-              <td class="item-price-cell">₹${item.base_price || item.price || 0}</td>
-              <td style="color:var(--text-muted);font-size:12px">${item.meal_type || 'allday'}</td>
-              <td><button class="btn btn-outline btn-sm" onclick="removeMenuItem('${restId}','${item.item_id || item._id}')">Remove</button></td>
-            </tr>`).join('')}
-        </tbody>
-      </table>`;
-  }
-
-  async function addMenuItem() {
-    const errEl = document.getElementById('menu-error');
-    const sucEl = document.getElementById('menu-success');
-    errEl.classList.remove('show'); sucEl.classList.remove('show');
-
-    const name     = document.getElementById('item-name').value.trim();
-    const price    = parseFloat(document.getElementById('item-price').value);
-    const category = document.getElementById('item-category').value;
-    const mealType = document.getElementById('item-meal-type').value;
-    const desc     = document.getElementById('item-desc').value.trim();
-
-    if (!name)       { errEl.textContent = '⚠️ Item name is required'; errEl.classList.add('show'); return; }
-    if (!price || price <= 0) { errEl.textContent = '⚠️ Valid price is required'; errEl.classList.add('show'); return; }
-
-    const r = await fetchMyRestaurant();
-    if (!r) { errEl.textContent = '⚠️ No restaurant found'; errEl.classList.add('show'); return; }
-
-    const btn = document.getElementById('add-item-btn');
-    btn.textContent = 'Adding...'; btn.disabled = true;
-
-    try {
-      const res = await fetch(`${RAPI}/restaurants/${r._id}/menu`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, base_price: price, category, meal_type: mealType, description: desc })
-      });
-      const data = await res.json();
-      if (data.success) {
-        sucEl.classList.add('show');
-        showToast(`${name} added to menu!`, 'success');
-        document.getElementById('item-name').value = '';
-        document.getElementById('item-price').value = '';
-        document.getElementById('item-desc').value = '';
-        renderMenuList(data.data?.menu || [], r._id);
-        setTimeout(() => sucEl.classList.remove('show'), 3000);
-      } else {
-        errEl.textContent = '⚠️ ' + (data.detail || data.message || 'Failed to add item');
-        errEl.classList.add('show');
-      }
-    } catch (e) {
-      errEl.textContent = '⚠️ Server error'; errEl.classList.add('show');
-    }
-    btn.textContent = 'Add Item'; btn.disabled = false;
-  }
-
-  async function removeMenuItem(restId, itemId) {
-    if (!confirm('Remove this item from the menu?')) return;
-    try {
-      const res  = await fetch(`${RAPI}/restaurants/${restId}/menu/${itemId}`, {
-        method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success) { showToast('Item removed', 'success'); renderMenuList(data.data?.menu || [], restId); }
-      else showToast('Could not remove item', 'error');
-    } catch (e) { showToast('Server error', 'error'); }
-  }
-
-  // ── SETTINGS ───────────────────────────────────────
-  async function loadSettings() {
-    const el = document.getElementById('settings-content');
-    el.innerHTML = '<div class="spinner"></div>';
-    const r = await fetchMyRestaurant();
-    if (!r) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>Register a restaurant first</p></div>`;
-      return;
-    }
-    el.innerHTML = `
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <h4>🔥 Surge Pricing</h4>
-          <p>Apply ${r.surge_multiplier || 1.5}x price multiplier during peak hours</p>
-        </div>
-        <button class="toggle ${r.is_surge ? 'on' : ''}" id="surge-toggle" onclick="toggleSurge('${r._id}', ${!r.is_surge})"></button>
-      </div>
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <h4>✅ Restaurant Active</h4>
-          <p>Show your restaurant to customers</p>
-        </div>
-        <button class="toggle ${r.is_active !== false ? 'on' : ''}" id="active-toggle" onclick="toggleActive('${r._id}', ${r.is_active === false})"></button>
-      </div>
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <h4>⭐ Boost Listing</h4>
-          <p>Appear at the top as a Customer Favourite</p>
-        </div>
-        <button class="btn btn-gold btn-sm" onclick="boostRestaurant('${r._id}')">
-          ${r.boost_active ? '🔥 Boosted' : 'Boost Now'}
+      <div class="no-restaurant">
+        <div class="big-icon">🏪</div>
+        <h2>Set up your restaurant</h2>
+        <p>You haven't registered your restaurant yet. Add your restaurant details to start receiving orders on QuickBowl.</p>
+        <button class="btn btn-gold" onclick="showPage('register')" style="padding:14px 32px;font-size:15px">
+          Register Your Restaurant
         </button>
       </div>`;
+    return;
   }
 
-  async function toggleSurge(id, value) {
-    try {
-      await fetch(`${RAPI}/restaurants/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ is_surge: value })
-      });
-      const toggle = document.getElementById('surge-toggle');
-      toggle.classList.toggle('on', value);
-      showToast(`Surge pricing ${value ? 'enabled' : 'disabled'}`, 'success');
-    } catch (e) { showToast('Could not update', 'error'); }
+  let analytics = {};
+  try {
+    const ares = await fetch(`${RAPI}/restaurants/${r._id}/analytics`, { headers: { Authorization: `Bearer ${token}` } });
+    const adata = await ares.json();
+    analytics = adata.data || {};
+  } catch (e) {}
+
+  el.innerHTML = `
+    <div class="page-title" style="margin-bottom:6px">Dashboard</div>
+    <div class="page-sub">Your restaurant at a glance</div>
+    <div class="rest-banner">
+      <div class="rest-banner-info">
+        <h2>🍽️ ${r.name}</h2>
+        <p>${r.cuisine || ''} • ${r.city || ''} • ${r.opening_time || '09:00'} – ${r.closing_time || '23:00'}</p>
+      </div>
+      <div class="rest-banner-actions">
+        <button class="btn btn-outline btn-sm" onclick="showPage('restaurant')">Edit Details</button>
+        <button class="btn btn-gold btn-sm" onclick="showPage('menu')">Manage Menu</button>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">${analytics.total_orders || 0}</div>
+        <div class="stat-label">Total Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${analytics.completed_orders || 0}</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">₹${Math.round(analytics.total_revenue || 0)}</div>
+        <div class="stat-label">Revenue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${r.menu?.length || 0}</div>
+        <div class="stat-label">Menu Items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${r.boost_active ? '🔥 ON' : 'OFF'}</div>
+        <div class="stat-label">Boosted</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${r.is_surge ? '⚡ ON' : 'OFF'}</div>
+        <div class="stat-label">Surge</div>
+      </div>
+    </div>`;
+}
+
+// ── RESTAURANT PAGE ─────────────────────────────────
+async function loadRestaurantPage() {
+  const el = document.getElementById('restaurant-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  const r = await fetchMyRestaurant();
+  if (!r) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>No restaurant found. <button class="btn btn-gold btn-sm" onclick="showPage('register')">Register one</button></p></div>`;
+    return;
   }
+  el.innerHTML = `
+    <div class="alert error"   id="edit-error"></div>
+    <div class="alert success" id="edit-success"></div>
+    <div class="form-grid">
+      <div class="field"><label>Restaurant Name</label><input type="text" id="e-name" value="${r.name || ''}"/></div>
+      <div class="field"><label>Cuisine</label><input type="text" id="e-cuisine" value="${r.cuisine || ''}"/></div>
+      <div class="field"><label>City</label><input type="text" id="e-city" value="${r.city || ''}"/></div>
+      <div class="field"><label>Phone</label><input type="tel" id="e-phone" value="${r.phone || ''}"/></div>
+      <div class="field"><label>Opening Time</label><input type="time" id="e-open" value="${r.opening_time || '09:00'}"/></div>
+      <div class="field"><label>Closing Time</label><input type="time" id="e-close" value="${r.closing_time || '23:00'}"/></div>
+      <div class="field full"><label>Address</label><input type="text" id="e-address" value="${r.address || ''}"/></div>
+      <div class="field full"><label>Description</label><textarea id="e-desc">${r.description || ''}</textarea></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="saveRestaurant('${r._id}')">Save Changes</button>
+    </div>`;
+}
 
-  async function toggleActive(id, value) {
-    try {
-      await fetch(`${RAPI}/restaurants/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ is_active: value })
-      });
-      const toggle = document.getElementById('active-toggle');
-      toggle.classList.toggle('on', value);
-      showToast(`Restaurant ${value ? 'activated' : 'deactivated'}`, 'success');
-    } catch (e) { showToast('Could not update', 'error'); }
+async function saveRestaurant(id) {
+  const errEl = document.getElementById('edit-error');
+  const sucEl = document.getElementById('edit-success');
+  errEl.classList.remove('show'); sucEl.classList.remove('show');
+  try {
+    const res = await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        name:         document.getElementById('e-name').value,
+        cuisine:      document.getElementById('e-cuisine').value,
+        city:         document.getElementById('e-city').value,
+        phone:        document.getElementById('e-phone').value,
+        address:      document.getElementById('e-address').value,
+        description:  document.getElementById('e-desc').value,
+        opening_time: document.getElementById('e-open').value,
+        closing_time: document.getElementById('e-close').value,
+      })
+    });
+    const data = await res.json();
+    if (data.success) { sucEl.classList.add('show'); showToast('Restaurant updated!', 'success'); }
+    else { errEl.textContent = data.detail || data.message || 'Update failed'; errEl.classList.add('show'); }
+  } catch (e) { errEl.textContent = 'Server error'; errEl.classList.add('show'); }
+}
+
+// ── MENU PAGE ───────────────────────────────────────
+async function loadMenuPage() {
+  const r = await fetchMyRestaurant();
+  if (!r) {
+    document.getElementById('menu-list').innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>Register a restaurant first</p></div>`;
+    return;
   }
+  renderMenuList(r.menu || [], r._id);
+}
 
-  async function boostRestaurant(id) {
-    try {
-      const res  = await fetch(`${RAPI}/restaurants/${id}/boost`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      if (data.success) { showToast('🔥 Restaurant boosted!', 'success'); loadSettings(); }
-      else showToast(data.detail || 'Could not boost', 'error');
-    } catch (e) { showToast('Server error', 'error'); }
+function renderMenuList(menu, restId) {
+  const el = document.getElementById('menu-list');
+  if (!menu.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><p>No menu items yet. Add your first item above!</p></div>`;
+    return;
   }
+  el.innerHTML = `
+    <table class="menu-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Meal Type</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${menu.map(item => `
+          <tr>
+            <td class="item-name-cell">${item.name}<br><span style="font-size:11px;color:var(--text-dim);font-weight:400">${item.description || ''}</span></td>
+            <td><span class="item-cat">${item.category || '—'}</span></td>
+            <td class="item-price-cell">₹${item.base_price || item.price || 0}</td>
+            <td style="color:var(--text-muted);font-size:12px">${item.meal_type || 'allday'}</td>
+            <td><button class="btn btn-outline btn-sm" onclick="removeMenuItem('${restId}','${item.item_id || item._id}')">Remove</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
 
-  // ── REGISTER RESTAURANT ────────────────────────────
-  async function registerRestaurant() {
-    const errEl = document.getElementById('reg-error');
-    const sucEl = document.getElementById('reg-success');
-    errEl.classList.remove('show'); sucEl.classList.remove('show');
-
-    const name    = document.getElementById('r-name').value.trim();
-    const cuisine = document.getElementById('r-cuisine').value.trim();
-    const city    = document.getElementById('r-city').value.trim();
-    const phone   = document.getElementById('r-phone').value.trim();
-    const email   = document.getElementById('r-email').value.trim();
-    const address = document.getElementById('r-address').value.trim();
-    const desc    = document.getElementById('r-desc').value.trim();
-    const open    = document.getElementById('r-open').value;
-    const close   = document.getElementById('r-close').value;
-
-    if (!name)    { errEl.textContent = '⚠️ Restaurant name is required'; errEl.classList.add('show'); return; }
-    if (!cuisine) { errEl.textContent = '⚠️ Cuisine type is required';    errEl.classList.add('show'); return; }
-    if (!city)    { errEl.textContent = '⚠️ City is required';            errEl.classList.add('show'); return; }
-    if (!phone)   { errEl.textContent = '⚠️ Phone is required';           errEl.classList.add('show'); return; }
-    if (!email)   { errEl.textContent = '⚠️ Email is required';           errEl.classList.add('show'); return; }
-    if (!address) { errEl.textContent = '⚠️ Address is required';         errEl.classList.add('show'); return; }
-
-    const btn = document.getElementById('reg-btn');
-    btn.textContent = 'Registering...'; btn.disabled = true;
-
-    try {
-      const res = await fetch(`${RAPI}/restaurants`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name, cuisine, city, phone, email, address,
-          description:  desc,
-          opening_time: open,
-          closing_time: close,
-          owner_id:     user.id || user._id || '',
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        sucEl.classList.add('show');
-        showToast('🎉 Restaurant registered!', 'success');
-        myRestaurant = data.data;
-        setTimeout(() => showPage('overview'), 1500);
-      } else {
-        errEl.textContent = '⚠️ ' + (data.detail || data.message || 'Registration failed');
-        errEl.classList.add('show');
-      }
-    } catch (e) {
-      errEl.textContent = '⚠️ Server error. Please try again.';
+async function addMenuItem() {
+  const errEl = document.getElementById('menu-error');
+  const sucEl = document.getElementById('menu-success');
+  errEl.classList.remove('show'); sucEl.classList.remove('show');
+  const name     = document.getElementById('item-name').value.trim();
+  const price    = parseFloat(document.getElementById('item-price').value);
+  const category = document.getElementById('item-category').value;
+  const mealType = document.getElementById('item-meal-type').value;
+  const desc     = document.getElementById('item-desc').value.trim();
+  if (!name)            { errEl.textContent = '⚠️ Item name is required'; errEl.classList.add('show'); return; }
+  if (!price || price <= 0) { errEl.textContent = '⚠️ Valid price is required'; errEl.classList.add('show'); return; }
+  const r = await fetchMyRestaurant();
+  if (!r) { errEl.textContent = '⚠️ No restaurant found'; errEl.classList.add('show'); return; }
+  const btn = document.getElementById('add-item-btn');
+  btn.textContent = 'Adding...'; btn.disabled = true;
+  try {
+    const res = await fetch(`${RAPI}/restaurants/${r._id}/menu`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name, base_price: price, category, meal_type: mealType, description: desc })
+    });
+    const data = await res.json();
+    if (data.success) {
+      sucEl.classList.add('show');
+      showToast(`${name} added to menu!`, 'success');
+      document.getElementById('item-name').value = '';
+      document.getElementById('item-price').value = '';
+      document.getElementById('item-desc').value = '';
+      renderMenuList(data.data?.menu || [], r._id);
+      setTimeout(() => sucEl.classList.remove('show'), 3000);
+    } else {
+      errEl.textContent = '⚠️ ' + (data.detail || data.message || 'Failed to add item');
       errEl.classList.add('show');
     }
-    btn.textContent = 'Register Restaurant'; btn.disabled = false;
-  }
+  } catch (e) { errEl.textContent = '⚠️ Server error'; errEl.classList.add('show'); }
+  btn.textContent = 'Add Item'; btn.disabled = false;
+}
 
-  // ── Toast ──────────────────────────────────────────
-  let toastTimer;
-  function showToast(msg, type = '') {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.className = `toast ${type} show`;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.className = `toast ${type}`, 2500);
-  }
+async function removeMenuItem(restId, itemId) {
+  if (!confirm('Remove this item from the menu?')) return;
+  try {
+    const res  = await fetch(`${RAPI}/restaurants/${restId}/menu/${itemId}`, {
+      method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Item removed', 'success'); renderMenuList(data.data?.menu || [], restId); }
+    else showToast('Could not remove item', 'error');
+  } catch (e) { showToast('Server error', 'error'); }
+}
 
-  // Init
-  loadOverview();
+// ── SETTINGS ────────────────────────────────────────
+async function loadSettings() {
+  const el = document.getElementById('settings-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  const r = await fetchMyRestaurant();
+  if (!r) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>Register a restaurant first</p></div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <h4>🔥 Surge Pricing</h4>
+        <p>Apply ${r.surge_multiplier || 1.5}x price multiplier during peak hours</p>
+      </div>
+      <button class="toggle ${r.is_surge ? 'on' : ''}" id="surge-toggle" onclick="toggleSurge('${r._id}', ${!r.is_surge})"></button>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <h4>✅ Restaurant Active</h4>
+        <p>Show your restaurant to customers</p>
+      </div>
+      <button class="toggle ${r.is_active !== false ? 'on' : ''}" id="active-toggle" onclick="toggleActive('${r._id}', ${r.is_active === false})"></button>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <h4>⭐ Boost Listing</h4>
+        <p>Appear at the top as a Customer Favourite</p>
+      </div>
+      <button class="btn btn-gold btn-sm" onclick="boostRestaurant('${r._id}')">
+        ${r.boost_active ? '🔥 Boosted' : 'Boost Now'}
+      </button>
+    </div>`;
+}
+
+async function toggleSurge(id, value) {
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ is_surge: value })
+    });
+    document.getElementById('surge-toggle').classList.toggle('on', value);
+    showToast(`Surge pricing ${value ? 'enabled' : 'disabled'}`, 'success');
+  } catch (e) { showToast('Could not update', 'error'); }
+}
+
+async function toggleActive(id, value) {
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ is_active: value })
+    });
+    document.getElementById('active-toggle').classList.toggle('on', value);
+    showToast(`Restaurant ${value ? 'activated' : 'deactivated'}`, 'success');
+  } catch (e) { showToast('Could not update', 'error'); }
+}
+
+async function boostRestaurant(id) {
+  try {
+    const res  = await fetch(`${RAPI}/restaurants/${id}/boost`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (data.success) { showToast('🔥 Restaurant boosted!', 'success'); loadSettings(); }
+    else showToast(data.detail || 'Could not boost', 'error');
+  } catch (e) { showToast('Server error', 'error'); }
+}
+
+// ── REGISTER RESTAURANT ─────────────────────────────
+async function registerRestaurant() {
+  const errEl = document.getElementById('reg-error');
+  const sucEl = document.getElementById('reg-success');
+  errEl.classList.remove('show'); sucEl.classList.remove('show');
+  const name    = document.getElementById('r-name').value.trim();
+  const cuisine = document.getElementById('r-cuisine').value.trim();
+  const city    = document.getElementById('r-city').value.trim();
+  const phone   = document.getElementById('r-phone').value.trim();
+  const email   = document.getElementById('r-email').value.trim();
+  const address = document.getElementById('r-address').value.trim();
+  const desc    = document.getElementById('r-desc').value.trim();
+  const open    = document.getElementById('r-open').value;
+  const close   = document.getElementById('r-close').value;
+  if (!name)    { errEl.textContent = '⚠️ Restaurant name is required'; errEl.classList.add('show'); return; }
+  if (!cuisine) { errEl.textContent = '⚠️ Cuisine type is required';    errEl.classList.add('show'); return; }
+  if (!city)    { errEl.textContent = '⚠️ City is required';            errEl.classList.add('show'); return; }
+  if (!phone)   { errEl.textContent = '⚠️ Phone is required';           errEl.classList.add('show'); return; }
+  if (!email)   { errEl.textContent = '⚠️ Email is required';           errEl.classList.add('show'); return; }
+  if (!address) { errEl.textContent = '⚠️ Address is required';         errEl.classList.add('show'); return; }
+  const btn = document.getElementById('reg-btn');
+  btn.textContent = 'Registering...'; btn.disabled = true;
+  try {
+    const res = await fetch(`${RAPI}/restaurants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        name, cuisine, city, phone, email, address,
+        description: desc, opening_time: open, closing_time: close,
+        owner_id: user.id || user._id || '',
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      sucEl.classList.add('show');
+      showToast('🎉 Restaurant registered!', 'success');
+      myRestaurant = data.data;
+      setTimeout(() => showPage('overview'), 1500);
+    } else {
+      errEl.textContent = '⚠️ ' + (data.detail || data.message || 'Registration failed');
+      errEl.classList.add('show');
+    }
+  } catch (e) {
+    errEl.textContent = '⚠️ Server error. Please try again.';
+    errEl.classList.add('show');
+  }
+  btn.textContent = 'Register Restaurant'; btn.disabled = false;
+}
+
+// ── Toast ────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = `toast ${type}`, 2500);
+}
+
+// Init
+loadOverview();
 </script>
 </body>
 </html>
