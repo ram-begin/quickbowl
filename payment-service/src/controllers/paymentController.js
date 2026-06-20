@@ -27,7 +27,7 @@ const createPayment = async (req, res) => {
         const razorpayOrder = await razorpay.orders.create({
             amount: Math.round(amount * 100), // in paise
             currency: 'INR',
-            receipt: `receipt_${uuidv4()}`,
+            receipt: `qb_${uuidv4().replace(/-/g,'').slice(0,28)}`,
         });
 
         // Save to DB
@@ -51,7 +51,8 @@ const createPayment = async (req, res) => {
             }
         });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        console.error('Payment creation error:', JSON.stringify(err));
+        res.status(500).json({ success: false, message: err.message || JSON.stringify(err) });
     }
 };
 

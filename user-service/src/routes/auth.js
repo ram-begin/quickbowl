@@ -73,4 +73,17 @@ router.post('/penalty/add', updatePenalty);
 // POST /api/auth/penalty/clear (called by payment service)
 router.post('/penalty/clear', clearPenalty);
 
+// GET /api/auth/users/all (admin only)
+router.get('/users/all', protect, async (req, res) => {
+  try {
+    const pool = require('../config/db');
+    const result = await pool.query(
+      'SELECT id, first_name, last_name, email, phone, role, penalty_amount, created_at FROM users ORDER BY created_at DESC'
+    );
+    res.json({ success: true, count: result.rows.length, data: result.rows });
+  } catch(err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

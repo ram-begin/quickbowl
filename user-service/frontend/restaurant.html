@@ -7,6 +7,7 @@
   <title>QuickBowl — Menu</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     :root {
       --red: #dc2626; --red-dark: #991b1b;
@@ -491,11 +492,11 @@ if (!items.length) {
     btn.disabled    = true;
 
     const items = Object.entries(cart).map(([id, item]) => ({
-  itemId:   id,
-  name:     item.name,
-  price:    item.price,
-  quantity: item.qty,
-}));
+      itemId:   id,
+      name:     item.name,
+      price:    item.price,
+      quantity: item.qty,
+    }));
 
     const subtotal    = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
     const deliveryFee = subtotal > 500 ? 0 : 30;
@@ -508,7 +509,8 @@ if (!items.length) {
     const total       = subtotal + surgeAmt - discAmt + deliveryFee;
 
     try {
-      const res = await fetch(`${ORDER_API}/orders`, {
+      // Step 1: Place order
+      const orderRes = await fetch(`${ORDER_API}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -525,20 +527,89 @@ if (!items.length) {
         }),
       });
 
-      const data = await res.json();
-      if (data.success || data.id || data.orderId) {
-        showToast('🎉 Order placed successfully!', 'success');
-        setTimeout(() => location.href = '/orders.html', 1500);
-      } else {
-        throw new Error(data.message || 'Order failed');
-      }
+      const orderData = await orderRes.json();
+      if (!orderData.success && !orderData.id) throw new Error(orderData.message || 'Order failed');
+
+      const orderId = orderData.data?.id || orderData.id;
+
+      // Step 2: Create Razorpay payment order
+      const payRes = await fetch('http://localhost:8003/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          order_id: String(orderId),
+          user_id:  String(user.id || user._id),
+          amount:   total,
+        }),
+      });
+
+      const payData = await payRes.json();
+      if (!payData.success) throw new Error(payData.message || 'Payment init failed');
+
+      const rzp = payData.data.razorpay;
+
+      // Step 3: Open Razorpay popup
+      const options = {
+        key:      rzp.key,
+        amount:   rzp.amount,
+        currency: rzp.currency,
+        order_id: rzp.order_id,
+        name:     'QuickBowl',
+        description: `Order #${orderId} — ${restaurant.name}`,
+        image:    'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72"><path d="M13 38 Q13 58 36 58 Q59 58 59 38 Z" fill="%23dc2626"/><rect x="11" y="33" width="50" height="8" rx="4" fill="%23FFD700"/></svg>',
+        prefill: {
+          name:    `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+          email:   user.email || '',
+          contact: phone,
+        },
+        theme: { color: '#FFD700' },
+        handler: async function(response) {
+          // Step 4: Verify payment
+          try {
+            const verifyRes = await fetch('http://localhost:8003/api/payments/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              body: JSON.stringify({
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature:  response.razorpay_signature,
+                payment_method:      'razorpay',
+                user_email:          user.email || '',
+                user_phone:          phone,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              showToast('🎉 Payment successful! Order placed.', 'success');
+              setTimeout(() => location.href = '/dashboard.html', 1500);
+            } else {
+              showToast('Payment verification failed', 'error');
+            }
+          } catch(e) {
+            showToast('Payment verification error', 'error');
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            showToast('Payment cancelled', 'error');
+            btn.textContent = 'Place Order →';
+            btn.disabled    = false;
+          }
+        }
+      };
+
+      const rzpInstance = new Razorpay(options);
+      rzpInstance.open();
+      btn.textContent = 'Place Order →';
+      btn.disabled    = false;
+
     } catch (e) {
       showToast(e.message || 'Could not place order', 'error');
       btn.textContent = 'Place Order →';
       btn.disabled    = false;
     }
   }
-
+    
   // ── Toast ──────────────────────────────────────────
   let toastTimer;
   function showToast(msg, type = '') {

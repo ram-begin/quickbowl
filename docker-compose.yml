@@ -261,6 +261,10 @@ services:
       DB_PASSWORD: postgres
       JWT_SECRET: your_jwt_secret_key
       KAFKA_BROKER: kafka:9092
+      RAZORPAY_KEY_ID: rzp_test_T3stjFSLus5zdy
+      RAZORPAY_KEY_SECRET: S0W3tSndeZOKSeR0Q0sGRSKW
+      PLATFORM_FEE_PERCENT: 2
+      ORDER_SERVICE_URL: http://order-service:8002
       SERVICE_NAME: payment-service
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     depends_on:
@@ -295,7 +299,16 @@ services:
     networks:
       - quickbowl-network
     restart: unless-stopped
-
+  admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    container_name: qb-admin-service
+    ports:
+      - "9000:9000"
+    networks:
+      - quickbowl-network
+    restart: unless-stopped
   api-gateway:
     build:
       context: ./api-gateway

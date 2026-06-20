@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuickBowl — Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --red: #dc2626; --red-dark: #991b1b;
+      --gold: #FFD700; --gold-dark: #FFA500;
+      --bg: #0a0a0f; --bg-card: #12121a; --bg-input: #12121a;
+      --border: #1e1e2e; --border-mid: #2a2a3e;
+      --white: #ffffff; --text-muted: #aaaaaa; --text-dim: #555566;
+      --font-display: 'Sora', sans-serif; --font-body: 'DM Sans', sans-serif;
+      --radius-sm: 8px; --radius-md: 10px; --radius-lg: 16px;
+      --accent: #6366f1;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--bg); min-height: 100vh; color: var(--white); }
+
+    /* LOGIN */
+    .login-wrap {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 50% 0%, #1a0a2e 0%, var(--bg) 70%);
+    }
+    .login-box {
+      background: var(--bg-card); border: 1px solid var(--border-mid);
+      border-radius: var(--radius-lg); padding: 40px; width: 100%; max-width: 400px;
+    }
+    .login-logo { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .login-logo .q { color: var(--gold); } .login-logo .b { color: var(--white); }
+    .login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+    .login-field { margin-bottom: 14px; }
+    .login-field label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+    .login-field input { width: 100%; padding: 11px 14px; background: var(--bg-input); border: 1.5px solid var(--border); border-radius: var(--radius-md); color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .login-field input:focus { border-color: var(--accent); }
+    .login-btn { width: 100%; padding: 13px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-family: var(--font-display); font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 6px; transition: opacity 0.2s; }
+    .login-btn:hover { opacity: 0.9; }
+    .login-error { background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: #ff6b6b; margin-bottom: 14px; display: none; }
+    .login-error.show { display: block; }
+
+    /* LAYOUT */
+    nav { height: 57px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-family: var(--font-display); font-size: 18px; font-weight: 800; }
+    .nav-logo .q { color: var(--gold); } .nav-logo .b { color: var(--white); }
+    .nav-badge { background: var(--accent); color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+    .nav-right { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-muted); }
+    .nav-logout { padding: 7px 14px; border-radius: var(--radius-sm); background: rgba(220,38,38,0.12); color: var(--red); border: 1px solid rgba(220,38,38,0.25); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    .layout { display: flex; min-height: calc(100vh - 57px); }
+    .sidebar { width: 220px; flex-shrink: 0; background: var(--bg-card); border-right: 1px solid var(--border); padding: 20px 0; }
+    .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 11px 20px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+    .sidebar-item:hover { color: var(--white); background: rgba(255,255,255,0.03); }
+    .sidebar-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(99,102,241,0.05); }
+    .main { flex: 1; padding: 28px; overflow-y: auto; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-title { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .page-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; }
+    .stat-value { font-family: var(--font-display); font-size: 28px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .table { width: 100%; border-collapse: collapse; }
+    .table th { text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    .table tr:last-child td { border-bottom: none; }
+    .table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .badge-green { background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
+    .badge-red { background: rgba(220,38,38,0.1); color: #ff6b6b; border: 1px solid rgba(220,38,38,0.2); }
+    .badge-yellow { background: rgba(255,215,0,0.1); color: var(--gold); border: 1px solid rgba(255,215,0,0.2); }
+    .badge-blue { background: rgba(99,102,241,0.1); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
+
+    .btn { padding: 8px 16px; border: none; border-radius: var(--radius-sm); font-family: var(--font-display); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-green { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+    .btn-red { background: rgba(220,38,38,0.12); color: #ff6b6b; border: 1px solid rgba(220,38,38,0.25); }
+    .btn-gold { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #1a0505; }
+    .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid var(--border-mid); }
+    .btn-sm { padding: 5px 12px; font-size: 11px; }
+
+    .toggle { width: 40px; height: 22px; border-radius: 11px; background: var(--border-mid); border: none; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .toggle.on { background: var(--gold); }
+    .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: white; top: 3px; left: 3px; transition: left 0.2s; }
+    .toggle.on::after { left: 21px; }
+
+    .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: var(--radius-md); padding: 12px 20px; font-size: 13px; font-weight: 600; color: var(--white); box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.3s ease; z-index: 999; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(74,222,128,0.4); color: #4ade80; }
+    .toast.error { border-color: rgba(220,38,38,0.4); color: #ff6b6b; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; }
+    .modal-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+    .field input, .field select, .field textarea { width: 100%; padding: 11px 14px; background: var(--bg-input); border: 1.5px solid var(--border); border-radius: var(--radius-md); color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .field select option { background: #12121a; }
+    .field textarea { resize: vertical; min-height: 80px; }
+    .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login-page" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo"><span class="q">Quick</span><span class="b">Bowl</span></div>
+    <div class="login-sub">Admin Panel — Restricted Access</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-field"><label>Email</label><input type="email" id="login-email" placeholder="admin@quickbowl.com"/></div>
+    <div class="login-field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"/></div>
+    <button class="login-btn" onclick="adminLogin()" id="login-btn">Sign In to Admin Panel</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel" style="display:none">
+  <nav>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="nav-logo"><span class="q">Quick</span><span class="b">Bowl</span></div>
+      <span class="nav-badge">ADMIN</span>
+    </div>
+    <div class="nav-right">
+      <span id="admin-name"></span>
+      <button class="nav-logout" onclick="adminLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-item active" onclick="showPage('dashboard')" id="nav-dashboard">📊 Dashboard</div>
+      <div class="sidebar-item" onclick="showPage('restaurants')" id="nav-restaurants">🏪 Restaurants</div>
+      <div class="sidebar-item" onclick="showPage('users')" id="nav-users">👥 Users</div>
+      <div class="sidebar-item" onclick="showPage('orders')" id="nav-orders">📋 Orders</div>
+      <div class="sidebar-item" onclick="showPage('offers')" id="nav-offers">🎟️ Offers</div>
+    </div>
+
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Platform overview</div>
+        <div id="dashboard-content"><div class="spinner"></div></div>
+      </div>
+
+      <!-- RESTAURANTS -->
+      <div class="page" id="page-restaurants">
+        <div class="page-title">Restaurants</div>
+        <div class="page-sub">Manage restaurants — verify, surge, boost</div>
+        <div id="restaurants-content"><div class="spinner"></div></div>
+      </div>
+
+      <!-- USERS -->
+      <div class="page" id="page-users">
+        <div class="page-title">Users</div>
+        <div class="page-sub">All registered users</div>
+        <div id="users-content"><div class="spinner"></div></div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="page" id="page-orders">
+        <div class="page-title">Orders</div>
+        <div class="page-sub">All orders across the platform</div>
+        <div id="orders-content"><div class="spinner"></div></div>
+      </div>
+
+      <!-- OFFERS -->
+      <div class="page" id="page-offers">
+        <div class="page-title">Offers</div>
+        <div class="page-sub">Manage platform-wide offers</div>
+        <button class="btn btn-accent" onclick="openAddOffer()" style="margin-bottom:20px">+ Add Offer</button>
+        <div id="offers-content"><div class="spinner"></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Add Offer Modal -->
+<div class="modal-overlay" id="offer-modal">
+  <div class="modal">
+    <div class="modal-title">➕ Add Platform Offer</div>
+    <div class="field"><label>Title</label><input type="text" id="offer-title" placeholder="e.g. Monday Madness"/></div>
+    <div class="field"><label>Description</label><input type="text" id="offer-desc" placeholder="e.g. 10% off on all orders"/></div>
+    <div class="field"><label>Discount %</label><input type="number" id="offer-discount" placeholder="10"/></div>
+    <div class="field"><label>Valid Until</label><input type="date" id="offer-valid"/></div>
+    <div class="field"><label>Icon (emoji)</label><input type="text" id="offer-icon" placeholder="🎉"/></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeOfferModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveOffer()">Save Offer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API   = 'http://localhost:3000/api';
+const UAPI  = 'http://localhost:3001/api';
+const RAPI  = 'http://localhost:8001/api';
+const OAPI  = 'http://localhost:8002/api';
+
+let adminToken = localStorage.getItem('admin_token');
+let adminUser  = JSON.parse(localStorage.getItem('admin_user') || '{}');
+
+// ── Init ─────────────────────────────────────────────
+if (adminToken && adminUser.role === 'admin') {
+  showAdminPanel();
+}
+
+async function adminLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const err   = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+  err.classList.remove('show');
+
+  if (!email || !pass) { err.textContent = '⚠ Email and password are required'; err.classList.add('show'); return; }
+
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+
+  try {
+    const res  = await fetch(`${UAPI}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+
+    if (data.success && data.user.role === 'admin') {
+      localStorage.setItem('admin_token', data.token);
+      localStorage.setItem('admin_user', JSON.stringify(data.user));
+      adminToken = data.token;
+      adminUser  = data.user;
+      showAdminPanel();
+    } else if (data.success && data.user.role !== 'admin') {
+      err.textContent = '⚠ Access denied. Admin accounts only.';
+      err.classList.add('show');
+    } else {
+      err.textContent = '⚠ ' + (data.message || 'Invalid credentials');
+      err.classList.add('show');
+    }
+  } catch(e) {
+    err.textContent = '⚠ Server error. Please try again.';
+    err.classList.add('show');
+  }
+  btn.textContent = 'Sign In to Admin Panel'; btn.disabled = false;
+}
+
+function showAdminPanel() {
+  document.getElementById('login-page').style.display  = 'none';
+  document.getElementById('admin-panel').style.display = 'block';
+  document.getElementById('admin-name').textContent    = `👋 ${adminUser.first_name || 'Admin'}`;
+  loadDashboard();
+}
+
+function adminLogout() {
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  location.reload();
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
+  if (name === 'dashboard')   loadDashboard();
+  if (name === 'restaurants') loadRestaurants();
+  if (name === 'users')       loadUsers();
+  if (name === 'orders')      loadOrders();
+  if (name === 'offers')      loadOffers();
+}
+
+// ── Dashboard ────────────────────────────────────────
+async function loadDashboard() {
+  const el = document.getElementById('dashboard-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+   const restRes   = await fetch(`${RAPI}/restaurants`, { headers: { Authorization: `Bearer ${adminToken}` } });
+const restData  = await restRes.json();
+const userData  = {};
+const orderData = {};
+
+    const restaurants = [...(restData.all_restaurants?.data || []), ...(restData.customer_favourites?.data || [])];
+    const users       = userData.data || userData.users || [];
+    const orders      = orderData.data || orderData.orders || [];
+
+    const totalRevenue = orders.filter(o => o.status === 'DELIVERED').reduce((s, o) => s + (o.totalAmount || o.total_amount || 0), 0);
+
+    el.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value">${restaurants.length}</div><div class="stat-label">Restaurants</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:#4ade80">${restaurants.length}</div><div class="stat-label">Total Restaurants</div></div>
+<div class="stat-card"><div class="stat-value" style="color:var(--gold)">${restaurants.filter(r=>r.is_active).length}</div><div class="stat-label">Active</div></div>
+<div class="stat-card"><div class="stat-value" style="color:#f472b6">${restaurants.filter(r=>r.is_surge).length}</div><div class="stat-label">Surge Active</div></div>
+      </div>
+      <div class="card">
+        <div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:16px">🏪 Recent Restaurants</div>
+        ${restaurants.slice(0,5).map(r => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-size:13px;font-weight:600">${r.name}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${r.city} • ${r.cuisine || '—'}</div>
+            </div>
+            <span class="badge ${r.is_active ? 'badge-green' : 'badge-red'}">${r.is_active ? 'Active' : 'Inactive'}</span>
+          </div>`).join('')}
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state">⚠️ Could not load dashboard data</div>`;
+  }
+}
+
+// ── Restaurants ──────────────────────────────────────
+async function loadRestaurants() {
+  const el = document.getElementById('restaurants-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const res  = await fetch(`${RAPI}/restaurants`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const data = await res.json();
+    const all  = [...(data.all_restaurants?.data || []), ...(data.customer_favourites?.data || [])];
+
+    if (!all.length) { el.innerHTML = `<div class="empty-state">No restaurants found</div>`; return; }
+
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="table">
+          <thead><tr>
+            <th>Restaurant</th><th>City</th><th>Status</th>
+            <th>Surge</th><th>Boosted</th><th>Actions</th>
+          </tr></thead>
+          <tbody>
+            ${all.map(r => `
+              <tr>
+                <td>
+                  <div style="font-weight:600">${r.name}</div>
+                  <div style="font-size:11px;color:var(--text-muted)">${r.cuisine || '—'}</div>
+                </td>
+                <td style="color:var(--text-muted)">${r.city || '—'}</td>
+                <td><span class="badge ${r.is_active ? 'badge-green' : 'badge-red'}">${r.is_active ? 'Active' : 'Inactive'}</span></td>
+                <td>
+                  <button class="toggle ${r.is_surge ? 'on' : ''}" onclick="toggleSurge('${r._id || r.id}', ${!r.is_surge}, this)"></button>
+                </td>
+                <td>
+                  <button class="toggle ${r.boost_active ? 'on' : ''}" onclick="toggleBoost('${r._id || r.id}', ${!r.boost_active}, this)"></button>
+                </td>
+                <td>
+                  <button class="btn btn-sm ${r.is_active ? 'btn-red' : 'btn-green'}" onclick="toggleRestaurantActive('${r._id || r.id}', ${!r.is_active}, this)">
+                    ${r.is_active ? 'Deactivate' : 'Activate'}
+                  </button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state">⚠️ Could not load restaurants</div>`;
+  }
+}
+
+async function toggleSurge(id, value, btn) {
+  btn.classList.toggle('on', value);
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ is_surge: value, surge_multiplier: value ? 1.5 : 1 })
+    });
+    showToast(`Surge ${value ? 'activated' : 'deactivated'}`, 'success');
+  } catch(e) {
+    btn.classList.toggle('on', !value);
+    showToast('Could not update surge', 'error');
+  }
+}
+
+async function toggleBoost(id, value, btn) {
+  btn.classList.toggle('on', value);
+  const now = new Date();
+  const end = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ boost_active: value, boost_start: now.toISOString(), boost_end: end.toISOString() })
+    });
+    showToast(`Boost ${value ? 'activated (24h)' : 'deactivated'}`, 'success');
+  } catch(e) {
+    btn.classList.toggle('on', !value);
+    showToast('Could not update boost', 'error');
+  }
+}
+
+async function toggleRestaurantActive(id, value, btn) {
+  btn.textContent = value ? 'Deactivate' : 'Activate';
+  btn.className   = `btn btn-sm ${value ? 'btn-red' : 'btn-green'}`;
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ is_active: value })
+    });
+    showToast(`Restaurant ${value ? 'activated' : 'deactivated'}`, 'success');
+  } catch(e) { showToast('Could not update', 'error'); }
+}
+
+// ── Users ────────────────────────────────────────────
+
+async function loadUsers() {
+  const el = document.getElementById('users-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const res  = await fetch(`${UAPI}/auth/users/all`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const data = await res.json();
+    const users = data.data || [];
+    if (!users.length) { el.innerHTML = `<div class="empty-state">No users found</div>`; return; }
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Penalty</th><th>Joined</th></tr></thead>
+          <tbody>
+            ${users.map(u => `
+              <tr>
+                <td style="font-weight:600">${u.first_name} ${u.last_name}</td>
+                <td style="color:var(--text-muted)">${u.email}</td>
+                <td style="color:var(--text-muted)">${u.phone || '—'}</td>
+                <td><span class="badge ${u.role === 'admin' ? 'badge-blue' : u.role === 'restaurant_owner' ? 'badge-yellow' : 'badge-green'}">${u.role}</span></td>
+                <td style="color:${u.penalty_amount > 0 ? '#ff6b6b' : 'var(--text-muted)'}">₹${u.penalty_amount || 0}</td>
+                <td style="color:var(--text-muted);font-size:12px">${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state">⚠️ Could not load users</div>`;
+  }
+}
+           
+// ── Orders ───────────────────────────────────────────
+async function loadOrders() {
+  const el = document.getElementById('orders-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const restRes  = await fetch(`${RAPI}/restaurants`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const restData = await restRes.json();
+    const allRests = [...(restData.all_restaurants?.data || []), ...(restData.customer_favourites?.data || [])];
+    let orders = [];
+    for (const r of allRests) {
+      try {
+        const res  = await fetch(`${OAPI}/orders/restaurant/${r._id || r.id}`, { headers: { Authorization: `Bearer ${adminToken}` } });
+        const data = await res.json();
+        orders = [...orders, ...(data.data || [])];
+      } catch(e) {}
+    }
+    orders.sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at));
+    if (!orders.length) { el.innerHTML = `<div class="empty-state">No orders yet</div>`; return; }
+    const statusColor = { PENDING:'badge-yellow', CONFIRMED:'badge-blue', PREPARING:'badge-blue', OUT_FOR_DELIVERY:'badge-yellow', DELIVERED:'badge-green', CANCELLED:'badge-red' };
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="table">
+          <thead><tr><th>Order</th><th>Restaurant</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+            ${orders.map(o => `<tr>
+              <td style="font-weight:600;font-family:monospace">#${o.id}</td>
+              <td>${o.restaurantName || o.restaurant_name || '—'}</td>
+              <td style="color:var(--gold);font-weight:700">₹${o.totalAmount || o.total_amount || 0}</td>
+              <td><span class="badge ${statusColor[o.status] || 'badge-yellow'}">${o.status}</span></td>
+              <td style="color:var(--text-muted);font-size:12px">${new Date(o.createdAt || o.created_at).toLocaleDateString('en-IN')}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state">⚠️ Could not load orders</div>`;
+  }
+}
+
+// ── Offers ───────────────────────────────────────────
+let platformOffers = JSON.parse(localStorage.getItem('platform_offers') || '[]');
+
+function loadOffers() {
+  const el = document.getElementById('offers-content');
+  if (!platformOffers.length) {
+    el.innerHTML = `<div class="empty-state">No platform offers yet. Click "Add Offer" to create one.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="table">
+        <thead><tr><th>Offer</th><th>Discount</th><th>Valid Until</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          ${platformOffers.map((o, i) => `
+            <tr>
+              <td>
+                <div style="font-size:18px;margin-bottom:2px">${o.icon || '🎟️'}</div>
+                <div style="font-weight:600">${o.title}</div>
+                <div style="font-size:11px;color:var(--text-muted)">${o.desc}</div>
+              </td>
+              <td style="color:var(--gold);font-weight:700">${o.discount}% OFF</td>
+              <td style="color:var(--text-muted)">${o.validUntil || '—'}</td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td><button class="btn btn-sm btn-red" onclick="deleteOffer(${i})">Delete</button></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function openAddOffer() {
+  document.getElementById('offer-modal').classList.add('show');
+}
+
+function closeOfferModal() {
+  document.getElementById('offer-modal').classList.remove('show');
+}
+
+function saveOffer() {
+  const title    = document.getElementById('offer-title').value.trim();
+  const desc     = document.getElementById('offer-desc').value.trim();
+  const discount = document.getElementById('offer-discount').value;
+  const valid    = document.getElementById('offer-valid').value;
+  const icon     = document.getElementById('offer-icon').value.trim() || '🎟️';
+
+  if (!title || !discount) { showToast('Title and discount are required', 'error'); return; }
+
+  platformOffers.push({ title, desc, discount, validUntil: valid, icon, createdAt: new Date().toISOString() });
+  localStorage.setItem('platform_offers', JSON.stringify(platformOffers));
+  closeOfferModal();
+  loadOffers();
+  showToast('Offer added!', 'success');
+
+  // Clear fields
+  ['offer-title','offer-desc','offer-discount','offer-valid','offer-icon'].forEach(id => document.getElementById(id).value = '');
+}
+
+function deleteOffer(i) {
+  if (!confirm('Delete this offer?')) return;
+  platformOffers.splice(i, 1);
+  localStorage.setItem('platform_offers', JSON.stringify(platformOffers));
+  loadOffers();
+  showToast('Offer deleted', 'success');
+}
+
+// ── Toast ─────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = `toast ${type}`, 2500);
+}
+</script>
+</body>
+</html>

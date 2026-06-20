@@ -20,14 +20,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(metricsMiddleware);
 
-// Serve Frontend
-app.use(express.static(path.join(__dirname, 'frontend')));
-
 // Metrics endpoint
 app.get('/metrics', metricsEndpoint);
 
-// API Routes
+// API Routes — must be before static files
 app.use('/api/auth', authRoutes);
+
+// Serve Frontend
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // Health Check
 app.get('/health', (req, res) => {
