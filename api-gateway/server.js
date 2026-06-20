@@ -14,7 +14,25 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
-app.use(express.json());
+app.use((req, res, next) => {
+  // Skip body parsing for proxied routes — proxy needs raw body
+  if (req.path.startsWith('/api/orders') || 
+      req.path.startsWith('/api/payments') ||
+      req.path.startsWith('/api/restaurants') ||
+      req.path.startsWith('/api/notifications')) {
+    return next();
+  }
+  express.json({ limit: '10mb' })(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/orders') || 
+      req.path.startsWith('/api/payments') ||
+      req.path.startsWith('/api/restaurants') ||
+      req.path.startsWith('/api/notifications')) {
+    return next();
+  }
+  express.urlencoded({ extended: true, limit: '10mb' })(req, res, next);
+});
 app.use(rateLimiter);
 app.use(metricsMiddleware);
 

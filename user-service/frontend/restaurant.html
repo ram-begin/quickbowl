@@ -227,7 +227,23 @@
 
 <nav>
   <button class="back-btn" onclick="location.href='/dashboard.html'">← Back</button>
+  <div style="display:flex;align-items:center;gap:8px">
+  <div style="width:32px;height:32px;background:rgba(255,255,255,0.06);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <svg width="20" height="20" viewBox="0 0 72 72" fill="none">
+      <defs>
+        <linearGradient id="lb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFA500"/></linearGradient>
+      </defs>
+      <path d="M13 38 Q13 58 36 58 Q59 58 59 38 Z" fill="url(#lb)"/>
+      <rect x="11" y="33" width="50" height="8" rx="4" fill="url(#lg)"/>
+      <line x1="24" y1="31" x2="16" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <line x1="32" y1="31" x2="26" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="31" x2="46" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+      <line x1="48" y1="31" x2="56" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
   <div class="logo-name"><span class="q">Quick</span><span class="b">Bowl</span></div>
+</div>
 </nav>
 
 <div class="layout">
@@ -251,9 +267,9 @@
     </div>
 
     <div class="cart-summary" id="cart-summary" style="display:none">
-      <div class="summary-row"><span>Subtotal</span><span id="s-subtotal">₹0</span></div>
-      <div class="summary-row" id="surge-row" style="display:none"><span>🔥 Surge charge</span><span class="gold" id="s-surge">₹0</span></div>
-      <div class="summary-row" id="discount-row" style="display:none"><span>🎉 Discount</span><span style="color:#4ade80" id="s-discount">-₹0</span></div>
+     <div class="summary-row"><span>Subtotal</span><span id="s-subtotal">₹0</span></div>
+<div class="summary-row" id="surge-row" style="display:none"><span>⚡ Surge</span><span class="gold" id="s-surge">₹0</span></div>
+<div class="summary-row" id="discount-row" style="display:none"><span>🎉 Discount</span><span style="color:#4ade80" id="s-discount">-₹0</span></div>
       <div class="summary-row"><span>Delivery fee</span><span id="s-delivery">₹30</span></div>
       <div class="summary-row total"><span>Total</span><span class="gold" id="s-total">₹0</span></div>
     </div>
@@ -261,7 +277,7 @@
     <div class="delivery-section" id="delivery-section" style="display:none">
       <div class="delivery-label">Delivery Details</div>
       <input class="delivery-input" type="text" id="delivery-address" placeholder="Delivery address"/>
-      <input class="delivery-input" type="tel" id="delivery-phone" placeholder="Phone number"/>
+      <input class="delivery-input" type="tel" id="delivery-phone" placeholder="Phone number" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"/>
     </div>
 
     <div class="checkout-section" id="checkout-section" style="display:none">
@@ -275,7 +291,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const API   = 'http://localhost:3000/api';
+ const API   = 'http://localhost:3000/api';
+ const ORDER_API = 'http://localhost:8002/api';
   const token = localStorage.getItem('token');
   const user  = JSON.parse(localStorage.getItem('user') || '{}');
   if (!token) location.href = '/';
@@ -327,9 +344,7 @@
           </div>
         </div>
       </div>
-      <div class="surge-banner ${isSurge ? 'show' : ''}">
-        🔥 Surge pricing active — ${restaurant.surge_multiplier || 1.5}x multiplier applied
-      </div>
+      
       <div class="discount-banner ${hasDiscount ? 'show' : ''}">
         🎉 ${restaurant.discount_percent || 10}% discount available on this order!
       </div>`;
@@ -347,6 +362,23 @@
 
       Object.entries(categories).forEach(([cat, items]) => {
         html += `<div class="menu-section-title">${cat}</div><div class="menu-grid">`;
+          const hour = new Date().getHours();
+const isVisible = (item) => {
+  const mt = item.meal_type || 'allday';
+  const types = mt.split(',').map(t => t.trim());
+  if (types.includes('allday')) return true;
+  if (types.includes('breakfast') && hour >= 6  && hour < 11)  return true;
+  if (types.includes('lunch')     && hour >= 11 && hour < 15)  return true;
+  if (types.includes('dinner')    && hour >= 18 && hour < 23)  return true;
+  return false;
+};
+items = items.filter(isVisible);
+if (!items.length) {
+  html += `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">
+    🕐 No items available right now — check back at meal time
+  </div>`;
+  return;
+}
         items.forEach((item, i) => {
           const emoji = EMOJIS[i % EMOJIS.length];
           html += `
@@ -359,8 +391,8 @@
                 <div class="item-emoji">${emoji}</div>
               </div>
               <div class="item-bottom">
-                <div class="item-price">₹${item.price}</div>
-                <button class="add-btn" onclick="addToCart('${item._id || item.id}', '${item.name}', ${item.price})">
+                <div class="item-price">₹${item.base_price || item.price || 0}</div>
+                <button class="add-btn" onclick="addToCart('${item._id || item.id || item.item_id}', '${item.name}', ${item.base_price || item.price || 0})">
                   + Add
                 </button>
               </div>
@@ -452,18 +484,18 @@
     const phone   = document.getElementById('delivery-phone').value.trim();
 
     if (!address) { showToast('Please enter delivery address', 'error'); return; }
-    if (!phone)   { showToast('Please enter phone number', 'error'); return; }
+    if (!phone || !/^\d{10}$/.test(phone)) { showToast('Please enter a valid 10-digit phone number', 'error'); return; }
 
     const btn = document.getElementById('checkout-btn');
     btn.textContent = 'Placing order...';
     btn.disabled    = true;
 
     const items = Object.entries(cart).map(([id, item]) => ({
-      item_id:  id,
-      name:     item.name,
-      price:    item.price,
-      quantity: item.qty,
-    }));
+  itemId:   id,
+  name:     item.name,
+  price:    item.price,
+  quantity: item.qty,
+}));
 
     const subtotal    = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
     const deliveryFee = subtotal > 500 ? 0 : 30;
@@ -476,20 +508,20 @@
     const total       = subtotal + surgeAmt - discAmt + deliveryFee;
 
     try {
-      const res = await fetch(`${API}/orders`, {
+      const res = await fetch(`${ORDER_API}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          user_id:          user.id || user._id,
-          restaurant_id:    restaurantId,
-          restaurant_name:  restaurant.name,
-          restaurant_city:  restaurant.city,
+          userId:          String(user.id || user._id),
+          restaurantId:    restaurantId,
+          restaurantName:  restaurant.name,
+          restaurantCity:  restaurant.city,
           items,
-          delivery_address: address,
-          delivery_phone:   phone,
-          total_amount:     total,
-          is_scheduled:     false,
-          use_discount:     hasDiscount,
+          deliveryAddress: address,
+          deliveryPhone:   phone,
+          totalAmount:     total,
+          isScheduled:     false,
+          useDiscount:     hasDiscount,
         }),
       });
 

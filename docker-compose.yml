@@ -125,21 +125,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # Observability
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.97.0
-    container_name: qb-otel-collector
-    command: ["--config=/etc/otel/otel-collector-config.yaml"]
-    volumes:
-      - ./observability/otel/otel-collector-config.yaml:/etc/otel/otel-collector-config.yaml
-    ports:
-      - "4317:4317"
-      - "4318:4318"
-    depends_on:
-      - jaeger
-    networks:
-      - quickbowl-network
-    restart: unless-stopped
+  # Observability (otel-collector removed - port conflict with jaeger)
 
   jaeger:
     image: jaegertracing/all-in-one:1.56
@@ -205,7 +191,7 @@ services:
       DB_PASSWORD: postgres
       JWT_SECRET: your_jwt_secret_key
       SERVICE_NAME: user-service
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres-user:
         condition: service_healthy
@@ -223,7 +209,7 @@ services:
     environment:
       MONGODB_URL: mongodb://mongodb:27017/restaurantdb
       JWT_SECRET: your_jwt_secret_key
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     depends_on:
       mongodb:
         condition: service_healthy
@@ -245,8 +231,11 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_PORT: 8002
       KAFKA_BROKER: kafka:9092
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      RESTAURANT_SERVICE_URL: http://restaurant-service:8001
+      USER_SERVICE_URL: http://user-service:3001
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
       OTEL_SERVICE_NAME: order-service
+
     depends_on:
       postgres-order:
         condition: service_healthy
@@ -273,7 +262,7 @@ services:
       JWT_SECRET: your_jwt_secret_key
       KAFKA_BROKER: kafka:9092
       SERVICE_NAME: payment-service
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres-payment:
         condition: service_healthy
@@ -297,7 +286,7 @@ services:
       JWT_SECRET: your_jwt_secret_key
       KAFKA_BROKER: kafka:9092
       SERVICE_NAME: notification-service
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     depends_on:
       redis:
         condition: service_healthy
@@ -325,7 +314,7 @@ services:
       RATE_LIMIT_WINDOW_MS: 900000
       RATE_LIMIT_MAX: 100
       SERVICE_NAME: api-gateway
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     depends_on:
       - user-service
       - restaurant-service

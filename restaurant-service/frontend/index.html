@@ -20,144 +20,82 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: var(--font-body); background: var(--bg); min-height: 100vh; color: var(--white); }
 
-    /* NAV */
-    nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 28px; background: #0f0505;
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 100;
-    }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; background: #0f0505; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
     .nav-left { display: flex; align-items: center; gap: 10px; }
-    .logo-icon {
-      width: 34px; height: 34px;
-      background: rgba(255,255,255,0.06);
-      border-radius: var(--radius-sm);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
+    .logo-icon { width: 34px; height: 34px; background: rgba(255,255,255,0.06); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .logo-name { font-family: var(--font-display); font-size: 20px; font-weight: 800; }
     .logo-name .q { color: var(--gold); } .logo-name .b { color: var(--white); }
     .nav-tag { font-size: 11px; color: var(--text-muted); margin-left: 6px; padding: 2px 8px; border: 1px solid var(--border-mid); border-radius: 20px; }
     .nav-right { display: flex; gap: 10px; align-items: center; }
-    .nav-btn {
-      padding: 8px 16px; border-radius: var(--radius-sm);
-      font-family: var(--font-body); font-size: 13px; font-weight: 600;
-      cursor: pointer; border: none; transition: all 0.2s;
-    }
+    .nav-btn { padding: 8px 16px; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
     .btn-logout { background: rgba(220,38,38,0.12); color: var(--red); border: 1px solid rgba(220,38,38,0.25); }
     .btn-logout:hover { background: rgba(220,38,38,0.22); }
-    .hamburger {
-      display: none; flex-direction: column; gap: 5px;
-      cursor: pointer; padding: 4px; background: none; border: none;
-    }
-    .hamburger span { width: 22px; height: 2px; background: var(--white); border-radius: 2px; transition: all 0.2s; }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
+    .hamburger span { width: 22px; height: 2px; background: var(--white); border-radius: 2px; }
 
-    /* LAYOUT */
     .layout { display: flex; min-height: calc(100vh - 57px); }
-
-    /* SIDEBAR */
-    .sidebar {
-      width: 220px; flex-shrink: 0;
-      background: var(--bg-card); border-right: 1px solid var(--border);
-      padding: 20px 0; transition: transform 0.3s ease;
-    }
-    .sidebar-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 20px; font-size: 13px; font-weight: 600;
-      color: var(--text-muted); cursor: pointer; transition: all 0.2s;
-      border-left: 3px solid transparent;
-    }
+    .sidebar { width: 220px; flex-shrink: 0; background: var(--bg-card); border-right: 1px solid var(--border); padding: 20px 0; transition: transform 0.3s ease; }
+    .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
     .sidebar-item:hover { color: var(--white); background: rgba(255,255,255,0.03); }
     .sidebar-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(255,215,0,0.05); }
     .sidebar-icon { font-size: 16px; }
-
-    /* MAIN */
     .main { flex: 1; padding: 28px; overflow-y: auto; }
 
-    /* PAGES */
     .page { display: none; }
     .page.active { display: block; animation: fadeIn 0.2s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
     .page-title { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-bottom: 6px; }
     .page-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
 
-    /* CARDS */
-    .card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px;
-    }
-    .card-title {
-      font-family: var(--font-display); font-size: 14px; font-weight: 700;
-      margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 8px;
-    }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px; }
+    .card-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 
-    /* STATS */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
     .stat-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: var(--radius-md); padding: 18px;
+      cursor: pointer; transition: all 0.2s; position: relative;
     }
+    .stat-card:hover { border-color: var(--gold); box-shadow: 0 4px 20px rgba(255,215,0,0.1); transform: translateY(-2px); }
+    .stat-card::after { content: '→'; position: absolute; top: 12px; right: 12px; font-size: 12px; color: var(--text-dim); opacity: 0; transition: opacity 0.2s; }
+    .stat-card:hover::after { opacity: 1; }
+    .stat-card.no-click { cursor: default; }
+    .stat-card.no-click:hover { border-color: var(--border); box-shadow: none; transform: none; }
+    .stat-card.no-click::after { display: none; }
     .stat-value { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--gold); margin-bottom: 4px; }
     .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-sublabel { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
 
-    /* FORM */
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .field { margin-bottom: 0; }
     .field.full { grid-column: 1 / -1; }
-    .field label {
-      display: block; font-size: 11px; font-weight: 700;
-      color: var(--text-muted); text-transform: uppercase;
-      letter-spacing: 0.5px; margin-bottom: 7px;
-    }
-    .field input, .field select, .field textarea {
-      width: 100%; padding: 11px 14px;
-      background: var(--bg-input); border: 1.5px solid var(--border);
-      border-radius: var(--radius-md); color: var(--white);
-      font-family: var(--font-body); font-size: 14px; outline: none;
-      transition: border-color 0.2s;
-    }
-    .field input:focus, .field select:focus, .field textarea:focus {
-      border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,215,0,0.08);
-    }
+    .field label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+    .field input, .field select, .field textarea { width: 100%; padding: 11px 14px; background: var(--bg-input); border: 1.5px solid var(--border); border-radius: var(--radius-md); color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,215,0,0.08); }
     .field input::placeholder, .field textarea::placeholder { color: var(--text-dim); }
-    .field select option { background: #1a0808; }
+    .field select option, .field select optgroup { background: #1a0808; }
     .field textarea { resize: vertical; min-height: 80px; }
+    .field-hint { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
 
-    /* BUTTONS */
-    .btn {
-      padding: 11px 22px; border: none; border-radius: var(--radius-md);
-      font-family: var(--font-display); font-size: 13px; font-weight: 700;
-      cursor: pointer; transition: all 0.2s;
-    }
+    input[type="time"] { color-scheme: dark; cursor: pointer; }
+    input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(5) hue-rotate(5deg); cursor: pointer; width: 18px; height: 18px; }
+
+    .btn { padding: 11px 22px; border: none; border-radius: var(--radius-md); font-family: var(--font-display); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
     .btn-gold { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #1a0505; box-shadow: 0 4px 16px rgba(255,215,0,0.2); }
     .btn-gold:hover { box-shadow: 0 6px 20px rgba(255,215,0,0.4); }
     .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-red { background: linear-gradient(135deg, var(--red), var(--red-dark)); color: white; }
-    .btn-red:hover { box-shadow: 0 4px 16px rgba(220,38,38,0.4); }
     .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid var(--border-mid); }
     .btn-outline:hover { color: var(--white); border-color: #444; }
     .btn-sm { padding: 6px 14px; font-size: 12px; }
     .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
-    /* ALERT */
-    .alert {
-      display: none; align-items: center; gap: 8px;
-      padding: 10px 14px; border-radius: var(--radius-sm);
-      font-size: 13px; font-weight: 600; margin-bottom: 16px;
-    }
+    .alert { display: none; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; margin-bottom: 16px; }
     .alert.show { display: flex; }
     .alert.success { background: rgba(255,215,0,0.08); color: var(--gold); border: 1px solid rgba(255,215,0,0.2); }
-    .alert.error   { background: rgba(220,38,38,0.1);  color: #ff6b6b;     border: 1px solid rgba(220,38,38,0.2); }
+    .alert.error { background: rgba(220,38,38,0.1); color: #ff6b6b; border: 1px solid rgba(220,38,38,0.2); }
 
-    /* MENU TABLE */
     .menu-table { width: 100%; border-collapse: collapse; }
-    .menu-table th {
-      text-align: left; font-size: 11px; font-weight: 700;
-      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
-      padding: 10px 12px; border-bottom: 1px solid var(--border);
-    }
+    .menu-table th { text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
     .menu-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
     .menu-table tr:last-child td { border-bottom: none; }
     .menu-table tr:hover td { background: rgba(255,255,255,0.02); }
@@ -165,83 +103,114 @@
     .item-price-cell { color: var(--gold); font-weight: 700; font-family: var(--font-display); }
     .item-cat { padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); font-size: 11px; color: var(--text-muted); }
 
-    /* RESTAURANT INFO BANNER */
-    .rest-banner {
-      background: linear-gradient(135deg, #1a0505, #0f0505);
-      border: 1px solid var(--border); border-radius: var(--radius-lg);
-      padding: 20px 24px; margin-bottom: 24px;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px;
-      flex-wrap: wrap;
-    }
+    .rest-banner { background: linear-gradient(135deg, #1a0505, #0f0505); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     .rest-banner-info h2 { font-family: var(--font-display); font-size: 18px; font-weight: 800; margin-bottom: 4px; }
     .rest-banner-info p { font-size: 13px; color: var(--text-muted); }
     .rest-banner-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-    /* TOGGLE */
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
     .toggle-row:last-child { border-bottom: none; }
     .toggle-info h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
-    .toggle-info p  { font-size: 12px; color: var(--text-muted); }
-    .toggle {
-      width: 44px; height: 24px; border-radius: 12px;
-      background: var(--border-mid); border: none; cursor: pointer;
-      position: relative; transition: background 0.2s; flex-shrink: 0;
-    }
+    .toggle-info p { font-size: 12px; color: var(--text-muted); }
+    .toggle { width: 44px; height: 24px; border-radius: 12px; background: var(--border-mid); border: none; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
     .toggle.on { background: var(--gold); }
-    .toggle::after {
-      content: ''; position: absolute;
-      width: 18px; height: 18px; border-radius: 50%;
-      background: white; top: 3px; left: 3px; transition: left 0.2s;
-    }
+    .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: white; top: 3px; left: 3px; transition: left 0.2s; }
     .toggle.on::after { left: 23px; }
 
-    /* EMPTY / NO RESTAURANT */
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
     .empty-icon { font-size: 40px; margin-bottom: 10px; }
-    .no-restaurant {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 60vh; text-align: center; padding: 40px 20px;
-    }
+    .no-restaurant { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; padding: 40px 20px; }
     .no-restaurant .big-icon { font-size: 72px; margin-bottom: 20px; }
     .no-restaurant h2 { font-family: var(--font-display); font-size: 24px; font-weight: 800; margin-bottom: 8px; }
     .no-restaurant p { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; max-width: 360px; }
 
-    /* SPINNER */
-    .spinner {
-      width: 32px; height: 32px; border: 3px solid var(--border);
-      border-top-color: var(--gold); border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin: 20px auto;
-    }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* TOAST */
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-      background: var(--bg-card); border: 1px solid var(--border-mid);
-      border-radius: var(--radius-md); padding: 12px 20px;
-      font-size: 13px; font-weight: 600; color: var(--white);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.3s ease; z-index: 999;
-    }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: var(--radius-md); padding: 12px 20px; font-size: 13px; font-weight: 600; color: var(--white); box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.3s ease; z-index: 999; }
     .toast.show { transform: translateX(-50%) translateY(0); }
     .toast.success { border-color: rgba(255,215,0,0.4); color: var(--gold); }
-    .toast.error   { border-color: rgba(220,38,38,0.4);  color: #ff6b6b; }
+    .toast.error { border-color: rgba(220,38,38,0.4); color: #ff6b6b; }
 
-    /* MOBILE OVERLAY */
-    .sidebar-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.6); z-index: 99;
-    }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99; }
     .sidebar-overlay.show { display: block; }
 
-    /* RESPONSIVE */
+    /* ── Drawer ── */
+    .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; }
+    .drawer-overlay.show { display: block; }
+    .drawer {
+      position: fixed; top: 0; right: -480px; width: 480px; max-width: 100vw;
+      height: 100vh; background: #140606; border-left: 1px solid var(--border-mid);
+      z-index: 201; transition: right 0.3s ease; display: flex; flex-direction: column;
+      box-shadow: -8px 0 40px rgba(0,0,0,0.6);
+    }
+    .drawer.open { right: 0; }
+    .drawer-header {
+      padding: 20px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .drawer-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+    .drawer-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: var(--radius-sm); }
+    .drawer-close:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+    .drawer-summary {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;
+    }
+    .drawer-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; }
+    .drawer-stat-val { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--gold); }
+    .drawer-stat-lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    .order-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; }
+    .order-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .order-id { font-size: 11px; color: var(--text-dim); font-family: monospace; }
+    .order-status { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+    .order-status.completed { background: rgba(74,222,128,0.1); color: #4ade80; }
+    .order-status.pending { background: rgba(255,215,0,0.1); color: var(--gold); }
+    .order-status.cancelled { background: rgba(220,38,38,0.1); color: #ff6b6b; }
+    .order-status.confirmed { background: rgba(96,165,250,0.1); color: #60a5fa; }
+    .order-items { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.6; }
+    .order-footer { display: flex; justify-content: space-between; align-items: center; }
+    .order-amount { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--gold); }
+    .order-date { font-size: 11px; color: var(--text-dim); }
+    .order-customer { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+
+    /* ── Cuisine dropdown ── */
+    .cuisine-trigger {
+      width: 100%; padding: 11px 14px;
+      background: var(--bg-input); border: 1.5px solid var(--border);
+      border-radius: var(--radius-md); color: var(--text-dim);
+      font-family: var(--font-body); font-size: 14px;
+      cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+      user-select: none; transition: border-color 0.2s;
+    }
+    .cuisine-trigger:hover { border-color: var(--border-mid); }
+    .cuisine-trigger.has-value { color: var(--white); }
+    .cuisine-popup {
+      display: none; position: fixed; z-index: 500;
+      background: #1a0808; border: 1.5px solid var(--border-mid);
+      border-radius: var(--radius-md); box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      overflow: hidden; flex-direction: column;
+    }
+    .cuisine-popup.open { display: flex; }
+    .cuisine-search {
+      width: 100%; padding: 10px 14px;
+      background: #0f0505; border: none; border-bottom: 1px solid var(--border-mid);
+      color: var(--white); font-family: var(--font-body); font-size: 13px; outline: none; flex-shrink: 0;
+    }
+    .cuisine-list-scroll { overflow-y: auto; flex: 1; }
+    .cuisine-done { padding: 10px 14px; border-top: 1px solid var(--border-mid); flex-shrink: 0; background: #1a0808; }
+    .cuisine-opt { display: flex; align-items: center; gap: 10px; padding: 9px 14px; cursor: pointer; font-size: 13px; transition: background 0.15s; }
+    .cuisine-opt:hover { background: rgba(255,255,255,0.04); }
+    .cuisine-opt input[type="checkbox"] { accent-color: var(--gold); width: 15px; height: 15px; flex-shrink: 0; }
+    .cuisine-opt.selected { color: var(--gold); }
+
+    .admin-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.2); border-radius: 20px; font-size: 11px; color: var(--gold); font-weight: 600; }
+
     @media (max-width: 768px) {
       nav { padding: 12px 16px; }
       .hamburger { display: flex; }
       .nav-tag { display: none; }
-      .sidebar {
-        position: fixed; top: 57px; left: 0; bottom: 0;
-        z-index: 100; transform: translateX(-100%);
-      }
+      .sidebar { position: fixed; top: 57px; left: 0; bottom: 0; z-index: 100; transform: translateX(-100%); }
       .sidebar.open { transform: translateX(0); }
       .form-grid { grid-template-columns: 1fr; }
       .main { padding: 20px 16px; }
@@ -250,31 +219,22 @@
       .rest-banner-actions { width: 100%; }
       .rest-banner-actions .btn { flex: 1; text-align: center; }
       .page-title { font-size: 18px; }
+      .drawer { width: 100vw; }
+      .drawer-summary { grid-template-columns: 1fr 1fr; }
     }
-
-    @media (max-width: 400px) {
-      .stats-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 400px) { .stats-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
 
 <nav>
   <div class="nav-left">
-    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu"><span></span><span></span><span></span></button>
     <div class="logo-icon">
       <svg width="22" height="22" viewBox="0 0 72 72" fill="none">
         <defs>
-          <linearGradient id="lb" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#dc2626"/>
-            <stop offset="100%" stop-color="#7f1d1d"/>
-          </linearGradient>
-          <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#FFD700"/>
-            <stop offset="100%" stop-color="#FFA500"/>
-          </linearGradient>
+          <linearGradient id="lb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient>
+          <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFA500"/></linearGradient>
         </defs>
         <path d="M13 38 Q13 58 36 58 Q59 58 59 38 Z" fill="url(#lb)"/>
         <rect x="11" y="33" width="50" height="8" rx="4" fill="url(#lg)"/>
@@ -294,39 +254,50 @@
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
+<!-- Cuisine popup -->
+<div class="cuisine-popup" id="cuisine-popup" onclick="event.stopPropagation()">
+  <input class="cuisine-search" type="text" id="cuisine-search-input" placeholder="Search cuisines..." oninput="filterCuisines(this.value)" onclick="event.stopPropagation()"/>
+  <div class="cuisine-list-scroll" id="cuisine-list"></div>
+  <div class="cuisine-done">
+    <button class="btn btn-gold" style="width:100%;padding:9px" id="cuisine-done-btn">✓ Done</button>
+  </div>
+</div>
+
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
+<!-- Drawer -->
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="drawer-title" id="drawer-title">Details</div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <div class="spinner"></div>
+  </div>
+</div>
+
 <div class="layout">
-  <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
-    <div class="sidebar-item active" onclick="showPage('overview')" id="nav-overview">
-      <span class="sidebar-icon">📊</span> Dashboard
-    </div>
-    <div class="sidebar-item" onclick="showPage('restaurant')" id="nav-restaurant">
-      <span class="sidebar-icon">🏪</span> My Restaurant
-    </div>
-    <div class="sidebar-item" onclick="showPage('menu')" id="nav-menu">
-      <span class="sidebar-icon">🍽️</span> Menu
-    </div>
-    <div class="sidebar-item" onclick="showPage('settings')" id="nav-settings">
-      <span class="sidebar-icon">⚙️</span> Settings
-    </div>
+    <div class="sidebar-item active" onclick="showPage('overview')" id="nav-overview"><span class="sidebar-icon">📊</span> Dashboard</div>
+    <div class="sidebar-item" onclick="showPage('restaurant')" id="nav-restaurant"><span class="sidebar-icon">🏪</span> My Restaurant</div>
+    <div class="sidebar-item" onclick="showPage('menu')" id="nav-menu"><span class="sidebar-icon">🍽️</span> Menu</div>
+    <div class="sidebar-item" onclick="showPage('orders')" id="nav-orders"><span class="sidebar-icon">📋</span> Orders</div>
+<div class="sidebar-item" onclick="showPage('settings')" id="nav-settings"><span class="sidebar-icon">⚙️</span> Settings</div>
   </div>
 
-  <!-- MAIN CONTENT -->
   <div class="main">
 
-    <!-- DASHBOARD PAGE -->
     <div class="page active" id="page-overview">
       <div id="overview-content"><div class="spinner"></div></div>
     </div>
 
-    <!-- MY RESTAURANT PAGE -->
     <div class="page" id="page-restaurant">
       <div class="page-title">My Restaurant</div>
       <div class="page-sub">View and edit your restaurant details</div>
       <div id="restaurant-content"><div class="spinner"></div></div>
     </div>
 
-    <!-- MENU PAGE -->
     <div class="page" id="page-menu">
       <div class="page-title">Menu</div>
       <div class="page-sub">Add and manage your menu items</div>
@@ -335,14 +306,8 @@
         <div class="alert error" id="menu-error"></div>
         <div class="alert success" id="menu-success"></div>
         <div class="form-grid">
-          <div class="field">
-            <label>Item Name</label>
-            <input type="text" id="item-name" placeholder="e.g. Butter Chicken"/>
-          </div>
-          <div class="field">
-            <label>Price (₹)</label>
-            <input type="number" id="item-price" placeholder="e.g. 250"/>
-          </div>
+          <div class="field"><label>Item Name</label><input type="text" id="item-name" placeholder="e.g. Butter Chicken"/></div>
+          <div class="field"><label>Price (₹)</label><input type="number" id="item-price" placeholder="e.g. 250"/></div>
           <div class="field">
             <label>Category</label>
             <select id="item-category">
@@ -360,21 +325,24 @@
           </div>
           <div class="field">
             <label>Meal Type</label>
-            <select id="item-meal-type">
-              <option value="allday">All Day</option>
-              <option value="breakfast">Breakfast</option>
-              <option value="lunch">Lunch</option>
-              <option value="dinner">Dinner</option>
-            </select>
+            <div style="display:flex;flex-direction:column;gap:8px;padding:6px 0">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
+                <input type="checkbox" id="mt-allday" checked style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> All Day
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
+                <input type="checkbox" id="mt-breakfast" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> Breakfast <span style="color:var(--text-dim);font-size:11px">(6AM–11AM)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
+                <input type="checkbox" id="mt-lunch" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> Lunch <span style="color:var(--text-dim);font-size:11px">(11AM–3PM)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
+                <input type="checkbox" id="mt-dinner" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> Dinner <span style="color:var(--text-dim);font-size:11px">(6PM–11PM)</span>
+              </label>
+            </div>
           </div>
-          <div class="field full">
-            <label>Description (optional)</label>
-            <input type="text" id="item-desc" placeholder="Brief description of the item"/>
-          </div>
+          <div class="field full"><label>Description (optional)</label><input type="text" id="item-desc" placeholder="Brief description of the item"/></div>
         </div>
-        <div class="btn-row">
-          <button class="btn btn-gold" onclick="addMenuItem()" id="add-item-btn">Add Item</button>
-        </div>
+        <div class="btn-row"><button class="btn btn-gold" onclick="addMenuItem()" id="add-item-btn">Add Item</button></div>
       </div>
       <div class="card">
         <div class="card-title">🍽️ Current Menu</div>
@@ -382,23 +350,46 @@
       </div>
     </div>
 
-    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-orders">
+  <div class="page-title">Orders</div>
+  <div class="page-sub">Manage incoming orders from customers</div>
+  <div id="orders-content"><div class="spinner"></div></div>
+</div>
+
     <div class="page" id="page-settings">
       <div class="page-title">Settings</div>
-      <div class="page-sub">Manage surge pricing and restaurant visibility</div>
+      <div class="page-sub">Manage your restaurant visibility</div>
       <div class="card">
-        <div class="card-title">⚡ Restaurant Controls</div>
+        <div class="card-title">⚙️ Restaurant Controls</div>
         <div id="settings-content"><div class="spinner"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔒 Admin-Controlled Settings</div>
+        <div style="padding:8px 0">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <h4>⚡ Surge Pricing</h4>
+              <p>Applied automatically by admin during peak hours. Contact admin to change.</p>
+            </div>
+            <span class="admin-badge">🔒 Admin Only</span>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <h4>🔥 Boost Listing</h4>
+              <p>Boosting your listing to appear at top is managed by admin.</p>
+            </div>
+            <span class="admin-badge">🔒 Admin Only</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- REGISTER PAGE (shown inline in dashboard when no restaurant) -->
     <div class="page" id="page-register">
       <div class="page-title">Register Restaurant</div>
       <div class="page-sub">Add your restaurant to QuickBowl</div>
       <div class="card">
         <div class="card-title">🏪 Restaurant Details</div>
-        <div class="alert error"   id="reg-error"></div>
+        <div class="alert error" id="reg-error"></div>
         <div class="alert success" id="reg-success"></div>
         <div class="form-grid">
           <div class="field">
@@ -407,15 +398,45 @@
           </div>
           <div class="field">
             <label>Cuisine Type</label>
-            <input type="text" id="r-cuisine" placeholder="e.g. North Indian"/>
+            <div class="cuisine-trigger" id="cuisine-trigger" onclick="toggleCuisineDropdown(event)">
+              <span id="cuisine-display">Select cuisines...</span>
+              <span style="font-size:11px;color:var(--text-dim)">▾</span>
+            </div>
+            <input type="hidden" id="r-cuisine"/>
           </div>
           <div class="field">
             <label>City</label>
-            <input type="text" id="r-city" placeholder="e.g. Mumbai"/>
+            <select id="r-city-select" onchange="handleCitySelect(this.value)">
+              <option value="">— Select a city —</option>
+              <optgroup label="Odisha">
+                <option>Bhubaneswar</option><option>Cuttack</option><option>Puri</option>
+                <option>Rourkela</option><option>Berhampur</option><option>Sambalpur</option>
+                <option>Balasore</option><option>Baripada</option><option>Bhadrak</option>
+                <option>Jeypore</option><option>Koraput</option><option>Paradip</option>
+                <option>Kendrapara</option><option>Jagatsinghpur</option><option>Angul</option>
+                <option>Dhenkanal</option><option>Keonjhar</option><option>Rayagada</option>
+                <option>Sundargarh</option><option>Jharsuguda</option><option>Phulbani</option>
+                <option>Bolangir</option><option>Bargarh</option><option>Nabarangpur</option>
+              </optgroup>
+              <optgroup label="Other Major Cities">
+                <option>Mumbai</option><option>Delhi</option><option>Bangalore</option>
+                <option>Hyderabad</option><option>Chennai</option><option>Kolkata</option>
+                <option>Pune</option><option>Ahmedabad</option><option>Jaipur</option>
+                <option>Surat</option><option>Lucknow</option><option>Chandigarh</option>
+                <option>Patna</option><option>Indore</option><option>Nagpur</option>
+                <option>Visakhapatnam</option><option>Coimbatore</option><option>Kochi</option>
+              </optgroup>
+              <option value="other">✏️ My city is not listed</option>
+            </select>
           </div>
           <div class="field">
             <label>Phone</label>
             <input type="tel" id="r-phone" placeholder="Restaurant phone number"/>
+          </div>
+          <div class="field full" id="r-city-custom-wrap" style="display:none">
+            <label>Enter Your City</label>
+            <input type="text" id="r-city-custom" placeholder="Type your city name here"/>
+            <div class="field-hint">⚠️ Your city was not in the list — please type it above</div>
           </div>
           <div class="field">
             <label>Email</label>
@@ -426,12 +447,12 @@
             <input type="text" id="r-address" placeholder="Full address"/>
           </div>
           <div class="field">
-            <label>Opening Time</label>
-            <input type="time" id="r-open" value="09:00"/>
+            <label>Opening Time 🕐</label>
+            <input type="time" id="r-open" onclick="this.showPicker && this.showPicker()"/>
           </div>
           <div class="field">
-            <label>Closing Time</label>
-            <input type="time" id="r-close" value="23:00"/>
+            <label>Closing Time 🕐</label>
+            <input type="time" id="r-close" onclick="this.showPicker && this.showPicker()"/>
           </div>
           <div class="field full">
             <label>Description</label>
@@ -452,8 +473,9 @@
 <script>
 const API  = 'http://localhost:3000/api';
 const RAPI = 'http://localhost:8001/api';
+// TODO: When domain is purchased, change ORDER_API to https://api.yourdomain.com/api
+const ORDER_API = 'http://localhost:8002/api';
 
-// Read token/user from URL params (passed after registration) or localStorage
 const params = new URLSearchParams(window.location.search);
 if (params.get('token')) {
   localStorage.setItem('token', params.get('token'));
@@ -463,20 +485,19 @@ if (params.get('token')) {
 
 const user  = JSON.parse(localStorage.getItem('user') || '{}');
 const token = localStorage.getItem('token') || '';
-
-if (!token || user.role !== 'restaurant_owner') {
-  window.location.href = 'http://localhost:3001';
-}
+if (!token || user.role !== 'restaurant_owner') window.location.href = 'http://localhost:3001';
 
 let myRestaurant = null;
+let cachedOrders = null;
 
-// ── Mobile sidebar toggle ───────────────────────────
+const rid = (r) => r._id || r.id;
+
+// ── Sidebar ─────────────────────────────────────────
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebar-overlay').classList.toggle('show');
 }
 
-// ── Navigation ──────────────────────────────────────
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
@@ -487,318 +508,660 @@ function showPage(name) {
   if (name === 'restaurant') loadRestaurantPage();
   if (name === 'menu')       loadMenuPage();
   if (name === 'settings')   loadSettings();
-  // Close sidebar on mobile after navigation
+  if (name === 'orders')     loadOrders();
+  if (name === 'register')   prefillRegisterForm();
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('show');
 }
 
 function logout() {
-  localStorage.clear();
-  sessionStorage.clear();
+  localStorage.clear(); sessionStorage.clear();
   window.location.href = 'http://localhost:3001';
 }
 
-// ── Load restaurant by owner ────────────────────────
-async function fetchMyRestaurant() {
-  try {
-    const res  = await fetch(`${RAPI}/restaurants`, { headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    const all  = [
-      ...(data.all_restaurants?.data || []),
-      ...(data.customer_favourites?.data || [])
-    ];
-    const ownerId = user.id || user._id;
-    myRestaurant  = all.find(r => r.owner_id === ownerId) || null;
-    return myRestaurant;
-  } catch (e) { return null; }
+function handleCitySelect(val) {
+  document.getElementById('r-city-custom-wrap').style.display = val === 'other' ? 'block' : 'none';
 }
 
-// ── DASHBOARD / OVERVIEW ────────────────────────────
+// ── Drawer ───────────────────────────────────────────
+function openDrawer(title, contentFn) {
+  document.getElementById('drawer-title').textContent = title;
+  document.getElementById('drawer-body').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('show');
+  contentFn();
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('show');
+}
+
+// ── Fetch orders for restaurant ──────────────────────
+async function fetchOrders() {
+  if (cachedOrders) return cachedOrders;
+  try {
+    const r = myRestaurant;
+    if (!r) return [];
+    const res = await fetch(`${ORDER_API}/orders/restaurant/${rid(r)}`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    cachedOrders = data.data || data.orders || [];
+    if (!Array.isArray(cachedOrders)) cachedOrders = [];
+    return cachedOrders;
+  } catch(e) { return []; }
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+
+function statusClass(s) {
+  if (!s) return '';
+  const sl = s.toLowerCase();
+  if (sl.includes('complet')) return 'completed';
+  if (sl.includes('cancel')) return 'cancelled';
+  if (sl.includes('confirm') || sl.includes('accept')) return 'confirmed';
+  return 'pending';
+}
+
+function orderCardHtml(o) {
+  const rawItems = typeof o.items === 'string' ? JSON.parse(o.items || '[]') : (o.items || []);
+const items = rawItems.map(i => `${i.name} x${i.quantity || i.qty || 1}`).join(', ') || '—';
+  const status = o.status || 'pending';
+  return `
+    <div class="order-card">
+      <div class="order-card-header">
+        <span class="order-id">#${(o.id || o._id || '').toString().slice(-8).toUpperCase()}</span>
+        <span class="order-status ${statusClass(status)}">${status.toUpperCase()}</span>
+      </div>
+      <div class="order-customer">👤 ${o.customer_name || o.user_name || 'Customer'} • 📞 ${o.delivery_phone || o.phone || '—'}</div>
+      <div class="order-items">🍽️ ${items}</div>
+      ${o.delivery_address ? `<div class="order-items">📍 ${o.delivery_address}</div>` : ''}
+      <div class="order-footer">
+        <span class="order-amount">₹${o.total_amount || o.total || 0}</span>
+        <span class="order-date">${fmtDate(o.created_at || o.createdAt)}</span>
+      </div>
+    </div>`;
+}
+
+// ── Drawer: All Orders ───────────────────────────────
+async function showAllOrders() {
+  openDrawer('📋 All Orders', async () => {
+    const orders = await fetchOrders();
+    const el = document.getElementById('drawer-body');
+    if (!orders.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>No orders yet</p></div>'; return; }
+    const total = orders.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+    el.innerHTML = `
+      <div class="drawer-summary">
+        <div class="drawer-stat"><div class="drawer-stat-val">${orders.length}</div><div class="drawer-stat-lbl">Total Orders</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Total Collected</div></div>
+      </div>
+      ${orders.map(orderCardHtml).join('')}`;
+  });
+}
+
+// ── Drawer: Completed Orders ─────────────────────────
+async function showCompletedOrders() {
+  openDrawer('✅ Completed Orders', async () => {
+    const orders = (await fetchOrders()).filter(o => (o.status||'').toLowerCase().includes('complet'));
+    const el = document.getElementById('drawer-body');
+    if (!orders.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>No completed orders yet</p></div>'; return; }
+    const total = orders.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+    const avg   = Math.round(total / orders.length);
+    el.innerHTML = `
+      <div class="drawer-summary">
+        <div class="drawer-stat"><div class="drawer-stat-val">${orders.length}</div><div class="drawer-stat-lbl">Completed</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Revenue</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${avg}</div><div class="drawer-stat-lbl">Avg Order</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">${Math.round(total * 0.05)}</div><div class="drawer-stat-lbl">Est. Tax (5%)</div></div>
+      </div>
+      ${orders.map(orderCardHtml).join('')}`;
+  });
+}
+
+// ── Drawer: Revenue ──────────────────────────────────
+async function showRevenue() {
+  openDrawer('💰 Revenue Breakdown', async () => {
+    const orders = (await fetchOrders()).filter(o => (o.status||'').toLowerCase().includes('complet'));
+    const el = document.getElementById('drawer-body');
+    const total = orders.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+    // Group by date
+    const byDate = {};
+    orders.forEach(o => {
+      const d = new Date(o.created_at || o.createdAt);
+      if (isNaN(d)) return;
+      const key = d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+      byDate[key] = (byDate[key] || 0) + (o.total_amount || o.total || 0);
+    });
+    const dateRows = Object.entries(byDate).map(([d, amt]) =>
+      `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span style="color:var(--text-muted)">${d}</span>
+        <span style="color:var(--gold);font-weight:700">₹${Math.round(amt)}</span>
+      </div>`).join('') || '<p style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px">No revenue data yet</p>';
+    el.innerHTML = `
+      <div class="drawer-summary">
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Total Revenue</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${orders.length ? Math.round(total/orders.length) : 0}</div><div class="drawer-stat-lbl">Avg per Order</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total * 0.05)}</div><div class="drawer-stat-lbl">GST (5%)</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total * 0.95)}</div><div class="drawer-stat-lbl">Net Revenue</div></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Daily Breakdown</div>
+      ${dateRows}`;
+  });
+}
+
+// ── Drawer: Surge info ───────────────────────────────
+function showSurgeInfo() {
+  openDrawer('⚡ Surge Pricing', () => {
+    const r = myRestaurant;
+    const el = document.getElementById('drawer-body');
+    el.innerHTML = `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:48px;margin-bottom:16px">${r?.is_surge ? '⚡' : '😴'}</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:8px">
+          Surge is ${r?.is_surge ? 'ACTIVE' : 'INACTIVE'}
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px">
+          ${r?.is_surge ? `${r?.surge_multiplier || 1.5}x multiplier is currently applied to all prices` : 'Normal pricing is currently active'}
+        </div>
+        <div class="admin-badge" style="margin:0 auto;display:inline-flex">🔒 Controlled by Admin</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:16px">
+          Surge pricing is applied automatically by the platform admin during peak demand hours. Contact admin to request changes.
+        </div>
+      </div>`;
+  });
+}
+
+// ── Drawer: Boost info ───────────────────────────────
+function showBoostInfo() {
+  openDrawer('🔥 Boost Status', () => {
+    const r = myRestaurant;
+    const el = document.getElementById('drawer-body');
+    el.innerHTML = `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:48px;margin-bottom:16px">${r?.boost_active ? '🔥' : '⭐'}</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:8px">
+          Boost is ${r?.boost_active ? 'ACTIVE' : 'INACTIVE'}
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px">
+          ${r?.boost_active ? 'Your restaurant is currently featured at the top of the listing' : 'Your restaurant appears in regular listing order'}
+        </div>
+        <div class="admin-badge" style="margin:0 auto;display:inline-flex">🔒 Controlled by Admin</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:16px">
+          Boost listing is managed by the platform admin. Contact admin to request a boost for your restaurant.
+        </div>
+      </div>`;
+  });
+}
+
+// ── Cuisine dropdown ────────────────────────────────
+const ALL_CUISINES = [
+  'North Indian','South Indian','Chinese','Fast Food','Pizza','Burgers',
+  'Biryani','Seafood','Street Food','Desserts & Sweets','Beverages',
+  'Breakfast','Healthy Food','Multi-cuisine','Thai','Continental',
+  'Italian','Mexican','Bengali','Gujarati','Rajasthani','Punjabi',
+  'Mughlai','Chettinad','Kerala','Andhra','Odia','Tibetan','Japanese',
+  'Korean','Lebanese','Mediterranean','Cafe','Bakery','Ice Cream','Juice Bar'
+];
+let selectedCuisines = [];
+
+function renderCuisineList(filter = '') {
+  const list = document.getElementById('cuisine-list');
+  const filtered = ALL_CUISINES.filter(c => c.toLowerCase().includes(filter.toLowerCase()));
+  list.innerHTML = filtered.map(c => `
+    <div class="cuisine-opt ${selectedCuisines.includes(c) ? 'selected' : ''}" data-val="${c}">
+      <input type="checkbox" ${selectedCuisines.includes(c) ? 'checked' : ''}/>
+      ${c}
+    </div>`).join('');
+  list.querySelectorAll('.cuisine-opt').forEach(el => {
+    el.addEventListener('click', () => toggleCuisine(el.dataset.val));
+    el.querySelector('input').addEventListener('click', (e) => { e.stopPropagation(); toggleCuisine(el.dataset.val); });
+  });
+}
+
+function toggleCuisine(c) {
+  if (selectedCuisines.includes(c)) selectedCuisines = selectedCuisines.filter(x => x !== c);
+  else selectedCuisines.push(c);
+  document.getElementById('r-cuisine').value = selectedCuisines.join(', ');
+  const display = document.getElementById('cuisine-display');
+  const trigger = document.getElementById('cuisine-trigger');
+  display.textContent = selectedCuisines.length ? selectedCuisines.join(', ') : 'Select cuisines...';
+  trigger.classList.toggle('has-value', selectedCuisines.length > 0);
+  document.querySelectorAll('.cuisine-opt').forEach(el => {
+    const val = el.dataset.val;
+    const cb  = el.querySelector('input[type="checkbox"]');
+    const sel = selectedCuisines.includes(val);
+    el.classList.toggle('selected', sel);
+    if (cb) cb.checked = sel;
+  });
+}
+
+function toggleCuisineDropdown(e) {
+  e.stopPropagation();
+  const popup   = document.getElementById('cuisine-popup');
+  const trigger = document.getElementById('cuisine-trigger');
+  const isOpen  = popup.classList.contains('open');
+  if (!isOpen) {
+    const rect = trigger.getBoundingClientRect();
+    popup.style.top       = (rect.bottom + 4) + 'px';
+    popup.style.left      = rect.left + 'px';
+    popup.style.width     = rect.width + 'px';
+    popup.style.height    = '300px';
+    popup.style.maxHeight = (window.innerHeight - rect.bottom - 20) + 'px';
+    popup.classList.add('open');
+    renderCuisineList();
+    const si = document.getElementById('cuisine-search-input');
+    si.value = ''; si.focus();
+  } else {
+    popup.classList.remove('open');
+  }
+}
+
+function filterCuisines(val) { renderCuisineList(val); }
+
+let cuisineClosing = false;
+document.addEventListener('click', (e) => {
+  if (cuisineClosing) { cuisineClosing = false; return; }
+  const popup   = document.getElementById('cuisine-popup');
+  const trigger = document.getElementById('cuisine-trigger');
+  if (popup && trigger && !popup.contains(e.target) && !trigger.contains(e.target)) {
+    popup.classList.remove('open');
+  }
+});
+
+// ── Restaurant fetch ────────────────────────────────
+async function fetchMyRestaurant(forceRefresh = false) {
+  if (myRestaurant && !forceRefresh) return myRestaurant;
+  // Use localStorage cache if not force refreshing
+  if (!forceRefresh) {
+    const cached = localStorage.getItem('myRestaurant');
+    if (cached) { myRestaurant = JSON.parse(cached); return myRestaurant; }
+  }
+  try {
+    // Fallback: public list
+    const res2 = await fetch(`${RAPI}/restaurants`, { headers: { Authorization: `Bearer ${token}` } });
+    const data2 = await res2.json();
+    const all = [...(data2.all_restaurants?.data || []), ...(data2.customer_favourites?.data || [])];
+    myRestaurant = all.find(r => String(r.owner_id) === String(user.id || user._id)) || null;
+    if (myRestaurant) {
+      localStorage.setItem('myRestaurant', JSON.stringify(myRestaurant));
+      return myRestaurant;
+    }
+    // Last fallback: localStorage cache (works even when restaurant is inactive)
+    const cached = localStorage.getItem('myRestaurant');
+    if (cached) { myRestaurant = JSON.parse(cached); return myRestaurant; }
+    return null;
+  } catch (e) {
+    const cached = localStorage.getItem('myRestaurant');
+    if (cached) { myRestaurant = JSON.parse(cached); return myRestaurant; }
+    return null;
+  }
+}
+
+// ── Overview ────────────────────────────────────────
 async function loadOverview() {
   const el = document.getElementById('overview-content');
   el.innerHTML = '<div class="spinner"></div>';
-  const r = await fetchMyRestaurant();
-
+  const r = myRestaurant || await fetchMyRestaurant();
   if (!r) {
-    // No restaurant — show registration prompt in the middle
     el.innerHTML = `
       <div class="no-restaurant">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <div style="width:32px;height:32px;background:rgba(255,215,0,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--gold);font-family:var(--font-display)">1</div>
+          <span style="font-size:13px;color:#4ade80;font-weight:600">✅ Account created</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+          <div style="width:32px;height:32px;background:rgba(255,215,0,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--gold);font-family:var(--font-display)">2</div>
+          <span style="font-size:13px;color:var(--gold);font-weight:600">Set up your restaurant</span>
+        </div>
         <div class="big-icon">🏪</div>
-        <h2>Set up your restaurant</h2>
-        <p>You haven't registered your restaurant yet. Add your restaurant details to start receiving orders on QuickBowl.</p>
-        <button class="btn btn-gold" onclick="showPage('register')" style="padding:14px 32px;font-size:15px">
-          Register Your Restaurant
-        </button>
+        <h2>One more step!</h2>
+        <p>Your account is ready. Now add your restaurant details to start receiving orders on QuickBowl.</p>
+        <button class="btn btn-gold" onclick="showPage('register')" style="padding:14px 32px;font-size:15px">Set Up Restaurant →</button>
       </div>`;
     return;
   }
-
-  let analytics = {};
-  try {
-    const ares = await fetch(`${RAPI}/restaurants/${r._id}/analytics`, { headers: { Authorization: `Bearer ${token}` } });
-    const adata = await ares.json();
-    analytics = adata.data || {};
-  } catch (e) {}
-
+ let analytics = {};
+try { analytics = (await (await fetch(`${RAPI}/restaurants/${rid(r)}/analytics`, { headers: { Authorization: `Bearer ${token}` } })).json()).data || {}; } catch (e) {}
+cachedOrders = null;
+// Get live order counts
+try {
+  const ordRes = await fetch(`${ORDER_API}/orders/restaurant/${rid(r)}`, { headers: { Authorization: `Bearer ${token}` } });
+  const ordData = await ordRes.json();
+  const orders = ordData.data || [];
+  analytics.total_orders = analytics.total_orders || orders.length;
+  analytics.completed_orders = analytics.completed_orders || orders.filter(o => o.status === 'DELIVERED').length;
+  analytics.total_revenue = analytics.total_revenue || orders.filter(o => o.status === 'DELIVERED').reduce((s, o) => s + (o.totalAmount || o.total_amount || 0), 0);
+} catch(e) {}// reset cache when overview loads
   el.innerHTML = `
     <div class="page-title" style="margin-bottom:6px">Dashboard</div>
-    <div class="page-sub">Your restaurant at a glance</div>
-    <div class="rest-banner">
-      <div class="rest-banner-info">
-        <h2>🍽️ ${r.name}</h2>
-        <p>${r.cuisine || ''} • ${r.city || ''} • ${r.opening_time || '09:00'} – ${r.closing_time || '23:00'}</p>
+    <div class="page-sub">Your restaurant at a glance — click any card for details</div>
+    ${r.is_active === false ? `
+    <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.25);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="width:10px;height:10px;border-radius:50%;background:#ff6b6b;display:inline-block"></span>
+          <span style="font-family:var(--font-display);font-size:15px;font-weight:800;color:#ff6b6b">Restaurant is Inactive</span>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted)">Customers cannot see or place orders from your restaurant right now.</div>
       </div>
+      <button class="btn btn-gold btn-sm" onclick="quickActivate('${rid(r)}')">✅ Activate Now</button>
+    </div>` : ''}
+    <div class="rest-banner">
+      <div class="rest-banner-info"><h2>🍽️ ${r.name}</h2><p>${r.cuisine || ''} • ${r.city || ''} • ${r.opening_time || '09:00'} – ${r.closing_time || '23:00'}</p></div>
       <div class="rest-banner-actions">
-        <button class="btn btn-outline btn-sm" onclick="showPage('restaurant')">Edit Details</button>
+        <button class="btn btn-outline btn-sm" onclick="showPage('restaurant');setTimeout(renderRestaurantEdit,150)">Edit Details</button>
         <button class="btn btn-gold btn-sm" onclick="showPage('menu')">Manage Menu</button>
       </div>
     </div>
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value">${analytics.total_orders || 0}</div>
+      <div class="stat-card" onclick="showAllOrders()">
+        <div class="stat-value">${analytics.total_orders||0}</div>
         <div class="stat-label">Total Orders</div>
+        <div class="stat-sublabel">Tap to view all</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">${analytics.completed_orders || 0}</div>
+      <div class="stat-card" onclick="showCompletedOrders()">
+        <div class="stat-value">${analytics.completed_orders||0}</div>
         <div class="stat-label">Completed</div>
+        <div class="stat-sublabel">Tap to view</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">₹${Math.round(analytics.total_revenue || 0)}</div>
+      <div class="stat-card" onclick="showRevenue()">
+        <div class="stat-value">₹${Math.round(analytics.total_revenue||0)}</div>
         <div class="stat-label">Revenue</div>
+        <div class="stat-sublabel">Tap for breakdown</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">${r.menu?.length || 0}</div>
+      <div class="stat-card" onclick="showPage('menu')">
+        <div class="stat-value">${r.menu?.length||0}</div>
         <div class="stat-label">Menu Items</div>
+        <div class="stat-sublabel">Tap to manage</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">${r.boost_active ? '🔥 ON' : 'OFF'}</div>
-        <div class="stat-label">Boosted</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${r.is_surge ? '⚡ ON' : 'OFF'}</div>
+      <div class="stat-card no-click" onclick="showSurgeInfo()" style="cursor:pointer" class="">
+        <div class="stat-value">${r.is_surge?'⚡ ON':'OFF'}</div>
         <div class="stat-label">Surge</div>
+        <div class="stat-sublabel">🔒 Admin controlled</div>
+      </div>
+      <div class="stat-card" onclick="showBoostInfo()">
+        <div class="stat-value">${r.boost_active?'🔥 ON':'OFF'}</div>
+        <div class="stat-label">Boosted</div>
+        <div class="stat-sublabel">🔒 Admin controlled</div>
       </div>
     </div>`;
 }
 
-// ── RESTAURANT PAGE ─────────────────────────────────
+// ── My Restaurant ───────────────────────────────────
 async function loadRestaurantPage() {
   const el = document.getElementById('restaurant-content');
   el.innerHTML = '<div class="spinner"></div>';
   const r = await fetchMyRestaurant();
-  if (!r) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>No restaurant found. <button class="btn btn-gold btn-sm" onclick="showPage('register')">Register one</button></p></div>`;
-    return;
-  }
+  if (!r) { el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>No restaurant found. <button class="btn btn-gold btn-sm" onclick="showPage('register')">Register one</button></p></div>`; return; }
+  renderRestaurantView(r);
+}
+
+function renderRestaurantView(r) {
+  const el = document.getElementById('restaurant-content');
   el.innerHTML = `
-    <div class="alert error"   id="edit-error"></div>
-    <div class="alert success" id="edit-success"></div>
-    <div class="form-grid">
-      <div class="field"><label>Restaurant Name</label><input type="text" id="e-name" value="${r.name || ''}"/></div>
-      <div class="field"><label>Cuisine</label><input type="text" id="e-cuisine" value="${r.cuisine || ''}"/></div>
-      <div class="field"><label>City</label><input type="text" id="e-city" value="${r.city || ''}"/></div>
-      <div class="field"><label>Phone</label><input type="tel" id="e-phone" value="${r.phone || ''}"/></div>
-      <div class="field"><label>Opening Time</label><input type="time" id="e-open" value="${r.opening_time || '09:00'}"/></div>
-      <div class="field"><label>Closing Time</label><input type="time" id="e-close" value="${r.closing_time || '23:00'}"/></div>
-      <div class="field full"><label>Address</label><input type="text" id="e-address" value="${r.address || ''}"/></div>
-      <div class="field full"><label>Description</label><textarea id="e-desc">${r.description || ''}</textarea></div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-gold" onclick="saveRestaurant('${r._id}')">Save Changes</button>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:4px">🍽️ ${r.name}</div>
+          <div style="font-size:13px;color:var(--text-muted)">${r.cuisine || '—'}</div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="renderRestaurantEdit()">✏️ Edit Details</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">City</div>
+          <div style="font-size:14px">${r.city || '—'}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Phone</div>
+          <div style="font-size:14px">${r.phone || '—'}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Email</div>
+          <div style="font-size:14px">${r.email || '—'}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Address</div>
+          <div style="font-size:14px">${r.address || '—'}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Opening Time</div>
+          <div style="font-size:14px">🕐 ${r.opening_time || '—'}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Closing Time</div>
+          <div style="font-size:14px">🕐 ${r.closing_time || '—'}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Status</div>
+          <div style="font-size:14px">${r.is_active !== false ? '<span style="color:#4ade80">✅ Active</span>' : '<span style="color:#ff6b6b">❌ Inactive</span>'}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Menu Items</div>
+          <div style="font-size:14px">${r.menu?.length || 0} items</div>
+        </div>
+        <div style="grid-column:1/-1">
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Description</div>
+          <div style="font-size:14px;color:${r.description ? 'var(--white)' : 'var(--text-dim)'}">${r.description || 'No description added'}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderRestaurantEdit() {
+  const r = myRestaurant;
+  const el = document.getElementById('restaurant-content');
+  el.innerHTML = `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:700">✏️ Edit Restaurant Details</div>
+        <button class="btn btn-outline btn-sm" onclick="renderRestaurantView(myRestaurant)">← Cancel</button>
+      </div>
+      <div class="alert error" id="edit-error"></div>
+      <div class="alert success" id="edit-success"></div>
+      <div class="form-grid">
+        <div class="field"><label>Restaurant Name</label><input type="text" id="e-name" value="${r.name||''}"/></div>
+        <div class="field"><label>Cuisine</label><input type="text" id="e-cuisine" value="${r.cuisine||''}"/></div>
+        <div class="field"><label>City</label><input type="text" id="e-city" value="${r.city||''}"/></div>
+        <div class="field"><label>Phone</label><input type="tel" id="e-phone" value="${r.phone||''}"/></div>
+        <div class="field"><label>Opening Time 🕐</label><input type="time" id="e-open" value="${r.opening_time||''}" style="color-scheme:dark;cursor:pointer" onclick="this.showPicker&&this.showPicker()"/></div>
+        <div class="field"><label>Closing Time 🕐</label><input type="time" id="e-close" value="${r.closing_time||''}" style="color-scheme:dark;cursor:pointer" onclick="this.showPicker&&this.showPicker()"/></div>
+        <div class="field full"><label>Address</label><input type="text" id="e-address" value="${r.address||''}"/></div>
+        <div class="field full"><label>Description</label><textarea id="e-desc">${r.description||''}</textarea></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-gold" onclick="saveRestaurant('${rid(r)}')">Save Changes</button></div>
     </div>`;
 }
 
 async function saveRestaurant(id) {
-  const errEl = document.getElementById('edit-error');
-  const sucEl = document.getElementById('edit-success');
+  const errEl = document.getElementById('edit-error'), sucEl = document.getElementById('edit-success');
   errEl.classList.remove('show'); sucEl.classList.remove('show');
   try {
     const res = await fetch(`${RAPI}/restaurants/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        name:         document.getElementById('e-name').value,
-        cuisine:      document.getElementById('e-cuisine').value,
-        city:         document.getElementById('e-city').value,
-        phone:        document.getElementById('e-phone').value,
-        address:      document.getElementById('e-address').value,
-        description:  document.getElementById('e-desc').value,
-        opening_time: document.getElementById('e-open').value,
-        closing_time: document.getElementById('e-close').value,
-      })
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name: document.getElementById('e-name').value, cuisine: document.getElementById('e-cuisine').value, city: document.getElementById('e-city').value, phone: document.getElementById('e-phone').value, address: document.getElementById('e-address').value, description: document.getElementById('e-desc').value, opening_time: document.getElementById('e-open').value, closing_time: document.getElementById('e-close').value })
     });
     const data = await res.json();
-    if (data.success) { sucEl.classList.add('show'); showToast('Restaurant updated!', 'success'); }
-    else { errEl.textContent = data.detail || data.message || 'Update failed'; errEl.classList.add('show'); }
+    if (data.success) {
+  showToast('Restaurant updated!', 'success');
+  await fetchMyRestaurant(true);
+  renderRestaurantView(myRestaurant);
+} else { errEl.textContent = data.detail || data.message || 'Update failed'; errEl.classList.add('show'); }
   } catch (e) { errEl.textContent = 'Server error'; errEl.classList.add('show'); }
 }
 
-// ── MENU PAGE ───────────────────────────────────────
+// ── Menu ────────────────────────────────────────────
 async function loadMenuPage() {
   const r = await fetchMyRestaurant();
-  if (!r) {
-    document.getElementById('menu-list').innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>Register a restaurant first</p></div>`;
-    return;
-  }
-  renderMenuList(r.menu || [], r._id);
+  if (!r) { document.getElementById('menu-list').innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>Register a restaurant first</p></div>`; return; }
+  renderMenuList(r.menu || [], rid(r));
 }
 
 function renderMenuList(menu, restId) {
   const el = document.getElementById('menu-list');
-  if (!menu.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><p>No menu items yet. Add your first item above!</p></div>`;
-    return;
-  }
-  el.innerHTML = `
-    <table class="menu-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Category</th>
-          <th>Price</th>
-          <th>Meal Type</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${menu.map(item => `
-          <tr>
-            <td class="item-name-cell">${item.name}<br><span style="font-size:11px;color:var(--text-dim);font-weight:400">${item.description || ''}</span></td>
-            <td><span class="item-cat">${item.category || '—'}</span></td>
-            <td class="item-price-cell">₹${item.base_price || item.price || 0}</td>
-            <td style="color:var(--text-muted);font-size:12px">${item.meal_type || 'allday'}</td>
-            <td><button class="btn btn-outline btn-sm" onclick="removeMenuItem('${restId}','${item.item_id || item._id}')">Remove</button></td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`;
+  if (!menu.length) { el.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><p>No menu items yet. Add your first item above!</p></div>`; return; }
+  el.innerHTML = `<table class="menu-table"><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Meal Type</th><th>Action</th></tr></thead><tbody>${menu.map(item => `<tr><td class="item-name-cell">${item.name}<br><span style="font-size:11px;color:var(--text-dim);font-weight:400">${item.description||''}</span></td><td><span class="item-cat">${item.category||'—'}</span></td><td class="item-price-cell">₹${item.base_price||item.price||0}</td><td style="color:var(--text-muted);font-size:12px">${item.meal_type||'allday'}</td><td style="display:flex;gap:6px">
+  <button class="btn btn-outline btn-sm" onclick="editMenuItem('${restId}','${item.item_id||item._id||item.id}')">✏️ Edit</button>
+  <button class="btn btn-outline btn-sm" style="color:#ff6b6b;border-color:rgba(220,38,38,0.3)" onclick="removeMenuItem('${restId}','${item.item_id||item._id||item.id}')">Remove</button>
+</td></tr>`).join('')}</tbody></table>`;
 }
 
 async function addMenuItem() {
-  const errEl = document.getElementById('menu-error');
-  const sucEl = document.getElementById('menu-success');
+  const errEl = document.getElementById('menu-error'), sucEl = document.getElementById('menu-success');
   errEl.classList.remove('show'); sucEl.classList.remove('show');
-  const name     = document.getElementById('item-name').value.trim();
-  const price    = parseFloat(document.getElementById('item-price').value);
+  const name = document.getElementById('item-name').value.trim();
+  const price = parseFloat(document.getElementById('item-price').value);
   const category = document.getElementById('item-category').value;
-  const mealType = document.getElementById('item-meal-type').value;
-  const desc     = document.getElementById('item-desc').value.trim();
-  if (!name)            { errEl.textContent = '⚠️ Item name is required'; errEl.classList.add('show'); return; }
+  const mealType = ['allday','breakfast','lunch','dinner'].filter(v => document.getElementById(`mt-${v}`)?.checked).join(',') || 'allday';
+  const desc = document.getElementById('item-desc').value.trim();
+  if (!name) { errEl.textContent = '⚠️ Item name is required'; errEl.classList.add('show'); return; }
   if (!price || price <= 0) { errEl.textContent = '⚠️ Valid price is required'; errEl.classList.add('show'); return; }
   const r = await fetchMyRestaurant();
   if (!r) { errEl.textContent = '⚠️ No restaurant found'; errEl.classList.add('show'); return; }
   const btn = document.getElementById('add-item-btn');
   btn.textContent = 'Adding...'; btn.disabled = true;
   try {
-    const res = await fetch(`${RAPI}/restaurants/${r._id}/menu`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ name, base_price: price, category, meal_type: mealType, description: desc })
-    });
+    const res = await fetch(`${RAPI}/restaurants/${rid(r)}/menu`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ name, base_price: price, category, meal_type: mealType, description: desc }) });
     const data = await res.json();
     if (data.success) {
-      sucEl.classList.add('show');
-      showToast(`${name} added to menu!`, 'success');
-      document.getElementById('item-name').value = '';
-      document.getElementById('item-price').value = '';
-      document.getElementById('item-desc').value = '';
-      renderMenuList(data.data?.menu || [], r._id);
+      sucEl.classList.add('show'); showToast(`${name} added!`, 'success');
+      document.getElementById('item-name').value = ''; document.getElementById('item-price').value = ''; document.getElementById('item-desc').value = '';
+      if (myRestaurant) myRestaurant.menu = data.data?.menu || myRestaurant.menu;
+      renderMenuList(data.data?.menu || [], rid(r));
       setTimeout(() => sucEl.classList.remove('show'), 3000);
-    } else {
-      errEl.textContent = '⚠️ ' + (data.detail || data.message || 'Failed to add item');
-      errEl.classList.add('show');
-    }
+    } else { errEl.textContent = '⚠️ ' + (data.detail || data.message || 'Failed'); errEl.classList.add('show'); }
   } catch (e) { errEl.textContent = '⚠️ Server error'; errEl.classList.add('show'); }
   btn.textContent = 'Add Item'; btn.disabled = false;
 }
 
 async function removeMenuItem(restId, itemId) {
-  if (!confirm('Remove this item from the menu?')) return;
+  if (!confirm('Remove this item?')) return;
   try {
-    const res  = await fetch(`${RAPI}/restaurants/${restId}/menu/${itemId}`, {
-      method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await fetch(`${RAPI}/restaurants/${restId}/menu/${itemId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
     const data = await res.json();
     if (data.success) { showToast('Item removed', 'success'); renderMenuList(data.data?.menu || [], restId); }
     else showToast('Could not remove item', 'error');
   } catch (e) { showToast('Server error', 'error'); }
 }
+function editMenuItem(restId, itemId) {
+  const r = myRestaurant;
+  const item = (r.menu || []).find(i => (i.item_id || i._id || i.id) === itemId);
+  if (!item) { showToast('Item not found', 'error'); return; }
+  openDrawer('✏️ Edit Menu Item', () => {
+    const el = document.getElementById('drawer-body');
+    el.innerHTML = `
+      <div class="alert error" id="edit-item-error"></div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px">
+        <div class="field"><label>Item Name</label><input type="text" id="ei-name" value="${item.name||''}"/></div>
+        <div class="field"><label>Price (₹)</label><input type="number" id="ei-price" value="${item.base_price||item.price||0}"/></div>
+        <div class="field">
+          <label>Category</label>
+          <select id="ei-category">
+            ${['Starters','Main Course','Rice & Biryani','Breads','Desserts','Beverages','Snacks','Pizza','Burgers','Sides'].map(c =>
+              `<option value="${c}" ${(item.category||'')=== c?'selected':''}>${c}</option>`
+            ).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Meal Type</label>
+          <div style="display:flex;flex-direction:column;gap:8px;padding:6px 0">
+            ${['allday','breakfast','lunch','dinner'].map(v => `
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
+                <input type="checkbox" id="ei-mt-${v}" ${(item.meal_type||'allday').split(',').includes(v)?'checked':''} style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/>
+                ${v.charAt(0).toUpperCase()+v.slice(1)}
+              </label>`).join('')}
+          </div>
+        </div>
+        <div class="field full"><label>Description</label><input type="text" id="ei-desc" value="${item.description||''}"/></div>
+      </div>
+      <div class="btn-row" style="margin-top:20px">
+        <button class="btn btn-outline" onclick="closeDrawer()">Cancel</button>
+        <button class="btn btn-gold" onclick="saveMenuItem('${restId}','${itemId}')">Save Changes</button>
+      </div>`;
+  });
+}
 
-// ── SETTINGS ────────────────────────────────────────
+async function saveMenuItem(restId, itemId) {
+  const errEl = document.getElementById('edit-item-error');
+  errEl.classList.remove('show');
+  const name  = document.getElementById('ei-name').value.trim();
+  const price = parseFloat(document.getElementById('ei-price').value);
+  const category = document.getElementById('ei-category').value;
+  const mealType = ['allday','breakfast','lunch','dinner'].filter(v => document.getElementById(`ei-mt-${v}`)?.checked).join(',') || 'allday';
+  const desc  = document.getElementById('ei-desc').value.trim();
+  if (!name)  { errEl.textContent = '⚠️ Item name is required'; errEl.classList.add('show'); return; }
+  if (!price || price <= 0) { errEl.textContent = '⚠️ Valid price is required'; errEl.classList.add('show'); return; }
+  try {
+    const res = await fetch(`${RAPI}/restaurants/${restId}/menu/${itemId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name, base_price: price, category, meal_type: mealType, description: desc })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (myRestaurant) myRestaurant.menu = data.data?.menu || myRestaurant.menu;
+      renderMenuList(data.data?.menu || myRestaurant.menu || [], restId);
+      closeDrawer();
+      showToast('Item updated!', 'success');
+    } else { errEl.textContent = '⚠️ ' + (data.detail || data.message || 'Update failed'); errEl.classList.add('show'); }
+  } catch(e) { errEl.textContent = '⚠️ Server error'; errEl.classList.add('show'); }
+}
+
+// ── Settings ────────────────────────────────────────
 async function loadSettings() {
   const el = document.getElementById('settings-content');
   el.innerHTML = '<div class="spinner"></div>';
-  const r = await fetchMyRestaurant();
-  if (!r) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>Register a restaurant first</p></div>`;
-    return;
-  }
+  const r = await fetchMyRestaurant(true); // force refresh to get latest state
+  if (!r) { el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>Register a restaurant first</p></div>`; return; }
   el.innerHTML = `
     <div class="toggle-row">
       <div class="toggle-info">
-        <h4>🔥 Surge Pricing</h4>
-        <p>Apply ${r.surge_multiplier || 1.5}x price multiplier during peak hours</p>
-      </div>
-      <button class="toggle ${r.is_surge ? 'on' : ''}" id="surge-toggle" onclick="toggleSurge('${r._id}', ${!r.is_surge})"></button>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
         <h4>✅ Restaurant Active</h4>
-        <p>Show your restaurant to customers</p>
+        <p>Show your restaurant to customers on the platform</p>
       </div>
-      <button class="toggle ${r.is_active !== false ? 'on' : ''}" id="active-toggle" onclick="toggleActive('${r._id}', ${r.is_active === false})"></button>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <h4>⭐ Boost Listing</h4>
-        <p>Appear at the top as a Customer Favourite</p>
-      </div>
-      <button class="btn btn-gold btn-sm" onclick="boostRestaurant('${r._id}')">
-        ${r.boost_active ? '🔥 Boosted' : 'Boost Now'}
-      </button>
+      <button class="toggle ${r.is_active!==false?'on':''}" id="active-toggle" onclick="toggleActive('${rid(r)}')"></button>
     </div>`;
 }
 
-async function toggleSurge(id, value) {
+async function toggleActive(id) {
+  const btn = document.getElementById('active-toggle');
+  const newValue = !btn.classList.contains('on'); // read current state and flip
+  btn.classList.toggle('on', newValue);
+  if (myRestaurant) myRestaurant.is_active = newValue;
+  localStorage.setItem('myRestaurant', JSON.stringify(myRestaurant));
   try {
-    await fetch(`${RAPI}/restaurants/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ is_surge: value })
-    });
-    document.getElementById('surge-toggle').classList.toggle('on', value);
-    showToast(`Surge pricing ${value ? 'enabled' : 'disabled'}`, 'success');
-  } catch (e) { showToast('Could not update', 'error'); }
+    await fetch(`${RAPI}/restaurants/${id}`, { method:'PUT', headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`}, body:JSON.stringify({is_active:newValue}) });
+    showToast(`Restaurant ${newValue?'activated':'deactivated'}`, 'success');
+  } catch(e) {
+    btn.classList.toggle('on', !newValue);
+    if (myRestaurant) myRestaurant.is_active = !newValue;
+    showToast('Could not update','error');
+  }
 }
 
-async function toggleActive(id, value) {
+async function quickActivate(id) {
+  if (myRestaurant) myRestaurant.is_active = true;
+  localStorage.setItem('myRestaurant', JSON.stringify(myRestaurant));
   try {
-    await fetch(`${RAPI}/restaurants/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ is_active: value })
-    });
-    document.getElementById('active-toggle').classList.toggle('on', value);
-    showToast(`Restaurant ${value ? 'activated' : 'deactivated'}`, 'success');
-  } catch (e) { showToast('Could not update', 'error'); }
+    await fetch(`${RAPI}/restaurants/${id}`, { method:'PUT', headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`}, body:JSON.stringify({is_active:true}) });
+    showToast('Restaurant activated!', 'success');
+    loadOverview(); // refresh dashboard to remove the banner
+  } catch(e) {
+    if (myRestaurant) myRestaurant.is_active = false;
+    showToast('Could not activate','error');
+  }
 }
 
-async function boostRestaurant(id) {
-  try {
-    const res  = await fetch(`${RAPI}/restaurants/${id}/boost`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    if (data.success) { showToast('🔥 Restaurant boosted!', 'success'); loadSettings(); }
-    else showToast(data.detail || 'Could not boost', 'error');
-  } catch (e) { showToast('Server error', 'error'); }
-}
-
-// ── REGISTER RESTAURANT ─────────────────────────────
+// ── Register ────────────────────────────────────────
 async function registerRestaurant() {
-  const errEl = document.getElementById('reg-error');
-  const sucEl = document.getElementById('reg-success');
+  const errEl = document.getElementById('reg-error'), sucEl = document.getElementById('reg-success');
   errEl.classList.remove('show'); sucEl.classList.remove('show');
   const name    = document.getElementById('r-name').value.trim();
-  const cuisine = document.getElementById('r-cuisine').value.trim();
-  const city    = document.getElementById('r-city').value.trim();
+  const cuisine = document.getElementById('r-cuisine').value;
+  const cityVal = document.getElementById('r-city-select').value;
+  const city    = cityVal === 'other' ? document.getElementById('r-city-custom').value.trim() : cityVal;
   const phone   = document.getElementById('r-phone').value.trim();
   const email   = document.getElementById('r-email').value.trim();
   const address = document.getElementById('r-address').value.trim();
@@ -806,51 +1169,137 @@ async function registerRestaurant() {
   const open    = document.getElementById('r-open').value;
   const close   = document.getElementById('r-close').value;
   if (!name)    { errEl.textContent = '⚠️ Restaurant name is required'; errEl.classList.add('show'); return; }
-  if (!cuisine) { errEl.textContent = '⚠️ Cuisine type is required';    errEl.classList.add('show'); return; }
-  if (!city)    { errEl.textContent = '⚠️ City is required';            errEl.classList.add('show'); return; }
-  if (!phone)   { errEl.textContent = '⚠️ Phone is required';           errEl.classList.add('show'); return; }
-  if (!email)   { errEl.textContent = '⚠️ Email is required';           errEl.classList.add('show'); return; }
-  if (!address) { errEl.textContent = '⚠️ Address is required';         errEl.classList.add('show'); return; }
+  if (!cuisine) { errEl.textContent = '⚠️ Please select at least one cuisine'; errEl.classList.add('show'); return; }
+  if (!city)    { errEl.textContent = '⚠️ City is required'; errEl.classList.add('show'); return; }
+  if (!phone)   { errEl.textContent = '⚠️ Phone is required'; errEl.classList.add('show'); return; }
+  if (!email)   { errEl.textContent = '⚠️ Email is required'; errEl.classList.add('show'); return; }
+  if (!address) { errEl.textContent = '⚠️ Address is required'; errEl.classList.add('show'); return; }
+  if (!open)    { errEl.textContent = '⚠️ Opening time is required'; errEl.classList.add('show'); return; }
+  if (!close)   { errEl.textContent = '⚠️ Closing time is required'; errEl.classList.add('show'); return; }
   const btn = document.getElementById('reg-btn');
   btn.textContent = 'Registering...'; btn.disabled = true;
   try {
-    const res = await fetch(`${RAPI}/restaurants`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        name, cuisine, city, phone, email, address,
-        description: desc, opening_time: open, closing_time: close,
-        owner_id: user.id || user._id || '',
-      })
-    });
+    const res = await fetch(`${RAPI}/restaurants`, { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`}, body:JSON.stringify({name,cuisine,city,phone,email,address,description:desc,opening_time:open,closing_time:close,owner_id:String(user.id||user._id||'')}) });
     const data = await res.json();
     if (data.success) {
-      sucEl.classList.add('show');
       showToast('🎉 Restaurant registered!', 'success');
-      myRestaurant = data.data;
-      setTimeout(() => showPage('overview'), 1500);
-    } else {
-      errEl.textContent = '⚠️ ' + (data.detail || data.message || 'Registration failed');
-      errEl.classList.add('show');
-    }
-  } catch (e) {
-    errEl.textContent = '⚠️ Server error. Please try again.';
-    errEl.classList.add('show');
-  }
+      myRestaurant = data.data || data.restaurant || data;
+localStorage.setItem('myRestaurant', JSON.stringify(myRestaurant));
+      setTimeout(() => {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+        document.getElementById('page-overview').classList.add('active');
+        document.getElementById('nav-overview').classList.add('active');
+        loadOverview();
+      }, 800);
+    } else { errEl.textContent='⚠️ '+(data.detail||data.message||'Registration failed'); errEl.classList.add('show'); }
+  } catch(e) { errEl.textContent='⚠️ Server error. Please try again.'; errEl.classList.add('show'); }
   btn.textContent = 'Register Restaurant'; btn.disabled = false;
 }
 
-// ── Toast ────────────────────────────────────────────
+function prefillRegisterForm() {
+  setTimeout(() => {
+    const n = document.getElementById('r-name'); if (n && !n.value) n.value = user.restaurant_name || '';
+    const e = document.getElementById('r-email'); if (e && !e.value) e.value = user.email || '';
+    const p = document.getElementById('r-phone'); if (p && !p.value) p.value = user.phone || '';
+  }, 100);
+}
+
 let toastTimer;
-function showToast(msg, type = '') {
+function showToast(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = `toast ${type} show`;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.className = `toast ${type}`, 2500);
 }
 
-// Init
+// ── Orders ───────────────────────────────────────────
+const ORDER_STATUS_NEXT = { 'PENDING':'CONFIRMED', 'CONFIRMED':'PREPARING', 'PREPARING':'OUT_FOR_DELIVERY', 'OUT_FOR_DELIVERY':'DELIVERED' };
+const ORDER_STATUS_LABEL = { 'PENDING':'⏳ Pending', 'CONFIRMED':'✅ Confirmed', 'PREPARING':'👨‍🍳 Preparing', 'OUT_FOR_DELIVERY':'🛵 Out for Delivery', 'DELIVERED':'🎉 Delivered', 'CANCELLED':'❌ Cancelled', 'SCHEDULED':'📅 Scheduled' };
+const ORDER_STATUS_COLOR = { 'PENDING':'#FFA500', 'CONFIRMED':'#60a5fa', 'PREPARING':'#c084fc', 'OUT_FOR_DELIVERY':'#FFD700', 'DELIVERED':'#4ade80', 'CANCELLED':'#ff6b6b', 'SCHEDULED':'#a5b4fc' };
+
+async function loadOrders() {
+  const el = document.getElementById('orders-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  const r = await fetchMyRestaurant();
+  if (!r) { el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>Register a restaurant first</p></div>`; return; }
+  try {
+    const res  = await fetch(`${API}/orders/restaurant/${rid(r)}`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    renderOrders(data.data || [], rid(r));
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Could not load orders</p></div>`;
+  }
+}
+
+function renderOrders(orders, restId) {
+  const el = document.getElementById('orders-content');
+  if (!orders.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>No orders yet — they'll appear here when customers order</p></div>`;
+    return;
+  }
+  const active = orders.filter(o => !['DELIVERED','CANCELLED'].includes(o.status));
+  const past   = orders.filter(o =>  ['DELIVERED','CANCELLED'].includes(o.status));
+  el.innerHTML = `
+    ${active.length ? `<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">🔴 Active Orders (${active.length})</div>${active.map(o => restOrderCardHtml(o, restId)).join('')}<div style="height:24px"></div>` : ''}
+    ${past.length   ? `<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">Past Orders (${past.length})</div>${past.map(o => restOrderCardHtml(o, restId)).join('')}` : ''}`;
+}
+
+function restOrderCardHtml(o, restId) {
+  const status = o.status || 'PENDING';
+  const color  = ORDER_STATUS_COLOR[status] || '#aaa';
+  const next   = ORDER_STATUS_NEXT[status];
+  const items  = parseRestOrderItems(o.items);
+  const date   = new Date(o.createdAt || o.created_at).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  return `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px">
+        <div>
+          <span style="font-family:var(--font-display);font-size:13px;font-weight:700">Order #${o.id}</span>
+          <span style="font-size:11px;color:var(--text-dim);margin-left:8px">${date}</span>
+        </div>
+        <span style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;background:${color}22;color:${color};border:1px solid ${color}44">${ORDER_STATUS_LABEL[status] || status}</span>
+      </div>
+      <div style="padding:14px 18px">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">📞 ${o.deliveryPhone || o.delivery_phone || '—'} &nbsp;•&nbsp; 📍 ${o.deliveryAddress || o.delivery_address || '—'}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">${items.map(i => `<span style="color:var(--white);font-weight:600">${i.name}</span> ×${i.quantity||i.qty||1}`).join(' &nbsp;•&nbsp; ')}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--gold)">₹${o.totalAmount || o.total_amount || 0}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${status === 'PENDING' ? `<button onclick="updateOrderStatus(${o.id},'CANCELLED')" style="padding:7px 14px;background:transparent;border:1px solid rgba(220,38,38,0.3);border-radius:var(--radius-sm);color:#ff6b6b;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer">Reject</button>` : ''}
+            ${next ? `<button onclick="updateOrderStatus(${o.id},'${next}')" style="padding:7px 18px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#1a0505;border:none;border-radius:var(--radius-sm);font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer">${next==='CONFIRMED'?'Accept Order':next==='PREPARING'?'Start Preparing':next==='OUT_FOR_DELIVERY'?'Out for Delivery':'Mark Delivered'}</button>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function parseRestOrderItems(items) {
+  if (!items) return [];
+  if (Array.isArray(items)) return items;
+  try { return JSON.parse(items); } catch { return []; }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+const res  = await fetch(`${ORDER_API}/orders/${orderId}/status`, {
+        method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status: newStatus, reason: newStatus === 'CANCELLED' ? 'Rejected by restaurant' : undefined })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(newStatus === 'CANCELLED' ? 'Order rejected' : `Order → ${ORDER_STATUS_LABEL[newStatus]}`, 'success');
+      loadOrders();
+    } else { showToast(data.message || 'Could not update order', 'error'); }
+  } catch(e) { showToast('Server error', 'error'); }
+}
+
 loadOverview();
+document.getElementById('cuisine-done-btn').addEventListener('click', (e) => {
+  cuisineClosing = true;
+  document.getElementById('cuisine-popup').classList.remove('open');
+});
 </script>
 </body>
 </html>

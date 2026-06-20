@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><defs><linearGradient id='lb' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23dc2626'/><stop offset='100%25' stop-color='%237f1d1d'/></linearGradient><linearGradient id='lg' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23FFD700'/><stop offset='100%25' stop-color='%23FFA500'/></linearGradient></defs><path d='M13 38 Q13 58 36 58 Q59 58 59 38 Z' fill='url(%23lb)'/><rect x='11' y='33' width='50' height='8' rx='4' fill='url(%23lg)'/><line x1='24' y1='31' x2='16' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='32' y1='31' x2='26' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='40' y1='31' x2='46' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/><line x1='48' y1='31' x2='56' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/></svg>"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>QuickBowl — Restaurants</title>
+  <title>QuickBowl — Home</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
@@ -16,50 +16,104 @@
       --white: #ffffff; --text-muted: #aaaaaa; --text-dim: #666666;
       --font-display: 'Sora', sans-serif; --font-body: 'DM Sans', sans-serif;
       --radius-sm: 8px; --radius-md: 10px; --radius-lg: 16px;
+      --sidebar-w: 220px;
+      --nav-h: 57px;
+      --bottom-nav-h: 64px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: var(--font-body); background: var(--bg); min-height: 100vh; color: var(--white); }
 
-    /* NAV */
-   nav {
-  padding: 14px 0;
-  background: #0f0505;
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
-}
+    /* ── TOP NAV ── */
+    nav {
+      height: var(--nav-h);
+      padding: 0;
+      background: #0f0505;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 200;
+    }
+    .nav-inner {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 8px; }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: rgba(255,255,255,0.06); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
     .logo-name { font-family: var(--font-display); font-size: 20px; font-weight: 800; }
     .logo-name .q { color: var(--gold); } .logo-name .b { color: var(--white); }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
     .nav-user { font-size: 13px; color: var(--text-muted); }
-    .nav-btn {
-      padding: 8px 16px; border-radius: var(--radius-sm);
+    .nav-logout {
+      padding: 7px 14px; border-radius: var(--radius-sm);
+      background: rgba(220,38,38,0.12); color: var(--red);
+      border: 1px solid rgba(220,38,38,0.25);
       font-family: var(--font-body); font-size: 13px; font-weight: 600;
-      cursor: pointer; border: none; transition: all 0.2s;
+      cursor: pointer; transition: all 0.2s;
     }
-    .btn-orders { background: transparent; color: var(--gold); border: 1px solid rgba(255,215,0,0.3); }
-    .btn-orders:hover { background: rgba(255,215,0,0.08); }
-    .btn-profile { background: transparent; color: var(--text-muted); border: 1px solid var(--border-mid); }
-    .btn-profile:hover { color: var(--white); border-color: #444; }
-    .btn-logout { background: rgba(220,38,38,0.12); color: var(--red); border: 1px solid rgba(220,38,38,0.25); }
-    .btn-logout:hover { background: rgba(220,38,38,0.22); }
+    .nav-logout:hover { background: rgba(220,38,38,0.22); }
+    .nav-right-desktop { display: flex; align-items: center; gap: 12px; }
 
-    /* HERO */
+    /* ── LAYOUT ── */
+    .layout {
+      display: flex;
+      min-height: calc(100vh - var(--nav-h));
+    }
+
+    /* ── DESKTOP SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w); flex-shrink: 0;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: sticky;
+      top: var(--nav-h);
+      height: calc(100vh - var(--nav-h));
+      overflow-y: auto;
+    }
+    .sidebar-section {
+      padding: 0 12px; margin-bottom: 8px;
+      font-size: 10px; font-weight: 700;
+      color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 20px; font-size: 13px; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+      border-left: 3px solid transparent; text-decoration: none;
+      margin-bottom: 2px;
+    }
+    .sidebar-item:hover { color: var(--white); background: rgba(255,255,255,0.03); }
+    .sidebar-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(255,215,0,0.05); }
+    .sidebar-icon { font-size: 17px; width: 20px; text-align: center; }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 12px 20px; }
+    .sidebar-logout {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 20px; font-size: 13px; font-weight: 600;
+      color: var(--red); cursor: pointer; transition: all 0.2s;
+      border-left: 3px solid transparent; border: none; background: none;
+      width: 100%; text-align: left; margin-top: 8px;
+    }
+    .sidebar-logout:hover { background: rgba(220,38,38,0.06); }
+
+    /* ── MAIN CONTENT ── */
+    .main-content { flex: 1; overflow-y: auto; }
+
+    /* ── HERO ── */
     .hero {
-  padding: 44px 0 36px;
-  background: linear-gradient(135deg, #1a0505 0%, #0f0505 100%);
-  border-bottom: 1px solid var(--border);
-}
-.hero-inner {
-  max-width: 1140px;
-  margin: 0 auto;
-  padding: 0 28px;
-}
-    .hero h1 { font-family: var(--font-display); font-size: 30px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+      padding: 40px 0 32px;
+      background: linear-gradient(135deg, #1a0505 0%, #0f0505 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-inner { max-width: 1140px; margin: 0 auto; padding: 0 28px; }
+    .hero h1 { font-family: var(--font-display); font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px; }
     .hero h1 span { color: var(--gold); }
-    .hero p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+    .hero p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
     .search-wrap { display: flex; gap: 10px; max-width: 520px; }
     .search-wrap input {
-      flex: 1; padding: 13px 16px;
+      flex: 1; padding: 12px 16px;
       background: var(--bg-card); border: 1px solid var(--border-mid);
       border-radius: var(--radius-md); color: var(--white);
       font-family: var(--font-body); font-size: 14px; outline: none;
@@ -68,7 +122,7 @@
     .search-wrap input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,215,0,0.08); }
     .search-wrap input::placeholder { color: var(--text-dim); }
     .search-wrap button {
-      padding: 13px 22px;
+      padding: 12px 20px;
       background: linear-gradient(135deg, var(--gold), var(--gold-dark));
       color: #1a0505; border: none; border-radius: var(--radius-md);
       font-family: var(--font-display); font-size: 13px; font-weight: 700; cursor: pointer;
@@ -76,8 +130,8 @@
     }
     .search-wrap button:hover { box-shadow: 0 4px 16px rgba(255,215,0,0.35); }
 
-    /* MAIN */
-    .main { padding: 32px 28px; max-width: 1140px; margin: 0 auto;  }
+    /* ── PAGE CONTENT ── */
+    .page-content { padding: 28px; max-width: 1140px; margin: 0 auto; }
     .section-title {
       font-family: var(--font-display); font-size: 15px; font-weight: 700;
       color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
@@ -85,53 +139,32 @@
     }
     .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    /* GRID */
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
-
-    /* RESTAURANT CARD */
+    /* ── RESTAURANT GRID ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
     .rest-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: var(--radius-lg); overflow: hidden; cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
-    .rest-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(220,38,38,0.12);
-      border-color: #3a1515;
-    }
+    .rest-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(220,38,38,0.12); border-color: #3a1515; }
     .rest-img {
-      height: 150px;
+      height: 148px;
       background: linear-gradient(135deg, #2d0808, #1a0505);
       display: flex; align-items: center; justify-content: center;
-      font-size: 56px; position: relative;
+      font-size: 54px; position: relative;
     }
-    .badge {
-      position: absolute; top: 10px; right: 10px;
-      padding: 4px 10px; border-radius: 20px;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
-    }
-    /* Surge badge removed from customer view — only discount badge shown */
+    .badge { position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
     .badge-discount { background: rgba(255,215,0,0.92); color: #1a0505; }
-    .rest-body { padding: 16px; }
-    .rest-name {
-      font-family: var(--font-display); font-size: 15px; font-weight: 700;
-      color: var(--white); margin-bottom: 6px;
-    }
-    .rest-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-    .tag {
-      padding: 3px 8px; border-radius: 6px;
-      background: rgba(255,255,255,0.05); border: 1px solid var(--border-mid);
-      font-size: 11px; color: var(--text-muted);
-    }
-    .rest-footer {
-      display: flex; align-items: center; justify-content: space-between;
-      padding-top: 12px; border-top: 1px solid var(--border);
-    }
-    .rest-stats { display: flex; gap: 14px; }
-    .rest-stat { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+    .rest-body { padding: 14px; }
+    .rest-name { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+    .rest-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .tag { padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-mid); font-size: 11px; color: var(--text-muted); }
+    .rest-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border); }
+    .rest-stats { display: flex; gap: 12px; }
+    .rest-stat { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
     .rest-stat.gold { color: var(--gold); font-weight: 600; }
     .order-now-btn {
-      padding: 7px 16px;
+      padding: 6px 14px;
       background: linear-gradient(135deg, var(--red), var(--red-dark));
       color: white; border: none; border-radius: var(--radius-sm);
       font-family: var(--font-body); font-size: 12px; font-weight: 600;
@@ -139,67 +172,200 @@
     }
     .order-now-btn:hover { box-shadow: 0 4px 12px rgba(220,38,38,0.4); }
 
-    /* STATES */
-    .loading-state, .empty-state {
-      grid-column: 1 / -1; text-align: center; padding: 70px 20px;
-      color: var(--text-muted);
-    }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--border); border-top-color: var(--gold);
-      border-radius: 50%; animation: spin 0.8s linear infinite;
-      margin: 0 auto 16px;
-    }
+    /* ── STATES ── */
+    .loading-state, .empty-state { grid-column: 1 / -1; text-align: center; padding: 70px 20px; color: var(--text-muted); }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .empty-icon { font-size: 52px; margin-bottom: 16px; }
     .empty-state h3 { font-family: var(--font-display); font-size: 16px; color: var(--white); margin-bottom: 6px; }
 
-    @media (max-width: 600px) {
-      nav { padding: 12px 16px; }
-      .hero { padding: 28px 16px 24px; }
+    /* ── OFFERS PAGE ── */
+    .offers-page { padding: 28px; max-width: 900px; margin: 0 auto; }
+    .offer-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 20px;
+      transition: border-color 0.2s;
+    }
+    .offer-card:hover { border-color: var(--border-mid); }
+    .offer-icon { font-size: 40px; flex-shrink: 0; }
+    .offer-info { flex: 1; }
+    .offer-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .offer-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+    .offer-tag {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+    }
+    .offer-tag.platform { background: rgba(255,215,0,0.12); color: var(--gold); border: 1px solid rgba(255,215,0,0.25); }
+    .offer-tag.restaurant { background: rgba(220,38,38,0.1); color: #ff6b6b; border: 1px solid rgba(220,38,38,0.2); }
+    .offer-badge {
+      font-family: var(--font-display); font-size: 22px; font-weight: 800;
+      color: var(--gold); flex-shrink: 0; text-align: right; min-width: 70px;
+    }
+    .offer-valid { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+    /* ── BOTTOM NAV (mobile only) ── */
+    .bottom-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: var(--bottom-nav-h);
+      background: #0f0505;
+      border-top: 1px solid var(--border);
+      z-index: 200;
+    }
+    .bottom-nav-inner {
+      display: flex; height: 100%;
+    }
+    .bottom-nav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      cursor: pointer; transition: all 0.2s;
+      border: none; background: none; color: var(--text-dim);
+      font-family: var(--font-body);
+    }
+    .bottom-nav-item.active { color: var(--gold); }
+    .bottom-nav-item:hover { color: var(--text-muted); }
+    .bottom-nav-icon { font-size: 20px; line-height: 1; }
+    .bottom-nav-label { font-size: 10px; font-weight: 600; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .nav-right-desktop { display: none; }
+      .bottom-nav { display: block; }
+      .main-content { padding-bottom: var(--bottom-nav-h); }
+      .hero { padding: 28px 0 24px; }
       .hero h1 { font-size: 22px; }
-      .main { padding: 24px 16px; }
-      .nav-user { display: none; }
+      .hero-inner { padding: 0 16px; }
+      .page-content { padding: 20px 16px; }
+      .offers-page { padding: 20px 16px; }
+      .grid { grid-template-columns: 1fr; }
+      .offer-card { flex-wrap: wrap; gap: 12px; }
     }
   </style>
 </head>
 <body>
 
+<!-- TOP NAV -->
 <nav>
-  <div style="max-width:1140px;margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;width:100%">
-    <div class="logo-name"><span class="q">Quick</span><span class="b">Bowl</span></div>
-    <div class="nav-right">
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 72 72" fill="none">
+          <defs>
+            <linearGradient id="lb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient>
+            <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFA500"/></linearGradient>
+          </defs>
+          <path d="M13 38 Q13 58 36 58 Q59 58 59 38 Z" fill="url(#lb)"/>
+          <rect x="11" y="33" width="50" height="8" rx="4" fill="url(#lg)"/>
+          <line x1="24" y1="31" x2="16" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <line x1="32" y1="31" x2="26" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <line x1="40" y1="31" x2="46" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+          <line x1="48" y1="31" x2="56" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="logo-name"><span class="q">Quick</span><span class="b">Bowl</span></div>
+    </div>
+    <div class="nav-right-desktop">
       <span class="nav-user" id="nav-user"></span>
-      <button class="nav-btn btn-orders" onclick="location.href='/orders.html'">My Orders</button>
-      <button class="nav-btn btn-profile" onclick="location.href='/profile.html'">Profile</button>
-      <button class="nav-btn btn-logout" onclick="logout()">Logout</button>
+      <button class="nav-logout" onclick="logout()">Logout</button>
     </div>
   </div>
 </nav>
 
-<div class="hero">
-  <div class="hero-inner">
-    <h1>What are you <span>craving</span> today?</h1>
-    <p>Fresh food from the best restaurants, delivered fast</p>
-    <div class="search-wrap">
-      <input type="text" id="search-input" placeholder="Search restaurants or cuisines..." oninput="filterRestaurants()"/>
-      <button onclick="filterRestaurants()">Search</button>
+<div class="layout">
+
+  <!-- DESKTOP SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">Menu</div>
+    <div class="sidebar-item active" id="sb-home" onclick="showTab('home')">
+      <span class="sidebar-icon">🏠</span> Home
     </div>
+    <div class="sidebar-item" id="sb-orders" onclick="showTab('orders')">
+      <span class="sidebar-icon">📦</span> My Orders
+    </div>
+    <div class="sidebar-item" id="sb-offers" onclick="showTab('offers')">
+      <span class="sidebar-icon">🎟️</span> Offers
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">Account</div>
+    <div class="sidebar-item" id="sb-profile" onclick="location.href='/profile.html'">
+      <span class="sidebar-icon">👤</span> Profile
+    </div>
+    <button class="sidebar-logout" onclick="logout()">
+      <span class="sidebar-icon">🚪</span> Logout
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- HOME TAB -->
+    <div id="tab-home">
+      <div class="hero">
+        <div class="hero-inner">
+          <h1>What are you <span>craving</span> today?</h1>
+          <p>Fresh food from the best restaurants, delivered fast</p>
+          <div class="search-wrap">
+            <input type="text" id="search-input" placeholder="Search restaurants or cuisines..." oninput="filterRestaurants()"/>
+            <button onclick="filterRestaurants()">Search</button>
+          </div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="section-title">All Restaurants</div>
+        <div class="grid" id="restaurant-grid">
+          <div class="loading-state"><div class="spinner"></div>Loading restaurants...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="tab-orders" style="display:none">
+      <div class="page-content">
+        <div class="section-title" style="font-size:20px;text-transform:none;letter-spacing:0;color:var(--white);font-family:var(--font-display);font-weight:800;margin-bottom:6px">My Orders</div>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">Track your current and past orders</p>
+        <div id="orders-list"><div class="loading-state"><div class="spinner"></div>Loading orders...</div></div>
+      </div>
+    </div>
+
+    <!-- OFFERS TAB -->
+    <div id="tab-offers" style="display:none">
+      <div class="offers-page">
+        <div class="section-title" style="font-size:20px;text-transform:none;letter-spacing:0;color:var(--white);font-family:var(--font-display);font-weight:800;margin-bottom:6px">Offers & Deals</div>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">Exclusive deals from QuickBowl and our restaurant partners</p>
+        <div id="offers-list"><div class="loading-state"><div class="spinner"></div>Loading offers...</div></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<div class="main">
-  <div class="section-title">All Restaurants</div>
-  <div class="grid" id="restaurant-grid">
-    <div class="loading-state">
-      <div class="spinner"></div>
-      Loading restaurants...
-    </div>
+<!-- BOTTOM NAV (mobile) -->
+<div class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bottom-nav-item active" id="bn-home" onclick="showTab('home')">
+      <span class="bottom-nav-icon">🏠</span>
+      <span class="bottom-nav-label">Home</span>
+    </button>
+    <button class="bottom-nav-item" id="bn-orders" onclick="showTab('orders')">
+      <span class="bottom-nav-icon">📦</span>
+      <span class="bottom-nav-label">Orders</span>
+    </button>
+    <button class="bottom-nav-item" id="bn-offers" onclick="showTab('offers')">
+      <span class="bottom-nav-icon">🎟️</span>
+      <span class="bottom-nav-label">Offers</span>
+    </button>
+    <button class="bottom-nav-item" id="bn-profile" onclick="location.href='/profile.html'">
+      <span class="bottom-nav-icon">👤</span>
+      <span class="bottom-nav-label">Profile</span>
+    </button>
   </div>
 </div>
 
 <script>
-  const API = 'http://localhost:3000/api';
+  const API   = 'http://localhost:3000/api';
+  const ORDER_API = 'http://localhost:8002/api';
   const token = localStorage.getItem('token');
   const user  = JSON.parse(localStorage.getItem('user') || '{}');
   if (!token) location.href = '/';
@@ -207,14 +373,52 @@
   document.getElementById('nav-user').textContent = 'Hi, ' + (user.first_name || user.name || 'there') + ' 👋';
 
   let allRestaurants = [];
+  let currentTab = 'home';
 
   function logout() { localStorage.clear(); location.href = '/'; }
 
+  // ── Tab switching ───────────────────────────────────
+  function showTab(name) {
+    // Stop orders auto-refresh when leaving orders tab
+if (currentTab === 'orders' && name !== 'orders') {
+  if (window.ordersRefreshTimer) clearInterval(window.ordersRefreshTimer);
+}
+    // Hide all tabs
+    ['home','orders','offers'].forEach(t => {
+      document.getElementById(`tab-${t}`).style.display = 'none';
+    });
+    // Deactivate sidebar items
+    ['home','orders','offers'].forEach(t => {
+      const sb = document.getElementById(`sb-${t}`);
+      if (sb) sb.classList.remove('active');
+      const bn = document.getElementById(`bn-${t}`);
+      if (bn) bn.classList.remove('active');
+    });
+    // Show active tab
+    document.getElementById(`tab-${name}`).style.display = 'block';
+    const sb = document.getElementById(`sb-${name}`);
+    if (sb) sb.classList.add('active');
+    const bn = document.getElementById(`bn-${name}`);
+    if (bn) bn.classList.add('active');
+    currentTab = name;
+    // Load content
+    if (name === 'orders') {
+  loadOrders();
+  // Auto-refresh orders every 15 seconds
+  if (window.ordersRefreshTimer) clearInterval(window.ordersRefreshTimer);
+  window.ordersRefreshTimer = setInterval(loadOrders, 15000);
+}
+    if (name === 'offers') loadOffers();
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+
+  // ── HOME: Load Restaurants ──────────────────────────
   async function loadRestaurants() {
     try {
       const res  = await fetch(`${API}/restaurants`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
-      allRestaurants = data.all_restaurants?.data || data.data || data.restaurants || [];
+allRestaurants = [...(data.all_restaurants?.data || []), ...(data.customer_favourites?.data || [])];
       renderRestaurants(allRestaurants);
     } catch (e) {
       document.getElementById('restaurant-grid').innerHTML = `
@@ -223,17 +427,17 @@
           <h3>Could not load restaurants</h3>
           <p>Make sure all services are running</p>
         </div>`;
+
     }
   }
 
   function filterRestaurants() {
     const q = document.getElementById('search-input').value.toLowerCase();
-    const filtered = allRestaurants.filter(r =>
+    renderRestaurants(allRestaurants.filter(r =>
       (r.name||'').toLowerCase().includes(q) ||
       (r.cuisine_type||r.cuisine||'').toLowerCase().includes(q) ||
       (r.city||'').toLowerCase().includes(q)
-    );
-    renderRestaurants(filtered);
+    ));
   }
 
   const EMOJIS = ['🍛','🍕','🍜','🥘','🍱','🌮','🍔','🥗','🍣','🍲','🧆','🥙'];
@@ -241,24 +445,17 @@
   function renderRestaurants(list) {
     const grid = document.getElementById('restaurant-grid');
     if (!list.length) {
-      grid.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <h3>No restaurants found</h3>
-          <p>Try a different search term</p>
-        </div>`;
+      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><h3>No restaurants found</h3><p>Try a different search term</p></div>`;
       return;
     }
     grid.innerHTML = list.map((r, i) => {
-      const emoji       = EMOJIS[i % EMOJIS.length];
-      // Surge is intentionally hidden from customers — prices silently reflect surge multiplier
+      const emoji      = EMOJIS[i % EMOJIS.length];
       const hasDiscount = r.discount_active || r.discount_percent > 0;
-      const rating      = r.rating ? r.rating.toFixed(1) : (4.0 + Math.random() * 0.9).toFixed(1);
-      const delivery    = r.delivery_time || '30–45 min';
-      const minOrder    = r.min_order || 99;
-      const cuisine     = r.cuisine_type || r.cuisine || 'Multi-cuisine';
-      const city        = r.city || 'Local';
-
+      const rating     = r.rating ? r.rating.toFixed(1) : (4.0 + Math.random() * 0.9).toFixed(1);
+      const delivery   = r.delivery_time || '30–45 min';
+      const minOrder   = r.min_order || 99;
+      const cuisine    = r.cuisine_type || r.cuisine || 'Multi-cuisine';
+      const city       = r.city || 'Local';
       return `
         <div class="rest-card" onclick="goToRestaurant('${r._id || r.id}')">
           <div class="rest-img">
@@ -278,9 +475,7 @@
                 <span class="rest-stat">🕐 ${delivery}</span>
                 <span class="rest-stat">₹${minOrder} min</span>
               </div>
-              <button class="order-now-btn" onclick="event.stopPropagation(); goToRestaurant('${r._id || r.id}')">
-                Order →
-              </button>
+              <button class="order-now-btn" onclick="event.stopPropagation(); goToRestaurant('${r._id || r.id}')">Order →</button>
             </div>
           </div>
         </div>`;
@@ -289,6 +484,168 @@
 
   function goToRestaurant(id) { location.href = `/restaurant.html?id=${id}`; }
 
+  // ── ORDERS ──────────────────────────────────────────
+  const STATUS_LABELS = {
+    PENDING:'⏳ Pending', CONFIRMED:'✅ Confirmed', PREPARING:'👨‍🍳 Preparing',
+    OUT_FOR_DELIVERY:'🛵 On the way', DELIVERED:'🎉 Delivered',
+    CANCELLED:'❌ Cancelled', SCHEDULED:'📅 Scheduled',
+  };
+  const STATUS_STEPS = ['PENDING','CONFIRMED','PREPARING','OUT_FOR_DELIVERY','DELIVERED'];
+
+  async function loadOrders() {
+    const el = document.getElementById('orders-list');
+    el.innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading orders...</div>';
+    try {
+      const userId = user.id || user._id;
+      const res    = await fetch(`${ORDER_API}/orders/user/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const data   = await res.json();
+      const orders = data.data || data.orders || data || [];
+      renderOrders(Array.isArray(orders) ? orders : []);
+    } catch (e) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load orders</h3></div>`;
+    }
+  }
+
+  function renderOrders(orders) {
+    const el = document.getElementById('orders-list');
+    if (!orders.length) {
+      el.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🍽️</div>
+          <h3>No orders yet</h3>
+          <p>Place your first order and it will appear here</p>
+          <button onclick="showTab('home')" style="margin-top:16px;padding:12px 24px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#1a0505;border:none;border-radius:var(--radius-md);font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer">Browse Restaurants</button>
+        </div>`;
+      return;
+    }
+    el.innerHTML = orders.map(order => {
+      const status      = order.status || 'PENDING';
+      const isCancelled = status === 'CANCELLED';
+      const stepIndex   = STATUS_STEPS.indexOf(status);
+      const items       = parseItems(order.items);
+      const date        = new Date(order.created_at || order.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      const statusColors = { PENDING:'#FFA500', CONFIRMED:'#60a5fa', PREPARING:'#c084fc', OUT_FOR_DELIVERY:'#FFD700', DELIVERED:'#4ade80', CANCELLED:'#ff6b6b', SCHEDULED:'#a5b4fc' };
+      const color = statusColors[status] || '#aaa';
+
+      let progressHtml = '';
+      if (!isCancelled) {
+        const stepLabels = ['Placed','Confirmed','Preparing','On way','Delivered'];
+        progressHtml = `<div style="display:flex;align-items:center;margin-bottom:14px">`;
+        STATUS_STEPS.forEach((step, i) => {
+          const isDone = i < stepIndex, isActive = i === stepIndex;
+          const dotColor = isDone ? '#4ade80' : isActive ? 'var(--gold)' : 'var(--border-mid)';
+          if (i > 0) progressHtml += `<div style="flex:1;height:2px;background:${isDone ? '#4ade80' : 'var(--border-mid)'};margin-bottom:14px"></div>`;
+          progressHtml += `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:10px;height:10px;border-radius:50%;background:${dotColor};${isActive ? 'box-shadow:0 0 8px rgba(255,215,0,0.5)' : ''}"></div>
+            <span style="font-size:9px;color:${isActive ? 'var(--gold)' : isDone ? '#4ade80' : 'var(--text-dim)'};white-space:nowrap">${stepLabels[i]}</span>
+          </div>`;
+        });
+        progressHtml += `</div>`;
+      }
+
+      const canCancel = ['PENDING','CONFIRMED'].includes(status);
+      return `
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:14px;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-family:var(--font-display);font-size:14px;font-weight:700">Order #${order.id || order._id} <span style="color:var(--text-muted);font-weight:400;font-size:12px">· ${date}</span></div>
+            </div>
+            <span style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;background:${color}22;color:${color};border:1px solid ${color}44">${STATUS_LABELS[status] || status}</span>
+          </div>
+          <div style="padding:14px 18px">
+            <div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:12px">🍽️ ${order.restaurant_name || order.restaurantName || 'Restaurant'}</div>
+            ${progressHtml}
+            <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
+              ${items.map(item => `
+                <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted)">
+                  <span><span style="color:var(--text-dim)">×${item.quantity || item.qty || 1}</span> ${item.name}</span>
+                  <span style="color:var(--white);font-weight:600">₹${(item.price * (item.quantity || item.qty || 1)).toFixed(0)}</span>
+                </div>`).join('')}
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px">
+              <div>
+                <div style="font-family:var(--font-display);font-size:15px;font-weight:700">Total: <span style="color:var(--gold)">₹${order.total_amount || order.totalAmount || 0}</span></div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">📍 ${order.delivery_address || order.deliveryAddress || ''}</div>
+              </div>
+              ${canCancel ? `<button onclick="cancelOrder('${order.id || order._id}')" style="padding:7px 14px;background:transparent;border:1px solid rgba(220,38,38,0.3);border-radius:var(--radius-sm);color:var(--red);font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer">Cancel</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function parseItems(items) {
+    if (!items) return [];
+    if (Array.isArray(items)) return items;
+    try { return JSON.parse(items); } catch { return []; }
+  }
+
+  async function cancelOrder(orderId) {
+    if (!confirm('Cancel this order?')) return;
+    try {
+const res  = await fetch(`${ORDER_API}/orders/${orderId}/status`, {
+            method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'CANCELLED', reason: 'Cancelled by customer' }),
+      });
+      const data = await res.json();
+      if (data.success || data.id) { loadOrders(); }
+    } catch (e) {}
+  }
+
+  // ── OFFERS ──────────────────────────────────────────
+  async function loadOffers() {
+    const el = document.getElementById('offers-list');
+    el.innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading offers...</div>';
+    let restaurantOffers = [];
+    try {
+      const res  = await fetch(`${API}/restaurants`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      const all = [...(data.all_restaurants?.data || []), ...(data.customer_favourites?.data || [])];
+      restaurantOffers = all.filter(r => r.discount_active || r.discount_percent > 0).map(r => ({
+        icon: '🍽️',
+        title: r.name,
+        desc: `${r.discount_percent || 10}% off on all orders from this restaurant`,
+        badge: `${r.discount_percent || 10}% OFF`,
+        tag: 'restaurant',
+        valid: 'Limited time',
+        id: r._id || r.id,
+      }));
+    } catch (e) {}
+
+    if (!restaurantOffers.length) {
+      el.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+          <div style="font-size:52px;margin-bottom:16px">🎟️</div>
+          <h3 style="font-family:var(--font-display);font-size:16px;color:var(--white);margin-bottom:8px">No offers right now</h3>
+          <p>Check back soon for exclusive deals!</p>
+        </div>`;
+      return;
+    }
+    el.innerHTML = `
+      <div class="section-title">🏪 Restaurant Deals</div>
+      ${restaurantOffers.map(o => offerCardHTML(o, true)).join('')}`;
+  }
+        
+
+  function offerCardHTML(o, clickable = false) {
+    return `
+      <div class="offer-card" ${clickable && o.id ? `onclick="goToRestaurant('${o.id}')" style="cursor:pointer"` : ''}>
+        <div class="offer-icon">${o.icon}</div>
+        <div class="offer-info">
+          <div class="offer-title">${o.title}</div>
+          <div class="offer-desc">${o.desc}</div>
+          <span class="offer-tag ${o.tag}">${o.tag === 'platform' ? '⚡ QuickBowl Offer' : '🏪 Restaurant Deal'}</span>
+          <div class="offer-valid">Valid: ${o.valid}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="offer-badge">${o.badge}</div>
+          ${clickable ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px">Order now →</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  // Init
   loadRestaurants();
 </script>
 </body>

@@ -17,6 +17,8 @@ const makeProxy = (target, pathRewrite) => {
         changeOrigin: true,
         followRedirects: true,
         pathRewrite,
+        proxyTimeout: 60000,
+        timeout: 60000,
         on: {
             error: (err, req, res) => {
                 if (!res.headersSent) {
