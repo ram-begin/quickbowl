@@ -458,14 +458,16 @@
             <label>Address</label>
             <input type="text" id="r-address" placeholder="Full address"/>
           </div>
-          <div class="field">
-            <label>Opening Time 🕐</label>
-            <input type="time" id="r-open" onclick="this.showPicker && this.showPicker()"/>
-          </div>
-          <div class="field">
-            <label>Closing Time 🕐</label>
-            <input type="time" id="r-close" onclick="this.showPicker && this.showPicker()"/>
-          </div>
+         <div class="field">
+  <label>Opening Time 🕐</label>
+  <input type="time" id="r-open" onclick="this.showPicker && this.showPicker()" oninput="document.getElementById('r-open-preview').textContent='→ '+formatTime12h(this.value)"/>
+  <div id="r-open-preview" style="font-size:12px;color:var(--gold);margin-top:5px;font-weight:600"></div>
+</div>
+<div class="field">
+  <label>Closing Time 🕐</label>
+  <input type="time" id="r-close" onclick="this.showPicker && this.showPicker()" oninput="document.getElementById('r-close-preview').textContent='→ '+formatTime12h(this.value)"/>
+  <div id="r-close-preview" style="font-size:12px;color:var(--gold);margin-top:5px;font-weight:600"></div>
+</div>
           <div class="field full">
             <label>Description</label>
             <textarea id="r-desc" placeholder="Tell customers about your restaurant..."></textarea>
@@ -503,6 +505,14 @@ let myRestaurant = null;
 let cachedOrders = null;
 
 const rid = (r) => r._id || r.id;
+
+function formatTime12h(time24) {
+  if (!time24) return '—';
+  const [h, m] = time24.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12  = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
 
 // ── Sidebar ─────────────────────────────────────────
 function toggleSidebar() {
@@ -903,7 +913,7 @@ try {
       <button class="btn btn-gold btn-sm" onclick="quickActivate('${rid(r)}')">✅ Activate Now</button>
     </div>` : ''}
     <div class="rest-banner">
-      <div class="rest-banner-info"><h2>🍽️ ${r.name}</h2><p>${r.cuisine || ''} • ${r.city || ''} • ${r.opening_time || '09:00'} – ${r.closing_time || '23:00'}</p></div>
+      <div class="rest-banner-info"><h2>🍽️ ${r.name}</h2><p>${r.cuisine || ''} • ${r.city || ''} • ${formatTime12h(r.opening_time || '09:00')} – ${formatTime12h(r.closing_time || '23:00')}</p></div>
       <div class="rest-banner-actions">
         <button class="btn btn-outline btn-sm" onclick="showPage('restaurant');setTimeout(renderRestaurantEdit,150)">Edit Details</button>
         <button class="btn btn-gold btn-sm" onclick="showPage('menu')">Manage Menu</button>
@@ -982,11 +992,11 @@ function renderRestaurantView(r) {
         </div>
         <div>
           <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Opening Time</div>
-          <div style="font-size:14px">🕐 ${r.opening_time || '—'}</div>
+          <div style="font-size:14px">🕐 ${formatTime12h(r.opening_time)}</div>
         </div>
         <div>
           <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Closing Time</div>
-          <div style="font-size:14px">🕐 ${r.closing_time || '—'}</div>
+          <div style="font-size:14px">🕐 ${formatTime12h(r.closing_time)}</div>
         </div>
         <div>
           <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Status</div>
@@ -1020,8 +1030,16 @@ function renderRestaurantEdit() {
         <div class="field"><label>Cuisine</label><input type="text" id="e-cuisine" value="${r.cuisine||''}"/></div>
 <div class="field"><label>City</label><input type="text" id="e-city" value="${r.city||''}"/></div>
 <div class="field"><label>Phone <span style="color:var(--text-dim);font-size:10px;font-weight:400">(cannot be changed)</span></label><input type="tel" id="e-phone" value="${r.phone||''}" disabled style="opacity:0.5;cursor:not-allowed"/></div>
-        <div class="field"><label>Opening Time 🕐</label><input type="time" id="e-open" value="${r.opening_time||''}" style="color-scheme:dark;cursor:pointer" onclick="this.showPicker&&this.showPicker()"/></div>
-        <div class="field"><label>Closing Time 🕐</label><input type="time" id="e-close" value="${r.closing_time||''}" style="color-scheme:dark;cursor:pointer" onclick="this.showPicker&&this.showPicker()"/></div>
+       <div class="field">
+  <label>Opening Time 🕐</label>
+  <input type="time" id="e-open" value="${r.opening_time||''}" style="color-scheme:dark;cursor:pointer" onclick="this.showPicker&&this.showPicker()" oninput="document.getElementById('e-open-preview').textContent='→ '+formatTime12h(this.value)"/>
+  <div id="e-open-preview" style="font-size:12px;color:var(--gold);margin-top:5px;font-weight:600">${r.opening_time ? '→ '+formatTime12h(r.opening_time) : ''}</div>
+</div>
+<div class="field">
+  <label>Closing Time 🕐</label>
+  <input type="time" id="e-close" value="${r.closing_time||''}" style="color-scheme:dark;cursor:pointer" onclick="this.showPicker&&this.showPicker()" oninput="document.getElementById('e-close-preview').textContent='→ '+formatTime12h(this.value)"/>
+  <div id="e-close-preview" style="font-size:12px;color:var(--gold);margin-top:5px;font-weight:600">${r.closing_time ? '→ '+formatTime12h(r.closing_time) : ''}</div>
+</div>
         <div class="field"><label>Email <span style="color:var(--text-dim);font-size:10px;font-weight:400">(cannot be changed)</span></label><input type="email" value="${r.email||''}" disabled style="opacity:0.5;cursor:not-allowed"/></div>
         <div class="field full"><label>Address</label><input type="text" id="e-address" value="${r.address||''}"/></div>
         <div class="field full"><label>Description</label><textarea id="e-desc">${r.description||''}</textarea></div>
