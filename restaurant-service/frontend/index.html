@@ -298,57 +298,69 @@
       <div id="restaurant-content"><div class="spinner"></div></div>
     </div>
 
-    <div class="page" id="page-menu">
-      <div class="page-title">Menu</div>
-      <div class="page-sub">Add and manage your menu items</div>
-      <div class="card">
-        <div class="card-title">➕ Add Menu Item</div>
-        <div class="alert error" id="menu-error"></div>
-        <div class="alert success" id="menu-success"></div>
-        <div class="form-grid">
-          <div class="field"><label>Item Name</label><input type="text" id="item-name" placeholder="e.g. Butter Chicken"/></div>
-          <div class="field"><label>Price (₹)</label><input type="number" id="item-price" placeholder="e.g. 250"/></div>
-          <div class="field">
-            <label>Category</label>
-            <select id="item-category">
-              <option value="Starters">Starters</option>
-              <option value="Main Course">Main Course</option>
-              <option value="Rice & Biryani">Rice & Biryani</option>
-              <option value="Breads">Breads</option>
-              <option value="Desserts">Desserts</option>
-              <option value="Beverages">Beverages</option>
-              <option value="Snacks">Snacks</option>
-              <option value="Pizza">Pizza</option>
-              <option value="Burgers">Burgers</option>
-              <option value="Sides">Sides</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Meal Type</label>
-            <div style="display:flex;flex-direction:column;gap:8px;padding:6px 0">
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
-                <input type="checkbox" id="mt-allday" checked style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> All Day
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
-                <input type="checkbox" id="mt-breakfast" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> Breakfast <span style="color:var(--text-dim);font-size:11px">(6AM–11AM)</span>
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
-                <input type="checkbox" id="mt-lunch" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> Lunch <span style="color:var(--text-dim);font-size:11px">(11AM–3PM)</span>
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
-                <input type="checkbox" id="mt-dinner" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> Dinner <span style="color:var(--text-dim);font-size:11px">(6PM–11PM)</span>
-              </label>
-            </div>
-          </div>
-          <div class="field full"><label>Description (optional)</label><input type="text" id="item-desc" placeholder="Brief description of the item"/></div>
-        </div>
-        <div class="btn-row"><button class="btn btn-gold" onclick="addMenuItem()" id="add-item-btn">Add Item</button></div>
-      </div>
-      <div class="card">
-        <div class="card-title">🍽️ Current Menu</div>
-        <div id="menu-list"><div class="spinner"></div></div>
-      </div>
+   <div class="page" id="page-menu">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div class="page-title" style="margin-bottom:0">Menu</div>
+      <div class="page-sub" style="margin-bottom:0">Manage your menu items — grouped by category</div>
     </div>
+    <button class="btn btn-gold btn-sm" id="add-item-toggle-btn" onclick="toggleAddItemForm()">➕ Add Item</button>
+  </div>
+
+  <!-- ADD ITEM FORM (hidden by default) -->
+  <div class="card" id="add-item-card" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div class="card-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none">➕ Add Menu Item</div>
+      <button class="btn btn-outline btn-sm" onclick="toggleAddItemForm()">✕ Close</button>
+    </div>
+    <div class="alert error" id="menu-error"></div>
+    <div class="alert success" id="menu-success"></div>
+    <div class="form-grid">
+      <div class="field"><label>Item Name</label><input type="text" id="item-name" placeholder="e.g. Butter Chicken"/></div>
+      <div class="field"><label>Price (₹)</label><input type="number" id="item-price" placeholder="e.g. 250"/></div>
+      <div class="field">
+        <label>Category</label>
+        <select id="item-category">
+          <option value="Starters">Starters</option>
+          <option value="Main Course">Main Course</option>
+          <option value="Rice & Biryani">Rice & Biryani</option>
+          <option value="Breads">Breads</option>
+          <option value="Desserts">Desserts</option>
+          <option value="Beverages">Beverages</option>
+          <option value="Snacks">Snacks</option>
+          <option value="Pizza">Pizza</option>
+          <option value="Burgers">Burgers</option>
+          <option value="Sides">Sides</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Meal Type</label>
+        <div style="display:flex;flex-direction:column;gap:8px;padding:6px 0">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
+            <input type="checkbox" id="mt-allday" checked style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> All Day
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
+            <input type="checkbox" id="mt-breakfast" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> Breakfast <span style="color:var(--text-dim);font-size:11px">(6AM–11AM)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
+            <input type="checkbox" id="mt-lunch" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> Lunch <span style="color:var(--text-dim);font-size:11px">(11AM–3PM)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--white);cursor:pointer">
+            <input type="checkbox" id="mt-dinner" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"/> Dinner <span style="color:var(--text-dim);font-size:11px">(6PM–11PM)</span>
+          </label>
+        </div>
+      </div>
+      <div class="field full"><label>Description (optional)</label><input type="text" id="item-desc" placeholder="Brief description of the item"/></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="addMenuItem()" id="add-item-btn">Add Item</button></div>
+  </div>
+
+  <!-- MENU LIST -->
+  <div class="card">
+    <div class="card-title">🍽️ Current Menu</div>
+    <div id="menu-list"><div class="spinner"></div></div>
+  </div>
+</div>
 
     <div class="page" id="page-orders">
   <div class="page-title">Orders</div>
@@ -585,64 +597,106 @@ const items = rawItems.map(i => `${i.name} x${i.quantity || i.qty || 1}`).join('
     </div>`;
 }
 
+// ── Date filter helpers ──────────────────────────────
+function filterOrdersByPeriod(orders, filter) {
+  const now = new Date();
+  return orders.filter(o => {
+    const d = new Date(o.created_at || o.createdAt);
+    if (isNaN(d)) return filter === 'all';
+    if (filter === 'all')    return true;
+    if (filter === 'today')  return d.toDateString() === now.toDateString();
+    if (filter === 'week')   return (now - d) <= 7  * 24 * 60 * 60 * 1000;
+    if (filter === 'month')  return (now - d) <= 30 * 24 * 60 * 60 * 1000;
+    if (filter === '3months')return (now - d) <= 90 * 24 * 60 * 60 * 1000;
+    return true;
+  });
+}
+
+function dateFilterHtml(fnName, active) {
+  const filters = [
+    { key: 'today',   label: 'Today' },
+    { key: 'week',    label: '7 Days' },
+    { key: 'month',   label: '30 Days' },
+    { key: '3months', label: '3 Months' },
+    { key: 'all',     label: 'All Time' },
+  ];
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+    ${filters.map(f => `
+      <button onclick="${fnName}('${f.key}')" style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ${active===f.key ? 'var(--gold)' : 'var(--border-mid)'};background:${active===f.key ? 'rgba(255,215,0,0.1)' : 'transparent'};color:${active===f.key ? 'var(--gold)' : 'var(--text-muted)'}">
+        ${f.label}
+      </button>`).join('')}
+  </div>`;
+}
+
 // ── Drawer: All Orders ───────────────────────────────
-async function showAllOrders() {
+async function showAllOrders(filter = 'all') {
   openDrawer('📋 All Orders', async () => {
-    const orders = await fetchOrders();
+    const allOrders = await fetchOrders();
     const el = document.getElementById('drawer-body');
-    if (!orders.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>No orders yet</p></div>'; return; }
-    const total = orders.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+
+    const filtered = filterOrdersByPeriod(allOrders, filter);
+    const total = filtered.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+
     el.innerHTML = `
+      ${dateFilterHtml('showAllOrders', filter)}
       <div class="drawer-summary">
-        <div class="drawer-stat"><div class="drawer-stat-val">${orders.length}</div><div class="drawer-stat-lbl">Total Orders</div></div>
-        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Total Collected</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">${filtered.length}</div><div class="drawer-stat-lbl">Orders</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Total</div></div>
       </div>
-      ${orders.map(orderCardHtml).join('')}`;
+      ${filtered.length ? filtered.map(orderCardHtml).join('') : '<div class="empty-state"><div class="empty-icon">📋</div><p>No orders in this period</p></div>'}`;
   });
 }
 
 // ── Drawer: Completed Orders ─────────────────────────
-async function showCompletedOrders() {
+async function showCompletedOrders(filter = 'all') {
   openDrawer('✅ Completed Orders', async () => {
-    const orders = (await fetchOrders()).filter(o => (o.status||'').toLowerCase().includes('complet'));
+    const allOrders = (await fetchOrders()).filter(o => (o.status||'').toLowerCase().includes('deliver'));
     const el = document.getElementById('drawer-body');
-    if (!orders.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>No completed orders yet</p></div>'; return; }
-    const total = orders.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
-    const avg   = Math.round(total / orders.length);
+
+    const filtered = filterOrdersByPeriod(allOrders, filter);
+    const total = filtered.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+    const avg   = filtered.length ? Math.round(total / filtered.length) : 0;
+
     el.innerHTML = `
+      ${dateFilterHtml('showCompletedOrders', filter)}
       <div class="drawer-summary">
-        <div class="drawer-stat"><div class="drawer-stat-val">${orders.length}</div><div class="drawer-stat-lbl">Completed</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">${filtered.length}</div><div class="drawer-stat-lbl">Completed</div></div>
         <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Revenue</div></div>
         <div class="drawer-stat"><div class="drawer-stat-val">₹${avg}</div><div class="drawer-stat-lbl">Avg Order</div></div>
-        <div class="drawer-stat"><div class="drawer-stat-val">${Math.round(total * 0.05)}</div><div class="drawer-stat-lbl">Est. Tax (5%)</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total * 0.05)}</div><div class="drawer-stat-lbl">Est. Tax</div></div>
       </div>
-      ${orders.map(orderCardHtml).join('')}`;
+      ${filtered.length ? filtered.map(orderCardHtml).join('') : '<div class="empty-state"><div class="empty-icon">✅</div><p>No completed orders in this period</p></div>'}`;
   });
 }
 
 // ── Drawer: Revenue ──────────────────────────────────
-async function showRevenue() {
+async function showRevenue(filter = 'all') {
   openDrawer('💰 Revenue Breakdown', async () => {
-    const orders = (await fetchOrders()).filter(o => (o.status||'').toLowerCase().includes('complet'));
+    const allOrders = (await fetchOrders()).filter(o => (o.status||'').toLowerCase().includes('deliver'));
     const el = document.getElementById('drawer-body');
-    const total = orders.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
-    // Group by date
+
+    const filtered = filterOrdersByPeriod(allOrders, filter);
+    const total = filtered.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+
     const byDate = {};
-    orders.forEach(o => {
+    filtered.forEach(o => {
       const d = new Date(o.created_at || o.createdAt);
       if (isNaN(d)) return;
       const key = d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
       byDate[key] = (byDate[key] || 0) + (o.total_amount || o.total || 0);
     });
+
     const dateRows = Object.entries(byDate).map(([d, amt]) =>
       `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
         <span style="color:var(--text-muted)">${d}</span>
         <span style="color:var(--gold);font-weight:700">₹${Math.round(amt)}</span>
-      </div>`).join('') || '<p style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px">No revenue data yet</p>';
+      </div>`).join('') || '<p style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px">No revenue in this period</p>';
+
     el.innerHTML = `
+      ${dateFilterHtml('showRevenue', filter)}
       <div class="drawer-summary">
         <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Total Revenue</div></div>
-        <div class="drawer-stat"><div class="drawer-stat-val">₹${orders.length ? Math.round(total/orders.length) : 0}</div><div class="drawer-stat-lbl">Avg per Order</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${filtered.length ? Math.round(total/filtered.length) : 0}</div><div class="drawer-stat-lbl">Avg per Order</div></div>
         <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total * 0.05)}</div><div class="drawer-stat-lbl">GST (5%)</div></div>
         <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total * 0.95)}</div><div class="drawer-stat-lbl">Net Revenue</div></div>
       </div>
@@ -1001,11 +1055,51 @@ async function loadMenuPage() {
 
 function renderMenuList(menu, restId) {
   const el = document.getElementById('menu-list');
-  if (!menu.length) { el.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><p>No menu items yet. Add your first item above!</p></div>`; return; }
-  el.innerHTML = `<table class="menu-table"><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Meal Type</th><th>Action</th></tr></thead><tbody>${menu.map(item => `<tr><td class="item-name-cell">${item.name}<br><span style="font-size:11px;color:var(--text-dim);font-weight:400">${item.description||''}</span></td><td><span class="item-cat">${item.category||'—'}</span></td><td class="item-price-cell">₹${item.base_price||item.price||0}</td><td style="color:var(--text-muted);font-size:12px">${item.meal_type||'allday'}</td><td style="display:flex;gap:6px">
-  <button class="btn btn-outline btn-sm" onclick="editMenuItem('${restId}','${item.item_id||item._id||item.id}')">✏️ Edit</button>
-  <button class="btn btn-outline btn-sm" style="color:#ff6b6b;border-color:rgba(220,38,38,0.3)" onclick="removeMenuItem('${restId}','${item.item_id||item._id||item.id}')">Remove</button>
-</td></tr>`).join('')}</tbody></table>`;
+  if (!menu.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><p>No menu items yet. Click "Add Item" to get started!</p></div>`;
+    return;
+  }
+  const categoryIcons = {
+    'Starters':'🥗','Main Course':'🍛','Rice & Biryani':'🍚','Breads':'🫓',
+    'Desserts':'🍮','Beverages':'🥤','Snacks':'🍿','Pizza':'🍕',
+    'Burgers':'🍔','Sides':'🍟','Other':'🍽️'
+  };
+  const categories = {};
+  menu.forEach(item => {
+    const cat = item.category || 'Other';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(item);
+  });
+  el.innerHTML = Object.entries(categories).map(([cat, items]) => `
+    <div style="margin-bottom:24px">
+      <div style="font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        ${categoryIcons[cat]||'🍽️'} ${cat}
+        <span style="font-size:11px;color:var(--text-dim);font-weight:400;text-transform:none;letter-spacing:0">(${items.length})</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      ${items.map(item => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:8px;flex-wrap:wrap">
+          <div style="flex:1;min-width:160px">
+            <div style="font-weight:700;font-size:14px">${item.name}</div>
+            ${item.description ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px">${item.description}</div>` : ''}
+            <div style="font-size:11px;color:var(--text-dim);margin-top:4px">🕐 ${item.meal_type||'allday'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--gold)">₹${item.base_price||item.price||0}</div>
+            <button class="btn btn-outline btn-sm" onclick="editMenuItem('${restId}','${item.item_id||item._id||item.id}')">✏️</button>
+            <button class="btn btn-outline btn-sm" style="color:#ff6b6b;border-color:rgba(220,38,38,0.3)" onclick="removeMenuItem('${restId}','${item.item_id||item._id||item.id}')">🗑️</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function toggleAddItemForm() {
+  const card = document.getElementById('add-item-card');
+  const btn  = document.getElementById('add-item-toggle-btn');
+  const isHidden = card.style.display === 'none';
+  card.style.display = isHidden ? 'block' : 'none';
+  btn.style.display  = isHidden ? 'none' : 'inline-flex';
+  if (isHidden) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function addMenuItem() {
@@ -1027,6 +1121,7 @@ async function addMenuItem() {
     const data = await res.json();
     if (data.success) {
       sucEl.classList.add('show'); showToast(`${name} added!`, 'success');
+      toggleAddItemForm();
       document.getElementById('item-name').value = ''; document.getElementById('item-price').value = ''; document.getElementById('item-desc').value = '';
       if (myRestaurant) myRestaurant.menu = data.data?.menu || myRestaurant.menu;
       renderMenuList(data.data?.menu || [], rid(r));
