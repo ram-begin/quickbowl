@@ -55,6 +55,10 @@ class RestaurantUpdate(BaseModel):
     boost_end:        Optional[str] = None
     discount_active:  Optional[bool] = None
     discount_percent: Optional[int] = None
+    owner_discount_active: Optional[bool] = None
+    owner_discount_percent: Optional[int] = None
+    admin_discount_active: Optional[bool] = None
+    admin_discount_percent: Optional[int] = None
 
 # ── Menu Item Add ─────────────────────────────────────
 class MenuItemAdd(BaseModel):

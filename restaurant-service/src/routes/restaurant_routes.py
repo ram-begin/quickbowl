@@ -110,6 +110,27 @@ async def delete_platform_offer(offer_id: str):
     await db.platform_offers.delete_one({"_id": ObjectId(offer_id)})
     return {"success": True, "message": "Offer deleted"}
 
+# ── Platform Global Discount ──────────────────────────
+# GET /api/restaurants/settings/platform-discount
+@router.get("/settings/platform-discount")
+async def get_platform_discount():
+    db = get_db()
+    doc = await db.platform_settings.find_one({"key": "global_discount"})
+    if not doc:
+        return {"success": True, "data": {"active": False, "percent": 0}}
+    return {"success": True, "data": {"active": doc.get("active", False), "percent": doc.get("percent", 0)}}
+
+# PUT /api/restaurants/settings/platform-discount
+@router.put("/settings/platform-discount")
+async def set_platform_discount(payload: dict):
+    db = get_db()
+    await db.platform_settings.update_one(
+        {"key": "global_discount"},
+        {"$set": {"key": "global_discount", "active": payload.get("active", False), "percent": payload.get("percent", 0)}},
+        upsert=True
+    )
+    return {"success": True, "message": "Platform discount updated"}
+
 # ── Get ALL restaurants including inactive (admin) ────
 # GET /api/restaurants/all
 @router.get("/all")

@@ -1223,6 +1223,45 @@ async function saveMenuItem(restId, itemId) {
   } catch(e) { errEl.textContent = '⚠️ Server error'; errEl.classList.add('show'); }
 }
 
+async function toggleDiscount(id) {
+  const btn = document.getElementById('discount-toggle');
+  const wrap = document.getElementById('discount-percent-wrap');
+  const newValue = !btn.classList.contains('on');
+  btn.classList.toggle('on', newValue);
+  wrap.style.display = newValue ? 'flex' : 'none';
+  if (myRestaurant) myRestaurant.discount_active = newValue;
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+body: JSON.stringify({ owner_discount_active: newValue })
+    });
+    showToast(newValue ? 'Discount offer enabled!' : 'Discount offer disabled', 'success');
+  } catch(e) {
+    btn.classList.toggle('on', !newValue);
+    wrap.style.display = !newValue ? 'flex' : 'none';
+    showToast('Could not update', 'error');
+  }
+}
+
+async function saveDiscount(id) {
+  const percent = parseInt(document.getElementById('discount-percent-input').value);
+  if (!percent || percent < 1 || percent > 60) {
+    showToast('Enter a valid discount (1–60%)', 'error'); return;
+  }
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ owner_discount_percent: percent, owner_discount_active: true })
+    });
+    if (myRestaurant) { myRestaurant.owner_discount_percent = percent; myRestaurant.owner_discount_active = true; }
+    localStorage.setItem('myRestaurant', JSON.stringify(myRestaurant));
+    showToast(`${percent}% discount saved!`, 'success');
+    document.getElementById('discount-percent-input').style.borderColor = 'var(--border)';
+  } catch(e) { showToast('Could not save', 'error'); }
+}
+
 // ── Settings ────────────────────────────────────────
 async function loadSettings() {
   const el = document.getElementById('settings-content');
@@ -1236,6 +1275,22 @@ async function loadSettings() {
         <p>Show your restaurant to customers on the platform</p>
       </div>
       <button class="toggle ${r.is_active!==false?'on':''}" id="active-toggle" onclick="toggleActive('${rid(r)}')"></button>
+    </div>
+    <div class="toggle-row" style="flex-wrap:wrap;gap:12px">
+      <div class="toggle-info">
+        <h4>🏷️ Discount Offer</h4>
+        <p>Show a discount badge on your restaurant for customers</p>
+      </div>
+      <button class="toggle ${r.owner_discount_active?'on':''}" id="discount-toggle" onclick="toggleDiscount('${rid(r)}')"></button>
+      <div id="discount-percent-wrap" style="width:100%;display:${r.owner_discount_active?'flex':'none'};align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);margin-top:4px">
+        <label style="font-size:13px;color:var(--text-muted);white-space:nowrap">Discount %</label>
+        <input type="number" id="discount-percent-input" min="1" max="60" value="${r.owner_discount_percent||10}"
+          style="width:80px;padding:7px 10px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:14px;outline:none"
+          oninput="this.style.borderColor='var(--gold)'"
+        />
+        <span style="font-size:13px;color:var(--text-muted)">% OFF shown to customers</span>
+        <button class="btn btn-gold btn-sm" onclick="saveDiscount('${rid(r)}')">Save</button>
+      </div>
     </div>`;
 }
 

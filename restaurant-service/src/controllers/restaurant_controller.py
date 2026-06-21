@@ -44,8 +44,12 @@ def restaurant_helper(r) -> dict:
         "total_revenue":       r.get("total_revenue", 0.0),
         "created_at":          r.get("created_at", datetime.now()),
         "is_surge":            r.get("is_surge", False),
-        "discount_active":     r.get("discount_active", False),
-        "discount_percent":    r.get("discount_percent", 0),
+        "discount_active":        r.get("discount_active", False),
+        "discount_percent":       r.get("discount_percent", 0),
+        "owner_discount_active":  r.get("owner_discount_active", False),
+        "owner_discount_percent": r.get("owner_discount_percent", 0),
+        "admin_discount_active":  r.get("admin_discount_active", False),
+        "admin_discount_percent": r.get("admin_discount_percent", 0),
     }
 
 # ── Check if restaurant is open ───────────────────────

@@ -473,8 +473,19 @@ function setFilter(type, value) {
   }
   filterRestaurants();
 }
+ function getDiscountBadges(r) {
+    const badges = [];
+    if (globalDiscount?.active && globalDiscount?.percent)
+      badges.push(`<span style="background:rgba(220,38,38,0.12);color:#ff6b6b;border:1px solid rgba(220,38,38,0.25);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-right:4px">${globalDiscount.percent}% OFF</span>`);
+    if (r.admin_discount_active && r.admin_discount_percent)
+      badges.push(`<span style="background:rgba(220,38,38,0.12);color:#ff6b6b;border:1px solid rgba(220,38,38,0.25);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-right:4px">${r.admin_discount_percent}% OFF</span>`);
+    if (r.owner_discount_active && r.owner_discount_percent)
+      badges.push(`<span style="background:rgba(220,38,38,0.12);color:#ff6b6b;border:1px solid rgba(220,38,38,0.25);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-right:4px">${r.owner_discount_percent}% OFF</span>`);
+    return badges.join('');
+  }
 
-  const EMOJIS = ['🍛','🍕','🍜','🥘','🍱','🌮','🍔','🥗','🍣','🍲','🧆','🥙'];
+  const EMOJIS = ['🍛','🍕','🍜','🥘','🍱','🌮','🍔','🥗','🍣','🍲','🧆','🥙']; 
+
 
   function renderRestaurants(list) {
     const grid = document.getElementById('restaurant-grid');
@@ -484,7 +495,8 @@ function setFilter(type, value) {
     }
     grid.innerHTML = list.map((r, i) => {
       const emoji      = EMOJIS[i % EMOJIS.length];
-      const hasDiscount = r.discount_active || r.discount_percent > 0;
+      const discountBadges = getDiscountBadges(r);
+      const hasDiscount = discountBadges.length > 0;
       const rating     = r.rating ? r.rating.toFixed(1) : (4.0 + Math.random() * 0.9).toFixed(1);
       const delivery   = r.delivery_time || '30–45 min';
       const minOrder   = r.min_order || 99;
@@ -494,7 +506,7 @@ function setFilter(type, value) {
         <div class="rest-card" onclick="goToRestaurant('${r._id || r.id}')">
           <div class="rest-img">
             ${emoji}
-            ${hasDiscount ? '<span class="badge badge-discount">% OFF</span>' : ''}
+            ${hasDiscount ? `<div style="position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;align-items:flex-end">${discountBadges}</div>` : ''}
           </div>
           <div class="rest-body">
             <div class="rest-name">${r.name}</div>
@@ -651,15 +663,24 @@ try {
     id: null
   }));
 } catch(e) {}
-      restaurantOffers = all.filter(r => r.discount_active || r.discount_percent > 0).map(r => ({
-        icon: '🍽️',
-        title: r.name,
-        desc: `${r.discount_percent || 10}% off on all orders from this restaurant`,
-        badge: `${r.discount_percent || 10}% OFF`,
-        tag: 'restaurant',
-        valid: 'Limited time',
-        id: r._id || r.id,
-      }));
+      restaurantOffers = [];
+      all.forEach(r => {
+        if (r.admin_discount_active && r.admin_discount_percent) {
+          restaurantOffers.push({
+            icon: '🍽️', title: r.name,
+            desc: `${r.admin_discount_percent}% off on all orders from this restaurant`,
+            badge: `${r.admin_discount_percent}% OFF`,
+            tag: 'restaurant', valid: 'Limited time', id: r._id || r.id
+          });
+        } else if (r.owner_discount_active && r.owner_discount_percent) {
+          restaurantOffers.push({
+            icon: '🍽️', title: r.name,
+            desc: `${r.owner_discount_percent}% off on all orders from this restaurant`,
+            badge: `${r.owner_discount_percent}% OFF`,
+            tag: 'restaurant', valid: 'Limited time', id: r._id || r.id
+          });
+        }
+      });
     } catch (e) {}
 
     const allOffers = [...platformOffers, ...restaurantOffers];
@@ -700,7 +721,16 @@ if (!allOffers.length) {
   }
 
   // Init
-  loadRestaurants();
+  let globalDiscount = null;
+  async function initDashboard() {
+    try {
+      const res  = await fetch(`${API}/restaurants/settings/platform-discount`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      globalDiscount = data.data || null;
+    } catch(e) { globalDiscount = null; }
+    loadRestaurants();
+  }
+  initDashboard();
 </script>
 </body>
 </html>
