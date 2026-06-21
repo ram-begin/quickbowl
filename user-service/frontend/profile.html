@@ -301,7 +301,18 @@
     </div>
   </div>
 </div>
-
+<!-- DELIVERY ADDRESS -->
+  <div class="form-card">
+    <div class="form-card-title">📍 Saved Delivery Address</div>
+    <div id="address-view">
+      <div style="font-size:14px;color:var(--text-muted)" id="saved-address-text">No address saved yet</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:4px" id="saved-phone-text"></div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <input type="text" id="new-address" placeholder="Enter delivery address" style="flex:1;padding:11px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-md);color:var(--white);font-family:var(--font-body);font-size:13px;outline:none"/>
+      <button class="btn btn-gold" style="padding:11px 18px;font-size:12px" onclick="saveAddress()">Save</button>
+    </div>
+  </div>
   <!-- DANGER ZONE -->
   <div class="danger-zone">
     <div class="danger-title">⚠️ Danger Zone</div>
@@ -367,7 +378,8 @@ document.getElementById('view-phone').textContent = phone || 'Not set';
   async function loadStats(userId) {
     try {
       const id  = userId || user.id || user._id;
-      const res = await fetch(`${API}/orders/user/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      const ORDER_API = 'http://localhost:8002/api';
+const res = await fetch(`${ORDER_API}/orders/user/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       const orders = data.data || data.orders || data || [];
       const list   = Array.isArray(orders) ? orders : [];
@@ -481,7 +493,30 @@ function togglePassword() {
     }
     btn.textContent = 'Update Password'; btn.disabled = false;
   }
+// Load saved address
+const savedAddr  = localStorage.getItem('saved_address');
+const savedPhone = localStorage.getItem('saved_phone');
+if (savedAddr) {
+  document.getElementById('saved-address-text').textContent = savedAddr;
+  document.getElementById('new-address').value = savedAddr;
+}
+if (savedPhone) {
+  document.getElementById('saved-phone-text').textContent = '📞 ' + savedPhone;
+}
 
+function saveAddress() {
+  const addr = document.getElementById('new-address').value.trim();
+  if (!addr) return;
+  localStorage.setItem('saved_address', addr);
+  document.getElementById('saved-address-text').textContent = addr;
+  document.getElementById('saved-address-text').style.color = 'var(--white)';
+  // Show success toast
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a0808;border:1px solid rgba(255,215,0,0.3);border-radius:10px;padding:12px 20px;color:var(--gold);font-size:13px;font-weight:600;z-index:999';
+  t.textContent = '✅ Address saved!';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
   loadProfile();
 </script>
 </body>
