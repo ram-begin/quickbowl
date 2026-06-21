@@ -129,6 +129,14 @@
       transition: box-shadow 0.2s;
     }
     .search-wrap button:hover { box-shadow: 0 4px 16px rgba(255,215,0,0.35); }
+    .filter-chip {
+  padding: 6px 14px; border-radius: 20px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border-mid);
+  color: var(--text-muted); font-family: var(--font-body); font-size: 12px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.filter-chip:hover { border-color: var(--gold); color: var(--gold); }
+.filter-chip.active { background: rgba(255,215,0,0.1); border-color: var(--gold); color: var(--gold); }
 
     /* ── PAGE CONTENT ── */
     .page-content { padding: 28px; max-width: 1140px; margin: 0 auto; }
@@ -307,9 +315,19 @@
           <h1>What are you <span>craving</span> today?</h1>
           <p>Fresh food from the best restaurants, delivered fast</p>
           <div class="search-wrap">
-            <input type="text" id="search-input" placeholder="Search restaurants or cuisines..." oninput="filterRestaurants()"/>
-            <button onclick="filterRestaurants()">Search</button>
-          </div>
+  <input type="text" id="search-input" placeholder="Search restaurants or cuisines..." oninput="filterRestaurants()"/>
+  <button onclick="filterRestaurants()">Search</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px" id="filter-chips">
+  <span style="font-size:12px;color:var(--text-dim);align-self:center">Filter:</span>
+  <button class="filter-chip active" onclick="setFilter('cuisine','')" id="chip-all">All</button>
+  <button class="filter-chip" onclick="setFilter('cuisine','North Indian')">🍛 North Indian</button>
+  <button class="filter-chip" onclick="setFilter('cuisine','South Indian')">🥘 South Indian</button>
+  <button class="filter-chip" onclick="setFilter('cuisine','Chinese')">🍜 Chinese</button>
+  <button class="filter-chip" onclick="setFilter('cuisine','Fast Food')">🍔 Fast Food</button>
+  <button class="filter-chip" onclick="setFilter('cuisine','Pizza')">🍕 Pizza</button>
+  <button class="filter-chip" onclick="setFilter('cuisine','Biryani')">🍱 Biryani</button>
+</div>
         </div>
       </div>
       <div class="page-content">
@@ -371,9 +389,9 @@
   if (!token) location.href = '/';
 
   document.getElementById('nav-user').textContent = 'Hi, ' + (user.first_name || user.name || 'there') + ' 👋';
-
-  let allRestaurants = [];
-  let currentTab = 'home';
+let allRestaurants = [];
+let currentTab = 'home';
+let activeFilters = { cuisine: '' };
 
   function logout() { localStorage.clear(); location.href = '/'; }
 
@@ -431,14 +449,30 @@ allRestaurants = [...(data.all_restaurants?.data || []), ...(data.customer_favou
     }
   }
 
-  function filterRestaurants() {
-    const q = document.getElementById('search-input').value.toLowerCase();
-    renderRestaurants(allRestaurants.filter(r =>
+ function filterRestaurants() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  renderRestaurants(allRestaurants.filter(r => {
+    const matchSearch = !q ||
       (r.name||'').toLowerCase().includes(q) ||
       (r.cuisine_type||r.cuisine||'').toLowerCase().includes(q) ||
-      (r.city||'').toLowerCase().includes(q)
-    ));
+      (r.city||'').toLowerCase().includes(q);
+    const matchCuisine = !activeFilters.cuisine ||
+      (r.cuisine_type||r.cuisine||'').toLowerCase().includes(activeFilters.cuisine.toLowerCase());
+    return matchSearch && matchCuisine;
+  }));
+}
+
+function setFilter(type, value) {
+  activeFilters[type] = value;
+  // Update chip styles
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  if (!value) {
+    document.getElementById('chip-all').classList.add('active');
+  } else {
+    event.target.classList.add('active');
   }
+  filterRestaurants();
+}
 
   const EMOJIS = ['🍛','🍕','🍜','🥘','🍱','🌮','🍔','🥗','🍣','🍲','🧆','🥙'];
 
