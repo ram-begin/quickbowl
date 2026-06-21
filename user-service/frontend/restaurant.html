@@ -303,7 +303,7 @@
   if (!restaurantId) location.href = '/dashboard.html';
 
   let restaurant = null;
-  let cart       = {}; // { itemId: { item, qty } }
+let cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
 
   const EMOJIS = ['🍛','🍕','🍜','🥘','🍱','🌮','🍔','🥗','🍣','🍲','🧆','🥙','🫕','🍗','🥩'];
 
@@ -413,6 +413,7 @@ if (!items.length) {
     } else {
       cart[id] = { name, price, qty: 1 };
     }
+    sessionStorage.setItem('cart', JSON.stringify(cart));
     updateCart();
     showToast(`${name} added to cart`, 'success');
   }
@@ -421,6 +422,7 @@ if (!items.length) {
     if (!cart[id]) return;
     cart[id].qty += delta;
     if (cart[id].qty <= 0) delete cart[id];
+    sessionStorage.setItem('cart', JSON.stringify(cart));
     updateCart();
   }
 
@@ -581,6 +583,7 @@ if (!items.length) {
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
               showToast('🎉 Payment successful! Order placed.', 'success');
+              sessionStorage.removeItem('cart');
               setTimeout(() => location.href = '/dashboard.html', 1500);
             } else {
               showToast('Payment verification failed', 'error');

@@ -29,7 +29,8 @@ def restaurant_helper(r) -> dict:
         "avg_delivery_minutes": r.get("avg_delivery_minutes", 30.0),
         "peak_hour_orders":    r.get("peak_hour_orders", 0),
         "peak_hour_completed": r.get("peak_hour_completed", 0),
-        "is_active":           r.get("is_active", True),
+        "is_active":           r.get("is_active", False),
+        "is_verified":         r.get("is_verified", False),
         "surge_multiplier":    r.get("surge_multiplier", 1.0),
         "surge_reasons":       r.get("surge_reasons", []),
         "opening_time":        r.get("opening_time", "09:00"),
@@ -42,6 +43,9 @@ def restaurant_helper(r) -> dict:
         "commission":          r.get("commission", {}),
         "total_revenue":       r.get("total_revenue", 0.0),
         "created_at":          r.get("created_at", datetime.now()),
+        "is_surge":            r.get("is_surge", False),
+        "discount_active":     r.get("discount_active", False),
+        "discount_percent":    r.get("discount_percent", 0),
     }
 
 # ── Check if restaurant is open ───────────────────────
@@ -132,7 +136,10 @@ async def get_all_restaurants(city: str = None, cuisine: str = None) -> list:
         if data["boost_active"] and data["boost_end"]:
             boost_end = data["boost_end"]
             if isinstance(boost_end, str):
-                boost_end = datetime.fromisoformat(boost_end)
+                boost_end = datetime.fromisoformat(boost_end.replace('Z', '+00:00'))
+            # Make both naive for comparison
+            if hasattr(boost_end, 'tzinfo') and boost_end.tzinfo is not None:
+                boost_end = boost_end.replace(tzinfo=None)
             if datetime.now() > boost_end:
                 # Boost expired — update in DB
                 await db.restaurants.update_one(
@@ -222,7 +229,8 @@ async def create_restaurant(data: RestaurantCreate) -> dict:
         "avg_delivery_minutes": 30.0,
         "peak_hour_orders":    0,
         "peak_hour_completed": 0,
-        "is_active":           True,
+        "is_active":           False,
+        "is_verified":         False,
         "surge_multiplier":    1.0,
         "surge_reasons":       [],
         "boost_active":        False,
@@ -460,6 +468,25 @@ async def get_analytics(restaurant_id: str) -> dict:
         },
         "boost_history": boost_history
     }
+
+# ── Update menu item ──────────────────────────────────
+async def update_menu_item(restaurant_id: str, item_id: str, item: MenuItemAdd) -> dict:
+    db = get_db()
+    if not ObjectId.is_valid(restaurant_id):
+        raise HTTPException(status_code=400, detail="Invalid restaurant ID")
+
+    item_dict = item.model_dump()
+    update_fields = {f"menu.$.{k}": v for k, v in item_dict.items() if v is not None}
+
+    result = await db.restaurants.update_one(
+        {"_id": ObjectId(restaurant_id), "menu.item_id": item_id},
+        {"$set": update_fields}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    return await get_restaurant(restaurant_id)
 
 # ── Update order stats (called by Order Service) ──────
 async def update_order_stats(restaurant_id: str, stats: dict) -> dict:

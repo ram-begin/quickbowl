@@ -37,16 +37,24 @@ class RestaurantCreate(BaseModel):
 
 # ── Restaurant Update ─────────────────────────────────
 class RestaurantUpdate(BaseModel):
-    name:          Optional[str] = None
-    description:   Optional[str] = None
-    cuisine:       Optional[str] = None
-    address:       Optional[str] = None
-    city:          Optional[str] = None
-    phone:         Optional[str] = None
-    image_url:     Optional[str] = None
-    opening_time:  Optional[str] = None
-    closing_time:  Optional[str] = None
-    is_active:     Optional[bool] = None
+    name:             Optional[str] = None
+    description:      Optional[str] = None
+    cuisine:          Optional[str] = None
+    address:          Optional[str] = None
+    city:             Optional[str] = None
+    phone:            Optional[str] = None
+    image_url:        Optional[str] = None
+    opening_time:     Optional[str] = None
+    closing_time:     Optional[str] = None
+    is_active:        Optional[bool] = None
+    is_verified:      Optional[bool] = None
+    is_surge:         Optional[bool] = None
+    surge_multiplier: Optional[float] = None
+    boost_active:     Optional[bool] = None
+    boost_start:      Optional[str] = None
+    boost_end:        Optional[str] = None
+    discount_active:  Optional[bool] = None
+    discount_percent: Optional[int] = None
 
 # ── Menu Item Add ─────────────────────────────────────
 class MenuItemAdd(BaseModel):

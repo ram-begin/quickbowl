@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, Header, HTTPException
 from typing import Optional
 from src.models.restaurant import RestaurantCreate, RestaurantUpdate, MenuItemAdd
+from src.config.database import get_db
 from src.controllers.restaurant_controller import (
     get_all_restaurants,
     get_restaurant,
@@ -80,6 +81,47 @@ async def discount_active():
         "success": True,
         "data":    status
     }
+# ── Platform Offers ───────────────────────────────────
+# GET /api/restaurants/offers/platform
+@router.get("/offers/platform")
+async def get_platform_offers():
+    db = get_db()
+    offers = await db.platform_offers.find({}).to_list(length=100)
+    for o in offers:
+        o["id"] = str(o["_id"])
+        del o["_id"]
+    return {"success": True, "data": offers}
+
+# POST /api/restaurants/offers/platform
+@router.post("/offers/platform")
+async def add_platform_offer(offer: dict):
+    from datetime import datetime
+    db = get_db()
+    offer["created_at"] = datetime.utcnow().isoformat()
+    result = await db.platform_offers.insert_one(offer)
+    offer["id"] = str(result.inserted_id)
+    return {"success": True, "data": offer}
+
+# DELETE /api/restaurants/offers/platform/{offer_id}
+@router.delete("/offers/platform/{offer_id}")
+async def delete_platform_offer(offer_id: str):
+    from bson import ObjectId
+    db = get_db()
+    await db.platform_offers.delete_one({"_id": ObjectId(offer_id)})
+    return {"success": True, "message": "Offer deleted"}
+
+# ── Get ALL restaurants including inactive (admin) ────
+# GET /api/restaurants/all
+@router.get("/all")
+async def list_all_restaurants():
+    db = get_db()
+    all_restaurants = []
+    cursor = db.restaurants.find({})
+    async for r in cursor:
+        from src.controllers.restaurant_controller import restaurant_helper
+        all_restaurants.append(restaurant_helper(r))
+    return {"success": True, "count": len(all_restaurants), "data": all_restaurants}
+
 
 # ── Get single restaurant ─────────────────────────────
 # GET /api/restaurants/{id}
@@ -174,3 +216,16 @@ async def update_stats(id: str, stats: dict):
         "success": True,
         "data":    result
     }
+
+# ── Update menu item ──────────────────────────────────
+# PUT /api/restaurants/{id}/menu/{item_id}
+@router.put("/{id}/menu/{item_id}")
+async def update_item(id: str, item_id: str, item: MenuItemAdd):
+    from src.controllers.restaurant_controller import update_menu_item
+    restaurant = await update_menu_item(id, item_id, item)
+    return {
+        "success": True,
+        "message": "Menu item updated successfully",
+        "data":    restaurant
+    }
+

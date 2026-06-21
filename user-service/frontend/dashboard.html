@@ -598,10 +598,25 @@ const res  = await fetch(`${ORDER_API}/orders/${orderId}/status`, {
     const el = document.getElementById('offers-list');
     el.innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading offers...</div>';
     let restaurantOffers = [];
+    let platformOffers = [];
     try {
       const res  = await fetch(`${API}/restaurants`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       const all = [...(data.all_restaurants?.data || []), ...(data.customer_favourites?.data || [])];
+      // Fetch platform offers
+try {
+  const pRes  = await fetch(`${API}/restaurants/offers/platform`, { headers: { Authorization: `Bearer ${token}` } });
+  const pData = await pRes.json();
+  platformOffers = (pData.data || []).map(o => ({
+    icon: o.icon || '🎟️',
+    title: o.title,
+    desc: o.desc || '',
+    badge: `${o.discount}% OFF`,
+    tag: 'platform',
+    valid: o.validUntil || 'Limited time',
+    id: null
+  }));
+} catch(e) {}
       restaurantOffers = all.filter(r => r.discount_active || r.discount_percent > 0).map(r => ({
         icon: '🍽️',
         title: r.name,
@@ -613,7 +628,8 @@ const res  = await fetch(`${ORDER_API}/orders/${orderId}/status`, {
       }));
     } catch (e) {}
 
-    if (!restaurantOffers.length) {
+    const allOffers = [...platformOffers, ...restaurantOffers];
+if (!allOffers.length) {
       el.innerHTML = `
         <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
           <div style="font-size:52px;margin-bottom:16px">🎟️</div>
@@ -623,8 +639,12 @@ const res  = await fetch(`${ORDER_API}/orders/${orderId}/status`, {
       return;
     }
     el.innerHTML = `
-      <div class="section-title">🏪 Restaurant Deals</div>
-      ${restaurantOffers.map(o => offerCardHTML(o, true)).join('')}`;
+  ${platformOffers.length ? `
+    <div class="section-title">⚡ QuickBowl Offers</div>
+    ${platformOffers.map(o => offerCardHTML(o, false)).join('')}` : ''}
+  ${restaurantOffers.length ? `
+    <div class="section-title">🏪 Restaurant Deals</div>
+    ${restaurantOffers.map(o => offerCardHTML(o, true)).join('')}` : ''}`;
   }
         
 

@@ -216,7 +216,7 @@
 <script>
 const API   = 'http://localhost:3000/api';
 const UAPI  = 'http://localhost:3001/api';
-const RAPI  = 'http://localhost:8001/api';
+const RAPI  = 'http://localhost:3000/api';
 const OAPI  = 'http://localhost:8002/api';
 
 let adminToken = localStorage.getItem('admin_token');
@@ -335,13 +335,34 @@ async function loadRestaurants() {
   const el = document.getElementById('restaurants-content');
   el.innerHTML = '<div class="spinner"></div>';
   try {
-    const res  = await fetch(`${RAPI}/restaurants`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const res  = await fetch(`${RAPI}/restaurants/all`, { headers: { Authorization: `Bearer ${adminToken}` } });
     const data = await res.json();
-    const all  = [...(data.all_restaurants?.data || []), ...(data.customer_favourites?.data || [])];
+    const all  = data.data || [...(data.all_restaurants?.data || []), ...(data.customer_favourites?.data || [])];
+    const pending  = all.filter(r => !r.is_verified);
+    const verified = all.filter(r => r.is_verified);
 
     if (!all.length) { el.innerHTML = `<div class="empty-state">No restaurants found</div>`; return; }
 
     el.innerHTML = `
+      ${pending.length ? `
+      <div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:12px;color:#fbbf24">⏳ Pending Verification (${pending.length})</div>
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px;border-color:rgba(251,191,36,0.3)">
+        <table class="table">
+          <thead><tr><th>Restaurant</th><th>City</th><th>Owner</th><th>Action</th></tr></thead>
+          <tbody>
+            ${pending.map(r => `<tr>
+              <td><div style="font-weight:600">${r.name}</div><div style="font-size:11px;color:var(--text-muted)">${r.cuisine || '—'}</div></td>
+              <td style="color:var(--text-muted)">${r.city || '—'}</td>
+              <td style="color:var(--text-muted)">${r.owner_id || '—'}</td>
+              <td style="display:flex;gap:8px">
+                <button class="btn btn-sm btn-green" onclick="verifyRestaurant('${r.id || r._id}', true)">✓ Approve</button>
+                <button class="btn btn-sm btn-red" onclick="verifyRestaurant('${r.id || r._id}', false)">✗ Reject</button>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>` : ''}
+      <div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:12px">✅ Verified Restaurants</div>
       <div class="card" style="padding:0;overflow:hidden">
         <table class="table">
           <thead><tr>
@@ -349,7 +370,7 @@ async function loadRestaurants() {
             <th>Surge</th><th>Boosted</th><th>Actions</th>
           </tr></thead>
           <tbody>
-            ${all.map(r => `
+            ${verified.map(r => `
               <tr>
                 <td>
                   <div style="font-weight:600">${r.name}</div>
@@ -358,10 +379,10 @@ async function loadRestaurants() {
                 <td style="color:var(--text-muted)">${r.city || '—'}</td>
                 <td><span class="badge ${r.is_active ? 'badge-green' : 'badge-red'}">${r.is_active ? 'Active' : 'Inactive'}</span></td>
                 <td>
-                  <button class="toggle ${r.is_surge ? 'on' : ''}" onclick="toggleSurge('${r._id || r.id}', ${!r.is_surge}, this)"></button>
+                  <button class="toggle ${r.is_surge ? 'on' : ''}" onclick="toggleSurge('${r._id || r.id}', this)"></button>
                 </td>
                 <td>
-                  <button class="toggle ${r.boost_active ? 'on' : ''}" onclick="toggleBoost('${r._id || r.id}', ${!r.boost_active}, this)"></button>
+                  <button class="toggle ${r.boost_active ? 'on' : ''}" onclick="toggleBoost('${r._id || r.id}', this)"></button>
                 </td>
                 <td>
                   <button class="btn btn-sm ${r.is_active ? 'btn-red' : 'btn-green'}" onclick="toggleRestaurantActive('${r._id || r.id}', ${!r.is_active}, this)">
@@ -371,13 +392,15 @@ async function loadRestaurants() {
               </tr>`).join('')}
           </tbody>
         </table>
-      </div>`;
+      </div>
+      ${verified.length === 0 ? '<div class="empty-state">No verified restaurants yet</div>' : ''}`;
   } catch(e) {
     el.innerHTML = `<div class="empty-state">⚠️ Could not load restaurants</div>`;
   }
 }
 
-async function toggleSurge(id, value, btn) {
+async function toggleSurge(id, btn) {
+  const value = !btn.classList.contains('on');
   btn.classList.toggle('on', value);
   try {
     await fetch(`${RAPI}/restaurants/${id}`, {
@@ -392,7 +415,8 @@ async function toggleSurge(id, value, btn) {
   }
 }
 
-async function toggleBoost(id, value, btn) {
+async function toggleBoost(id, btn) {
+  const value = !btn.classList.contains('on');
   btn.classList.toggle('on', value);
   const now = new Date();
   const end = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -496,32 +520,35 @@ async function loadOrders() {
 // ── Offers ───────────────────────────────────────────
 let platformOffers = JSON.parse(localStorage.getItem('platform_offers') || '[]');
 
-function loadOffers() {
+async function loadOffers() {
   const el = document.getElementById('offers-content');
-  if (!platformOffers.length) {
-    el.innerHTML = `<div class="empty-state">No platform offers yet. Click "Add Offer" to create one.</div>`;
-    return;
-  }
-  el.innerHTML = `
-    <div class="card" style="padding:0;overflow:hidden">
-      <table class="table">
-        <thead><tr><th>Offer</th><th>Discount</th><th>Valid Until</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody>
-          ${platformOffers.map((o, i) => `
-            <tr>
-              <td>
-                <div style="font-size:18px;margin-bottom:2px">${o.icon || '🎟️'}</div>
-                <div style="font-weight:600">${o.title}</div>
-                <div style="font-size:11px;color:var(--text-muted)">${o.desc}</div>
-              </td>
-              <td style="color:var(--gold);font-weight:700">${o.discount}% OFF</td>
-              <td style="color:var(--text-muted)">${o.validUntil || '—'}</td>
-              <td><span class="badge badge-green">Active</span></td>
-              <td><button class="btn btn-sm btn-red" onclick="deleteOffer(${i})">Delete</button></td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>`;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const res  = await fetch(`${RAPI}/restaurants/offers/platform`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const data = await res.json();
+    const offers = data.data || [];
+    if (!offers.length) { el.innerHTML = `<div class="empty-state">No platform offers yet. Click "Add Offer" to create one.</div>`; return; }
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="table">
+          <thead><tr><th>Offer</th><th>Discount</th><th>Valid Until</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            ${offers.map(o => `
+              <tr>
+                <td>
+                  <div style="font-size:18px;margin-bottom:2px">${o.icon || '🎟️'}</div>
+                  <div style="font-weight:600">${o.title}</div>
+                  <div style="font-size:11px;color:var(--text-muted)">${o.desc || ''}</div>
+                </td>
+                <td style="color:var(--gold);font-weight:700">${o.discount}% OFF</td>
+                <td style="color:var(--text-muted)">${o.validUntil || '—'}</td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td><button class="btn btn-sm btn-red" onclick="deleteOffer('${o.id}')">Delete</button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) { el.innerHTML = `<div class="empty-state">⚠️ Could not load offers</div>`; }
 }
 
 function openAddOffer() {
@@ -532,33 +559,51 @@ function closeOfferModal() {
   document.getElementById('offer-modal').classList.remove('show');
 }
 
-function saveOffer() {
+async function saveOffer() {
   const title    = document.getElementById('offer-title').value.trim();
   const desc     = document.getElementById('offer-desc').value.trim();
   const discount = document.getElementById('offer-discount').value;
   const valid    = document.getElementById('offer-valid').value;
   const icon     = document.getElementById('offer-icon').value.trim() || '🎟️';
-
   if (!title || !discount) { showToast('Title and discount are required', 'error'); return; }
-
-  platformOffers.push({ title, desc, discount, validUntil: valid, icon, createdAt: new Date().toISOString() });
-  localStorage.setItem('platform_offers', JSON.stringify(platformOffers));
-  closeOfferModal();
-  loadOffers();
-  showToast('Offer added!', 'success');
-
-  // Clear fields
-  ['offer-title','offer-desc','offer-discount','offer-valid','offer-icon'].forEach(id => document.getElementById(id).value = '');
+  try {
+    const res  = await fetch(`${RAPI}/restaurants/offers/platform`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ title, desc, discount: parseInt(discount), validUntil: valid, icon })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeOfferModal();
+      loadOffers();
+      showToast('Offer added!', 'success');
+      ['offer-title','offer-desc','offer-discount','offer-valid','offer-icon'].forEach(id => document.getElementById(id).value = '');
+    }
+  } catch(e) { showToast('Could not save offer', 'error'); }
 }
 
-function deleteOffer(i) {
+async function deleteOffer(id) {
   if (!confirm('Delete this offer?')) return;
-  platformOffers.splice(i, 1);
-  localStorage.setItem('platform_offers', JSON.stringify(platformOffers));
-  loadOffers();
-  showToast('Offer deleted', 'success');
+  try {
+    await fetch(`${RAPI}/restaurants/offers/platform/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    loadOffers();
+    showToast('Offer deleted', 'success');
+  } catch(e) { showToast('Could not delete offer', 'error'); }
 }
-
+async function verifyRestaurant(id, approve) {
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ is_verified: approve, is_active: approve })
+    });
+    showToast(approve ? 'Restaurant approved!' : 'Restaurant rejected', approve ? 'success' : 'error');
+    loadRestaurants();
+  } catch(e) { showToast('Could not update', 'error'); }
+}
 // ── Toast ─────────────────────────────────────────────
 let toastTimer;
 function showToast(msg, type = '') {
