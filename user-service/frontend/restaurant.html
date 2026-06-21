@@ -314,6 +314,19 @@ let cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
       const data = await res.json();
       restaurant = data.data || data;
       renderMenu();
+      // Prefill saved delivery details
+const savedAddress = localStorage.getItem('saved_address');
+const savedPhone   = localStorage.getItem('saved_phone');
+setTimeout(() => {
+  if (savedAddress) {
+    const addrEl = document.getElementById('delivery-address');
+    if (addrEl) addrEl.value = savedAddress;
+  }
+  if (savedPhone) {
+    const phoneEl = document.getElementById('delivery-phone');
+    if (phoneEl) phoneEl.value = savedPhone;
+  }
+}, 100);
     } catch (e) {
       document.getElementById('menu-side').innerHTML = `
         <div class="loading-state">
@@ -533,6 +546,9 @@ if (!items.length) {
       if (!orderData.success && !orderData.id) throw new Error(orderData.message || 'Order failed');
 
       const orderId = orderData.data?.id || orderData.id;
+      // Save delivery details for next time
+localStorage.setItem('saved_address', address);
+localStorage.setItem('saved_phone', phone);
 
       // Step 2: Create Razorpay payment order
       const payRes = await fetch('http://localhost:8003/api/payments', {
