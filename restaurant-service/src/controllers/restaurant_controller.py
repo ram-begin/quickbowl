@@ -50,6 +50,7 @@ def restaurant_helper(r) -> dict:
         "owner_discount_percent": r.get("owner_discount_percent", 0),
         "admin_discount_active":  r.get("admin_discount_active", False),
         "admin_discount_percent": r.get("admin_discount_percent", 0),
+        "admin_discount_tiers":   r.get("admin_discount_tiers", []),
     }
 
 # ── Check if restaurant is open ───────────────────────
@@ -255,7 +256,14 @@ async def update_restaurant(id: str, data: RestaurantUpdate) -> dict:
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail="Invalid restaurant ID")
 
-    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    raw = data.model_dump()
+    update_data = {}
+    for k, v in raw.items():
+        if k == 'admin_discount_tiers':
+            if v is not None:
+                update_data[k] = v
+        elif v is not None:
+            update_data[k] = v
     if not update_data:
         raise HTTPException(status_code=400, detail="No data to update")
 

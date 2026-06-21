@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 # ── Menu Item ─────────────────────────────────────────
@@ -57,8 +57,9 @@ class RestaurantUpdate(BaseModel):
     discount_percent: Optional[int] = None
     owner_discount_active: Optional[bool] = None
     owner_discount_percent: Optional[int] = None
-    admin_discount_active: Optional[bool] = None
+    admin_discount_active:  Optional[bool] = None
     admin_discount_percent: Optional[int] = None
+    admin_discount_tiers:   Optional[List[DiscountTier]] = None
 
 # ── Menu Item Add ─────────────────────────────────────
 class MenuItemAdd(BaseModel):
@@ -71,6 +72,12 @@ class MenuItemAdd(BaseModel):
     meal_type:      Optional[str] = "allday"
     is_available:   bool = True
     image_url:      Optional[str] = None
+
+# ── Discount Tier (conditional) ───────────────────────
+class DiscountTier(BaseModel):
+    min_order: float   # minimum cart value to unlock
+    percent:   int     # discount percentage
+    label:     Optional[str] = None  # e.g. "10% OFF above ₹100"
 
 # ── Discount Config ───────────────────────────────────
 class DiscountConfig(BaseModel):

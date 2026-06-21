@@ -271,10 +271,15 @@
       </div>
     </div>
 
+    <div id="discount-selector" style="display:none;padding:12px 20px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">🏷️ Available Discounts</div>
+      <div id="discount-options"></div>
+    </div>
+
     <div class="cart-summary" id="cart-summary" style="display:none">
-     <div class="summary-row"><span>Subtotal</span><span id="s-subtotal">₹0</span></div>
-<div class="summary-row" id="surge-row" style="display:none"><span>⚡ Surge</span><span class="gold" id="s-surge">₹0</span></div>
-<div class="summary-row" id="discount-row" style="display:none"><span>🎉 Discount</span><span style="color:#4ade80" id="s-discount">-₹0</span></div>
+      <div class="summary-row"><span>Subtotal</span><span id="s-subtotal">₹0</span></div>
+      <div class="summary-row" id="surge-row" style="display:none"><span>⚡ Surge</span><span class="gold" id="s-surge">₹0</span></div>
+      <div class="summary-row" id="discount-row" style="display:none"><span>🎉 Discount</span><span style="color:#4ade80" id="s-discount">-₹0</span></div>
       <div class="summary-row"><span>Delivery fee</span><span id="s-delivery">₹30</span></div>
       <div class="summary-row total"><span>Total</span><span class="gold" id="s-total">₹0</span></div>
     </div>
@@ -307,13 +312,22 @@
   if (!restaurantId) location.href = '/dashboard.html';
 
   let restaurant = null;
-let cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
+  let cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
+  let selectedDiscount = null; // { type: 'flat'|'tier'|'owner'|'global', percent, min_order }
+  let globalDiscount = null;
 
   const EMOJIS = ['🍛','🍕','🍜','🥘','🍱','🌮','🍔','🥗','🍣','🍲','🧆','🥙','🫕','🍗','🥩'];
 
   // ── Load restaurant + menu ─────────────────────────
   async function loadRestaurant() {
     try {
+      // Fetch global discount
+      try {
+        const gRes  = await fetch(`${API}/restaurants/settings/platform-discount`, { headers: { Authorization: `Bearer ${token}` } });
+        const gData = await gRes.json();
+        globalDiscount = gData.data?.active ? gData.data : null;
+      } catch(e) { globalDiscount = null; }
+
       const res  = await fetch(`${API}/restaurants/${restaurantId}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       restaurant = data.data || data;
@@ -443,6 +457,66 @@ if (!items.length) {
     updateCart();
   }
 
+   function buildAvailableDiscounts(subtotal) {
+    const discounts = [];
+    if (globalDiscount?.active && globalDiscount?.percent)
+      discounts.push({ type: 'global', percent: globalDiscount.percent, min_order: 0, label: `${globalDiscount.percent}% OFF (all orders)` });
+    if (restaurant?.admin_discount_active && restaurant?.admin_discount_percent)
+      discounts.push({ type: 'flat', percent: restaurant.admin_discount_percent, min_order: 0, label: `${restaurant.admin_discount_percent}% OFF (all orders)` });
+    (restaurant?.admin_discount_tiers || []).forEach(t =>
+      discounts.push({ type: 'tier', percent: t.percent, min_order: t.min_order, label: `${t.percent}% OFF above ₹${t.min_order}` })
+    );
+    if (restaurant?.owner_discount_active && restaurant?.owner_discount_percent)
+      discounts.push({ type: 'owner', percent: restaurant.owner_discount_percent, min_order: 0, label: `${restaurant.owner_discount_percent}% OFF (all orders)` });
+    return discounts;
+  }
+
+  function renderDiscountSelector(subtotal) {
+    const discounts = buildAvailableDiscounts(subtotal);
+    const selectorEl = document.getElementById('discount-selector');
+    const optionsEl  = document.getElementById('discount-options');
+    if (!discounts.length) { selectorEl.style.display = 'none'; selectedDiscount = null; return; }
+    selectorEl.style.display = 'block';
+    optionsEl.innerHTML = discounts.map((d, i) => {
+      const unlocked = subtotal >= d.min_order;
+      const isSelected = selectedDiscount && selectedDiscount.label === d.label;
+      return `
+        <div onclick="${unlocked ? `selectDiscount(${i})` : ''}"
+          style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:6px;cursor:${unlocked ? 'pointer' : 'default'};
+          background:${isSelected ? 'rgba(74,222,128,0.08)' : unlocked ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)'};
+          border:1px solid ${isSelected ? 'rgba(74,222,128,0.3)' : unlocked ? 'var(--border-mid)' : 'var(--border)'};
+          opacity:${unlocked ? 1 : 0.5}">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:${isSelected ? '#4ade80' : unlocked ? 'var(--white)' : 'var(--text-dim)'}">
+              ${isSelected ? '✓ ' : ''}${d.label}
+            </div>
+            ${!unlocked ? `<div style="font-size:11px;color:var(--text-dim)">Add ₹${d.min_order - subtotal} more to unlock</div>` : ''}
+          </div>
+          ${isSelected ? `<span style="font-size:10px;color:#4ade80;font-weight:700">APPLIED</span>` : ''}
+        </div>`;
+    }).join('') + (selectedDiscount ? `<button onclick="clearDiscount()" style="font-size:11px;color:var(--text-dim);background:none;border:none;cursor:pointer;padding:2px 0">✕ Remove discount</button>` : '');
+
+    // Auto-select if only one and subtotal qualifies
+    if (!selectedDiscount) {
+      const unlocked = discounts.filter(d => subtotal >= d.min_order);
+      if (unlocked.length === 1) { selectedDiscount = unlocked[0]; renderDiscountSelector(subtotal); }
+    }
+  }
+
+  function selectDiscount(i) {
+    const items = Object.entries(cart);
+    const subtotal = items.reduce((sum, [, item]) => sum + item.price * item.qty, 0);
+    const discounts = buildAvailableDiscounts(subtotal);
+    if (subtotal < discounts[i].min_order) return;
+    selectedDiscount = discounts[i];
+    updateCart();
+  }
+
+  function clearDiscount() {
+    selectedDiscount = null;
+    updateCart();
+  }
+
   function updateCart() {
     const items = Object.entries(cart);
     const cartEl     = document.getElementById('cart-items');
@@ -455,10 +529,11 @@ if (!items.length) {
       summaryEl.style.display  = 'none';
       deliveryEl.style.display = 'none';
       checkoutEl.style.display = 'none';
+      document.getElementById('discount-selector').style.display = 'none';
+      selectedDiscount = null;
       return;
     }
 
-    // Render cart items
     cartEl.innerHTML = items.map(([id, item]) => `
       <div class="cart-item">
         <div class="cart-item-name">${item.name}</div>
@@ -470,17 +545,20 @@ if (!items.length) {
         <div class="cart-item-price">₹${(item.price * item.qty).toFixed(0)}</div>
       </div>`).join('');
 
-    // Calculate totals
+    const subtotal    = items.reduce((sum, [, i]) => sum + i.price * i.qty, 0);
     const isSurge     = restaurant && (restaurant.is_surge || restaurant.surge_multiplier > 1);
-    const hasDiscount = restaurant && (restaurant.discount_active || restaurant.discount_percent > 0);
     const surge       = restaurant?.surge_multiplier || 1;
-    const discPct     = restaurant?.discount_percent || 10;
+    const surgeAmt    = isSurge ? Math.round(subtotal * (surge - 1)) : 0;
+    const deliveryFee = subtotal > 500 ? 0 : 30;
 
-    const subtotal     = items.reduce((sum, [, i]) => sum + i.price * i.qty, 0);
-    const surgeAmt     = isSurge ? Math.round(subtotal * (surge - 1)) : 0;
-    const discAmt      = hasDiscount ? Math.round(subtotal * discPct / 100) : 0;
-    const deliveryFee  = subtotal > 500 ? 0 : 30;
-    const total        = subtotal + surgeAmt - discAmt + deliveryFee;
+    // Render discount selector
+    renderDiscountSelector(subtotal);
+
+    // Check if selected discount still valid
+    if (selectedDiscount && subtotal < selectedDiscount.min_order) selectedDiscount = null;
+
+    const discAmt = selectedDiscount ? Math.round(subtotal * selectedDiscount.percent / 100) : 0;
+    const total   = subtotal + surgeAmt - discAmt + deliveryFee;
 
     document.getElementById('s-subtotal').textContent = `₹${subtotal}`;
     document.getElementById('s-delivery').textContent = deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`;
@@ -490,13 +568,14 @@ if (!items.length) {
     const discountRow = document.getElementById('discount-row');
     if (isSurge) { surgeRow.style.display = 'flex'; document.getElementById('s-surge').textContent = `₹${surgeAmt}`; }
     else surgeRow.style.display = 'none';
-    if (hasDiscount) { discountRow.style.display = 'flex'; document.getElementById('s-discount').textContent = `-₹${discAmt}`; }
+    if (selectedDiscount) { discountRow.style.display = 'flex'; document.getElementById('s-discount').textContent = `-₹${discAmt}`; }
     else discountRow.style.display = 'none';
 
     summaryEl.style.display  = 'block';
     deliveryEl.style.display = 'block';
     checkoutEl.style.display = 'block';
   }
+    
 
   // ── Place Order ────────────────────────────────────
   async function placeOrder() {
@@ -519,13 +598,11 @@ if (!items.length) {
 
     const subtotal    = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
     const deliveryFee = subtotal > 500 ? 0 : 30;
-    const isSurge     = restaurant?.is_surge || restaurant?.surge_multiplier > 1;
-    const hasDiscount = restaurant?.discount_active || restaurant?.discount_percent > 0;
-    const surge       = restaurant?.surge_multiplier || 1;
-    const discPct     = restaurant?.discount_percent || 10;
-    const surgeAmt    = isSurge ? Math.round(subtotal * (surge - 1)) : 0;
-    const discAmt     = hasDiscount ? Math.round(subtotal * discPct / 100) : 0;
-    const total       = subtotal + surgeAmt - discAmt + deliveryFee;
+    const isSurge  = restaurant?.is_surge || restaurant?.surge_multiplier > 1;
+    const surge    = restaurant?.surge_multiplier || 1;
+    const surgeAmt = isSurge ? Math.round(subtotal * (surge - 1)) : 0;
+    const discAmt  = selectedDiscount ? Math.round(subtotal * selectedDiscount.percent / 100) : 0;
+    const total    = subtotal + surgeAmt - discAmt + deliveryFee;
 
     try {
       // Step 1: Place order
@@ -542,7 +619,9 @@ if (!items.length) {
           deliveryPhone:   phone,
           totalAmount:     total,
           isScheduled:     false,
-          useDiscount:     hasDiscount,
+          useDiscount:     !!selectedDiscount,
+          discountPercent: selectedDiscount?.percent || 0,
+          discountType:    selectedDiscount?.type || null,
         }),
       });
 
