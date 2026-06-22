@@ -217,6 +217,54 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* CHECKOUT MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8); z-index: 500;
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .checkout-modal {
+      background: #1a0808; border: 1px solid var(--border-mid);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 28px; width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-title { font-family: var(--font-display); font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+    .modal-input {
+      width: 100%; padding: 12px 14px;
+      background: var(--bg); border: 1.5px solid var(--border-mid);
+      border-radius: var(--radius-md); color: var(--white);
+      font-family: var(--font-body); font-size: 14px; outline: none;
+      margin-bottom: 12px; transition: border-color 0.2s;
+    }
+    .modal-input:focus { border-color: var(--gold); }
+    .modal-input::placeholder { color: var(--text-dim); }
+    .pay-btn {
+      width: 100%; padding: 14px; border: none;
+      border-radius: var(--radius-md); font-family: var(--font-display);
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: box-shadow 0.2s; margin-bottom: 10px;
+    }
+    .pay-btn-cod {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-mid); color: var(--white);
+    }
+    .pay-btn-online {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #1a0505;
+    }
+    .pay-btn-online:hover { box-shadow: 0 6px 20px rgba(255,215,0,0.4); }
+
+    /* REPLACE CART MODAL */
+    .replace-modal {
+      background: #1a0808; border: 1px solid var(--border-mid);
+      border-radius: var(--radius-lg); padding: 28px;
+      width: 100%; max-width: 380px; text-align: center;
+    }
+
     @media (max-width: 768px) {
   .layout { flex-direction: column; }
   .cart-side { width: 100%; height: auto; position: static; border-left: none; border-top: 1px solid var(--border); }
@@ -284,14 +332,8 @@
       <div class="summary-row total"><span>Total</span><span class="gold" id="s-total">₹0</span></div>
     </div>
 
-    <div class="delivery-section" id="delivery-section" style="display:none">
-      <div class="delivery-label">Delivery Details</div>
-      <input class="delivery-input" type="text" id="delivery-address" placeholder="Delivery address"/>
-      <input class="delivery-input" type="tel" id="delivery-phone" placeholder="Phone number" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"/>
-    </div>
-
     <div class="checkout-section" id="checkout-section" style="display:none">
-      <button class="checkout-btn" onclick="placeOrder()" id="checkout-btn">
+      <button class="checkout-btn" onclick="openCheckoutModal()" id="checkout-btn">
         Place Order →
       </button>
     </div>
@@ -300,28 +342,71 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkout-modal" onclick="e => { if(e.target===this) closeCheckoutModal(); }">
+  <div class="checkout-modal" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div class="modal-title" style="margin-bottom:0">Delivery Details</div>
+      <button onclick="closeCheckoutModal()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div id="checkout-order-summary" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;font-size:13px;color:var(--text-muted)"></div>
+    <input class="modal-input" type="text" id="modal-address" placeholder="Delivery address"/>
+    <input class="modal-input" type="tel" id="modal-phone" placeholder="Phone number (10 digits)" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"/>
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Payment Method</div>
+    <button class="pay-btn pay-btn-cod" onclick="submitOrder('cod')" id="cod-btn">💵 Cash on Delivery</button>
+    <button class="pay-btn pay-btn-online" onclick="submitOrder('online')" id="online-btn">💳 Pay Online</button>
+  </div>
+</div>
+
+<!-- REPLACE CART MODAL -->
+<div class="modal-overlay" id="replace-modal">
+  <div class="replace-modal">
+    <div style="font-size:36px;margin-bottom:12px">🛒</div>
+    <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:8px">Replace cart?</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Your cart has items from another restaurant. Adding this item will remove existing items.</div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="closeReplaceModal()" style="padding:10px 20px;background:transparent;border:1px solid var(--border-mid);border-radius:var(--radius-sm);color:var(--text-muted);font-family:var(--font-body);font-size:13px;cursor:pointer">Keep existing</button>
+      <button onclick="confirmReplaceCart()" style="padding:10px 20px;background:linear-gradient(135deg,var(--red),var(--red-dark));border:none;border-radius:var(--radius-sm);color:white;font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer">Yes, replace</button>
+    </div>
+  </div>
+</div>
+
 <script>
- const API   = 'http://localhost:3000/api';
- const ORDER_API = 'http://localhost:8002/api';
-  const token = localStorage.getItem('token');
-  const user  = JSON.parse(localStorage.getItem('user') || '{}');
+  const API       = 'http://localhost:3000/api';
+  const ORDER_API = 'http://localhost:8002/api';
+  const token     = localStorage.getItem('token');
+  const user      = JSON.parse(localStorage.getItem('user') || '{}');
   if (!token) location.href = '/';
 
   const params       = new URLSearchParams(location.search);
   const restaurantId = params.get('id');
   if (!restaurantId) location.href = '/dashboard.html';
 
-  let restaurant = null;
-  let cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
-  let selectedDiscount = null; // { type: 'flat'|'tier'|'owner'|'global', percent, min_order }
-  let globalDiscount = null;
+  let restaurant     = null;
+  let selectedDiscount = null;
+  let globalDiscount   = null;
+  let pendingCartItem  = null; // for replace cart flow
+
+  const CART_KEY = 'qb_cart';
+
+  // ── Cart stored in localStorage ─────────────────────
+  function getCart() {
+    try { return JSON.parse(localStorage.getItem(CART_KEY) || '{}'); } catch { return {}; }
+  }
+  function saveCart(cart) {
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    localStorage.setItem('qb_cart_restaurant', restaurantId);
+  }
+  function clearCart() {
+    localStorage.removeItem(CART_KEY);
+    localStorage.removeItem('qb_cart_restaurant');
+  }
 
   const EMOJIS = ['🍛','🍕','🍜','🥘','🍱','🌮','🍔','🥗','🍣','🍲','🧆','🥙','🫕','🍗','🥩'];
 
-  // ── Load restaurant + menu ─────────────────────────
+  // ── Load restaurant + menu ───────────────────────────
   async function loadRestaurant() {
     try {
-      // Fetch global discount
       try {
         const gRes  = await fetch(`${API}/restaurants/settings/platform-discount`, { headers: { Authorization: `Bearer ${token}` } });
         const gData = await gRes.json();
@@ -332,34 +417,15 @@
       const data = await res.json();
       restaurant = data.data || data;
       renderMenu();
-      // Prefill saved delivery details
-const savedAddress = localStorage.getItem('saved_address');
-const savedPhone   = localStorage.getItem('saved_phone');
-setTimeout(() => {
-  if (savedAddress) {
-    const addrEl = document.getElementById('delivery-address');
-    if (addrEl) addrEl.value = savedAddress;
-  }
-  if (savedPhone) {
-    const phoneEl = document.getElementById('delivery-phone');
-    if (phoneEl) phoneEl.value = savedPhone;
-  }
-}, 100);
-    } catch (e) {
-      document.getElementById('menu-side').innerHTML = `
-        <div class="loading-state">
-          <div style="font-size:48px;margin-bottom:12px">⚠️</div>
-          <p>Could not load restaurant</p>
-        </div>`;
+      updateCart();
+    } catch(e) {
+      document.getElementById('menu-side').innerHTML = `<div class="loading-state"><div style="font-size:48px;margin-bottom:12px">⚠️</div><p>Could not load restaurant</p></div>`;
     }
   }
 
   function renderMenu() {
     const menu   = restaurant.menu || [];
-    const isSurge     = restaurant.is_surge || restaurant.surge_multiplier > 1;
-    const hasDiscount = restaurant.discount_active || restaurant.discount_percent > 0;
     const rating = restaurant.rating ? restaurant.rating.toFixed(1) : '4.5';
-
     document.getElementById('cart-restaurant-name').textContent = restaurant.name;
     document.title = `QuickBowl — ${restaurant.name}`;
 
@@ -375,114 +441,135 @@ setTimeout(() => {
             <span>🕐 30–45 min</span>
           </div>
         </div>
-      </div>
-      
-      <div class="discount-banner ${hasDiscount ? 'show' : ''}">
-        🎉 ${restaurant.discount_percent || 10}% discount available on this order!
       </div>`;
 
     if (!menu.length) {
       html += `<div class="loading-state"><p style="color:var(--text-muted)">No menu items available</p></div>`;
     } else {
-      // Group by category
       const categories = {};
       menu.forEach(item => {
         const cat = item.category || 'Menu';
         if (!categories[cat]) categories[cat] = [];
         categories[cat].push(item);
       });
-
+      const hour = new Date().getHours();
+      const isVisible = (item) => {
+        const types = (item.meal_type || 'allday').split(',').map(t => t.trim());
+        if (types.includes('allday')) return true;
+        if (types.includes('breakfast') && hour >= 6  && hour < 11) return true;
+        if (types.includes('lunch')     && hour >= 11 && hour < 15) return true;
+        if (types.includes('dinner')    && hour >= 18 && hour < 23) return true;
+        return false;
+      };
       Object.entries(categories).forEach(([cat, items]) => {
+        const visible = items.filter(isVisible);
         html += `<div class="menu-section-title">${cat}</div><div class="menu-grid">`;
-          const hour = new Date().getHours();
-const isVisible = (item) => {
-  const mt = item.meal_type || 'allday';
-  const types = mt.split(',').map(t => t.trim());
-  if (types.includes('allday')) return true;
-  if (types.includes('breakfast') && hour >= 6  && hour < 11)  return true;
-  if (types.includes('lunch')     && hour >= 11 && hour < 15)  return true;
-  if (types.includes('dinner')    && hour >= 18 && hour < 23)  return true;
-  return false;
-};
-items = items.filter(isVisible);
-if (!items.length) {
-  html += `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">
-    🕐 No items available right now — check back at meal time
-  </div>`;
-  return;
-}
-        items.forEach((item, i) => {
-          const emoji = EMOJIS[i % EMOJIS.length];
-          html += `
-            <div class="menu-item" id="item-${item._id || item.id}">
-              <div class="item-top">
-                <div>
-                  <div class="item-name">${item.name}</div>
-                  <div class="item-desc">${item.description || ''}</div>
+        if (!visible.length) {
+          html += `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">🕐 No items available right now</div>`;
+        } else {
+          visible.forEach((item, i) => {
+            html += `
+              <div class="menu-item">
+                <div class="item-top">
+                  <div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-desc">${item.description || ''}</div>
+                  </div>
+                  <div class="item-emoji">${EMOJIS[i % EMOJIS.length]}</div>
                 </div>
-                <div class="item-emoji">${emoji}</div>
-              </div>
-              <div class="item-bottom">
-                <div class="item-price">₹${item.base_price || item.price || 0}</div>
-                <button class="add-btn" onclick="addToCart('${item._id || item.id || item.item_id}', '${item.name}', ${item.base_price || item.price || 0})">
-                  + Add
-                </button>
-              </div>
-            </div>`;
-        });
+                <div class="item-bottom">
+                  <div class="item-price">₹${item.base_price || item.price || 0}</div>
+                  <button class="add-btn" onclick="addToCart('${item._id || item.id || item.item_id}', '${item.name.replace(/'/g,"\\'")}', ${item.base_price || item.price || 0})">+ Add</button>
+                </div>
+              </div>`;
+          });
+        }
         html += `</div>`;
       });
     }
-
     document.getElementById('menu-side').innerHTML = html;
   }
 
-  // ── Cart logic ─────────────────────────────────────
+  // ── Cart logic ───────────────────────────────────────
   function addToCart(id, name, price) {
-    if (cart[id]) {
-      cart[id].qty++;
-    } else {
-      cart[id] = { name, price, qty: 1 };
+    const cartRestId = localStorage.getItem('qb_cart_restaurant');
+    const cart = getCart();
+    const hasItems = Object.keys(cart).length > 0;
+
+    // Different restaurant — ask to replace
+    if (hasItems && cartRestId && cartRestId !== restaurantId) {
+      pendingCartItem = { id, name, price };
+      document.getElementById('replace-modal').classList.add('show');
+      return;
     }
-    sessionStorage.setItem('cart', JSON.stringify(cart));
+
+    doAddToCart(id, name, price);
+  }
+
+  function doAddToCart(id, name, price) {
+    const cart = getCart();
+    if (cart[id]) cart[id].qty++;
+    else cart[id] = { name, price, qty: 1 };
+    saveCart(cart);
     updateCart();
     showToast(`${name} added to cart`, 'success');
   }
 
+  function confirmReplaceCart() {
+    clearCart();
+    closeReplaceModal();
+    if (pendingCartItem) {
+      doAddToCart(pendingCartItem.id, pendingCartItem.name, pendingCartItem.price);
+      pendingCartItem = null;
+    }
+  }
+
+  function closeReplaceModal() {
+    document.getElementById('replace-modal').classList.remove('show');
+    pendingCartItem = null;
+  }
+
   function changeQty(id, delta) {
+    const cart = getCart();
     if (!cart[id]) return;
     cart[id].qty += delta;
     if (cart[id].qty <= 0) delete cart[id];
-    sessionStorage.setItem('cart', JSON.stringify(cart));
+    saveCart(cart);
     updateCart();
   }
 
-   function buildAvailableDiscounts(subtotal) {
+  // ── Discount logic ───────────────────────────────────
+  function buildAvailableDiscounts(subtotal) {
     const discounts = [];
     if (globalDiscount?.active && globalDiscount?.percent)
-      discounts.push({ type: 'global', percent: globalDiscount.percent, min_order: 0, label: `${globalDiscount.percent}% OFF (all orders)` });
+      discounts.push({ type: 'global', percent: globalDiscount.percent, min_order: 0, label: `${globalDiscount.percent}% OFF` });
     if (restaurant?.admin_discount_active && restaurant?.admin_discount_percent)
-      discounts.push({ type: 'flat', percent: restaurant.admin_discount_percent, min_order: 0, label: `${restaurant.admin_discount_percent}% OFF (all orders)` });
+      discounts.push({ type: 'flat', percent: restaurant.admin_discount_percent, min_order: 0, label: `${restaurant.admin_discount_percent}% OFF` });
     (restaurant?.admin_discount_tiers || []).forEach(t =>
       discounts.push({ type: 'tier', percent: t.percent, min_order: t.min_order, label: `${t.percent}% OFF above ₹${t.min_order}` })
     );
     if (restaurant?.owner_discount_active && restaurant?.owner_discount_percent)
-      discounts.push({ type: 'owner', percent: restaurant.owner_discount_percent, min_order: 0, label: `${restaurant.owner_discount_percent}% OFF (all orders)` });
+      discounts.push({ type: 'owner', percent: restaurant.owner_discount_percent, min_order: 0, label: `${restaurant.owner_discount_percent}% OFF` });
     return discounts;
   }
 
   function renderDiscountSelector(subtotal) {
-    const discounts = buildAvailableDiscounts(subtotal);
+    const discounts  = buildAvailableDiscounts(subtotal);
     const selectorEl = document.getElementById('discount-selector');
     const optionsEl  = document.getElementById('discount-options');
     if (!discounts.length) { selectorEl.style.display = 'none'; selectedDiscount = null; return; }
     selectorEl.style.display = 'block';
+
+    // Validate selected discount still unlocked
+    if (selectedDiscount && subtotal < selectedDiscount.min_order) selectedDiscount = null;
+
     optionsEl.innerHTML = discounts.map((d, i) => {
-      const unlocked = subtotal >= d.min_order;
-      const isSelected = selectedDiscount && selectedDiscount.label === d.label;
+      const unlocked   = subtotal >= d.min_order;
+      const isSelected = selectedDiscount && selectedDiscount.type === d.type && selectedDiscount.label === d.label;
       return `
         <div onclick="${unlocked ? `selectDiscount(${i})` : ''}"
-          style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:6px;cursor:${unlocked ? 'pointer' : 'default'};
+          style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:6px;
+          cursor:${unlocked ? 'pointer' : 'default'};
           background:${isSelected ? 'rgba(74,222,128,0.08)' : unlocked ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)'};
           border:1px solid ${isSelected ? 'rgba(74,222,128,0.3)' : unlocked ? 'var(--border-mid)' : 'var(--border)'};
           opacity:${unlocked ? 1 : 0.5}">
@@ -490,24 +577,23 @@ if (!items.length) {
             <div style="font-size:12px;font-weight:700;color:${isSelected ? '#4ade80' : unlocked ? 'var(--white)' : 'var(--text-dim)'}">
               ${isSelected ? '✓ ' : ''}${d.label}
             </div>
-            ${!unlocked ? `<div style="font-size:11px;color:var(--text-dim)">Add ₹${d.min_order - subtotal} more to unlock</div>` : ''}
+            ${!unlocked ? `<div style="font-size:11px;color:var(--text-dim)">Add ₹${Math.ceil(d.min_order - subtotal)} more to unlock</div>` : ''}
           </div>
-          ${isSelected ? `<span style="font-size:10px;color:#4ade80;font-weight:700">APPLIED</span>` : ''}
+          ${isSelected ? `<span style="font-size:10px;color:#4ade80;font-weight:700">APPLIED</span>` : `${unlocked ? `<span style="font-size:10px;color:var(--text-dim)">TAP TO APPLY</span>` : ''}`}
         </div>`;
-    }).join('') + (selectedDiscount ? `<button onclick="clearDiscount()" style="font-size:11px;color:var(--text-dim);background:none;border:none;cursor:pointer;padding:2px 0">✕ Remove discount</button>` : '');
+    }).join('');
 
-    // Auto-select if only one and subtotal qualifies
-    if (!selectedDiscount) {
-      const unlocked = discounts.filter(d => subtotal >= d.min_order);
-      if (unlocked.length === 1) { selectedDiscount = unlocked[0]; renderDiscountSelector(subtotal); }
+    // Remove button separately so it always works
+    if (selectedDiscount) {
+      optionsEl.innerHTML += `<button onclick="clearDiscount()" style="display:block;margin-top:4px;font-size:11px;color:#ff6b6b;background:none;border:none;cursor:pointer;padding:4px 0">✕ Remove discount</button>`;
     }
   }
 
   function selectDiscount(i) {
-    const items = Object.entries(cart);
-    const subtotal = items.reduce((sum, [, item]) => sum + item.price * item.qty, 0);
+    const cart     = getCart();
+    const subtotal = Object.values(cart).reduce((s, item) => s + item.price * item.qty, 0);
     const discounts = buildAvailableDiscounts(subtotal);
-    if (subtotal < discounts[i].min_order) return;
+    if (!discounts[i] || subtotal < discounts[i].min_order) return;
     selectedDiscount = discounts[i];
     updateCart();
   }
@@ -517,17 +603,17 @@ if (!items.length) {
     updateCart();
   }
 
+  // ── Update cart UI ───────────────────────────────────
   function updateCart() {
-    const items = Object.entries(cart);
-    const cartEl     = document.getElementById('cart-items');
+    const cart     = getCart();
+    const items    = Object.entries(cart);
+    const cartEl   = document.getElementById('cart-items');
     const summaryEl  = document.getElementById('cart-summary');
-    const deliveryEl = document.getElementById('delivery-section');
     const checkoutEl = document.getElementById('checkout-section');
 
     if (!items.length) {
       cartEl.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🍽️</div>Your cart is empty</div>`;
       summaryEl.style.display  = 'none';
-      deliveryEl.style.display = 'none';
       checkoutEl.style.display = 'none';
       document.getElementById('discount-selector').style.display = 'none';
       selectedDiscount = null;
@@ -545,17 +631,13 @@ if (!items.length) {
         <div class="cart-item-price">₹${(item.price * item.qty).toFixed(0)}</div>
       </div>`).join('');
 
-    const subtotal    = items.reduce((sum, [, i]) => sum + i.price * i.qty, 0);
+    const subtotal    = items.reduce((s, [, i]) => s + i.price * i.qty, 0);
     const isSurge     = restaurant && (restaurant.is_surge || restaurant.surge_multiplier > 1);
     const surge       = restaurant?.surge_multiplier || 1;
     const surgeAmt    = isSurge ? Math.round(subtotal * (surge - 1)) : 0;
     const deliveryFee = subtotal > 500 ? 0 : 30;
 
-    // Render discount selector
     renderDiscountSelector(subtotal);
-
-    // Check if selected discount still valid
-    if (selectedDiscount && subtotal < selectedDiscount.min_order) selectedDiscount = null;
 
     const discAmt = selectedDiscount ? Math.round(subtotal * selectedDiscount.percent / 100) : 0;
     const total   = subtotal + surgeAmt - discAmt + deliveryFee;
@@ -566,52 +648,82 @@ if (!items.length) {
 
     const surgeRow    = document.getElementById('surge-row');
     const discountRow = document.getElementById('discount-row');
-    if (isSurge) { surgeRow.style.display = 'flex'; document.getElementById('s-surge').textContent = `₹${surgeAmt}`; }
-    else surgeRow.style.display = 'none';
-    if (selectedDiscount) { discountRow.style.display = 'flex'; document.getElementById('s-discount').textContent = `-₹${discAmt}`; }
-    else discountRow.style.display = 'none';
+    surgeRow.style.display    = isSurge ? 'flex' : 'none';
+    if (isSurge) document.getElementById('s-surge').textContent = `₹${surgeAmt}`;
+    discountRow.style.display = selectedDiscount ? 'flex' : 'none';
+    if (selectedDiscount) document.getElementById('s-discount').textContent = `-₹${discAmt}`;
 
     summaryEl.style.display  = 'block';
-    deliveryEl.style.display = 'block';
     checkoutEl.style.display = 'block';
   }
-    
 
-  // ── Place Order ────────────────────────────────────
-  async function placeOrder() {
-    const address = document.getElementById('delivery-address').value.trim();
-    const phone   = document.getElementById('delivery-phone').value.trim();
+  // ── Checkout Modal ───────────────────────────────────
+  function openCheckoutModal() {
+    const cart  = getCart();
+    const items = Object.entries(cart);
+    if (!items.length) { showToast('Cart is empty', 'error'); return; }
 
+    // Prefill saved details
+    const savedAddress = localStorage.getItem('saved_address') || '';
+    const savedPhone   = localStorage.getItem('saved_phone')   || '';
+    document.getElementById('modal-address').value = savedAddress;
+    document.getElementById('modal-phone').value   = savedPhone;
+
+    // Order summary
+    const subtotal    = items.reduce((s, [, i]) => s + i.price * i.qty, 0);
+    const isSurge     = restaurant && (restaurant.is_surge || restaurant.surge_multiplier > 1);
+    const surge       = restaurant?.surge_multiplier || 1;
+    const surgeAmt    = isSurge ? Math.round(subtotal * (surge - 1)) : 0;
+    const deliveryFee = subtotal > 500 ? 0 : 30;
+    const discAmt     = selectedDiscount ? Math.round(subtotal * selectedDiscount.percent / 100) : 0;
+    const total       = subtotal + surgeAmt - discAmt + deliveryFee;
+
+    document.getElementById('checkout-order-summary').innerHTML = `
+      <div style="font-weight:700;color:var(--white);margin-bottom:8px">${restaurant.name}</div>
+      ${items.map(([, i]) => `<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>${i.name} ×${i.qty}</span><span style="color:var(--gold)">₹${i.price * i.qty}</span></div>`).join('')}
+      ${selectedDiscount ? `<div style="display:flex;justify-content:space-between;color:#4ade80;margin-top:6px"><span>🎉 ${selectedDiscount.label}</span><span>-₹${discAmt}</span></div>` : ''}
+      <div style="display:flex;justify-content:space-between;font-family:var(--font-display);font-weight:700;color:var(--white);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><span>Total</span><span style="color:var(--gold)">₹${total}</span></div>`;
+    window._checkoutTotal = total;
+    document.getElementById('checkout-modal').classList.add('show');
+  }
+
+  function closeCheckoutModal() {
+    document.getElementById('checkout-modal').classList.remove('show');
+  }
+
+  // ── Submit Order ─────────────────────────────────────
+  async function submitOrder(paymentMethod) {
+    const address = document.getElementById('modal-address').value.trim();
+    const phone   = document.getElementById('modal-phone').value.trim();
     if (!address) { showToast('Please enter delivery address', 'error'); return; }
     if (!phone || !/^\d{10}$/.test(phone)) { showToast('Please enter a valid 10-digit phone number', 'error'); return; }
 
-    const btn = document.getElementById('checkout-btn');
-    btn.textContent = 'Placing order...';
-    btn.disabled    = true;
+    const btnId = paymentMethod === 'cod' ? 'cod-btn' : 'online-btn';
+    const btn   = document.getElementById(btnId);
+    btn.textContent = 'Placing order...'; btn.disabled = true;
 
+    const cart  = getCart();
     const items = Object.entries(cart).map(([id, item]) => ({
-      itemId:   id,
-      name:     item.name,
-      price:    item.price,
-      quantity: item.qty,
+      itemId: id, name: item.name, price: item.price, quantity: item.qty
     }));
 
-    const subtotal    = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const subtotal    = items.reduce((s, i) => s + i.price * i.quantity, 0);
     const deliveryFee = subtotal > 500 ? 0 : 30;
-    const isSurge  = restaurant?.is_surge || restaurant?.surge_multiplier > 1;
-    const surge    = restaurant?.surge_multiplier || 1;
-    const surgeAmt = isSurge ? Math.round(subtotal * (surge - 1)) : 0;
-    const discAmt  = selectedDiscount ? Math.round(subtotal * selectedDiscount.percent / 100) : 0;
-    const total    = subtotal + surgeAmt - discAmt + deliveryFee;
+    const isSurge     = restaurant?.is_surge || restaurant?.surge_multiplier > 1;
+    const surge       = restaurant?.surge_multiplier || 1;
+    const surgeAmt    = isSurge ? Math.round(subtotal * (surge - 1)) : 0;
+    const discAmt     = selectedDiscount ? Math.round(subtotal * selectedDiscount.percent / 100) : 0;
+    const total       = window._checkoutTotal;
+    console.log('checkout total:', window._checkoutTotal, 'selectedDiscount:', selectedDiscount);
+    if (!total) { showToast('Something went wrong, please try again', 'error'); btn.textContent = paymentMethod === 'cod' ? '💵 Cash on Delivery' : '💳 Pay Online'; btn.disabled = false; return; }
 
     try {
-      // Step 1: Place order
       const orderRes = await fetch(`${ORDER_API}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           userId:          String(user.id || user._id),
-          restaurantId:    restaurantId,
+          restaurantId,
           restaurantName:  restaurant.name,
           restaurantCity:  restaurant.city,
           items,
@@ -622,102 +734,80 @@ if (!items.length) {
           useDiscount:     !!selectedDiscount,
           discountPercent: selectedDiscount?.percent || 0,
           discountType:    selectedDiscount?.type || null,
+          paymentMethod,
         }),
       });
 
       const orderData = await orderRes.json();
       if (!orderData.success && !orderData.id) throw new Error(orderData.message || 'Order failed');
-
       const orderId = orderData.data?.id || orderData.id;
-      // Save delivery details for next time
-localStorage.setItem('saved_address', address);
-localStorage.setItem('saved_phone', phone);
 
-      // Step 2: Create Razorpay payment order
-      const payRes = await fetch('http://localhost:8003/api/payments', {
+      localStorage.setItem('saved_address', address);
+      localStorage.setItem('saved_phone', phone);
+
+      if (paymentMethod === 'cod') {
+        clearCart();
+        closeCheckoutModal();
+        showToast('🎉 Order placed! Pay on delivery.', 'success');
+        setTimeout(() => location.href = '/dashboard.html', 1500);
+        return;
+      }
+
+      // Online payment via Razorpay
+      const payRes  = await fetch('http://localhost:8003/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          order_id: String(orderId),
-          user_id:  String(user.id || user._id),
-          amount:   total,
-        }),
+        body: JSON.stringify({ order_id: String(orderId), user_id: String(user.id || user._id), amount: total }),
       });
-
       const payData = await payRes.json();
       if (!payData.success) throw new Error(payData.message || 'Payment init failed');
 
       const rzp = payData.data.razorpay;
-
-      // Step 3: Open Razorpay popup
       const options = {
-        key:      rzp.key,
-        amount:   rzp.amount,
-        currency: rzp.currency,
-        order_id: rzp.order_id,
-        name:     'QuickBowl',
-        description: `Order #${orderId} — ${restaurant.name}`,
-        image:    'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72"><path d="M13 38 Q13 58 36 58 Q59 58 59 38 Z" fill="%23dc2626"/><rect x="11" y="33" width="50" height="8" rx="4" fill="%23FFD700"/></svg>',
-        prefill: {
-          name:    `${user.first_name || ''} ${user.last_name || ''}`.trim(),
-          email:   user.email || '',
-          contact: phone,
-        },
+        key: rzp.key, amount: rzp.amount, currency: rzp.currency, order_id: rzp.order_id,
+        name: 'QuickBowl', description: `Order #${orderId} — ${restaurant.name}`,
+        prefill: { name: `${user.first_name || ''} ${user.last_name || ''}`.trim(), email: user.email || '', contact: phone },
         theme: { color: '#FFD700' },
         handler: async function(response) {
-          // Step 4: Verify payment
           try {
-            const verifyRes = await fetch('http://localhost:8003/api/payments/verify', {
+            const verifyRes  = await fetch('http://localhost:8003/api/payments/verify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
               body: JSON.stringify({
-                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature:  response.razorpay_signature,
-                payment_method:      'razorpay',
-                user_email:          user.email || '',
-                user_phone:          phone,
+                razorpay_signature: response.razorpay_signature,
+                payment_method: 'razorpay', user_email: user.email || '', user_phone: phone,
               }),
             });
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
+              clearCart();
+              closeCheckoutModal();
               showToast('🎉 Payment successful! Order placed.', 'success');
-              sessionStorage.removeItem('cart');
               setTimeout(() => location.href = '/dashboard.html', 1500);
-            } else {
-              showToast('Payment verification failed', 'error');
-            }
-          } catch(e) {
-            showToast('Payment verification error', 'error');
-          }
+            } else { showToast('Payment verification failed', 'error'); }
+          } catch(e) { showToast('Payment verification error', 'error'); }
         },
-        modal: {
-          ondismiss: function() {
-            showToast('Payment cancelled', 'error');
-            btn.textContent = 'Place Order →';
-            btn.disabled    = false;
-          }
-        }
+        modal: { ondismiss: () => { showToast('Payment cancelled', 'error'); btn.textContent = paymentMethod === 'online' ? '💳 Pay Online' : '💵 Cash on Delivery'; btn.disabled = false; } }
       };
-
       const rzpInstance = new Razorpay(options);
       rzpInstance.open();
-      btn.textContent = 'Place Order →';
-      btn.disabled    = false;
+      btn.textContent = paymentMethod === 'online' ? '💳 Pay Online' : '💵 Cash on Delivery';
+      btn.disabled = false;
 
-    } catch (e) {
+    } catch(e) {
       showToast(e.message || 'Could not place order', 'error');
-      btn.textContent = 'Place Order →';
-      btn.disabled    = false;
+      btn.textContent = paymentMethod === 'cod' ? '💵 Cash on Delivery' : '💳 Pay Online';
+      btn.disabled = false;
     }
   }
-    
-  // ── Toast ──────────────────────────────────────────
+
+  // ── Toast ────────────────────────────────────────────
   let toastTimer;
   function showToast(msg, type = '') {
     const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className   = `toast ${type} show`;
+    t.textContent = msg; t.className = `toast ${type} show`;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.className = `toast ${type}`, 2500);
   }

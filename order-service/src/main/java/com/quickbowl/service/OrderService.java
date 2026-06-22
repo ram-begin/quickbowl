@@ -57,32 +57,22 @@ public class OrderService {
             .sum();
 
         double surgeAmount = isSurge ? Math.round((subtotal * (surgeMultiplier - 1.0)) * 100.0) / 100.0 : 0.0;
-
-        double discountPercent = 0;
-        double discountAmount = 0;
-        boolean discountUsed = false;
-
-        if (req.getUseDiscount()) {
-            Map discountStatus = restTemplate.getForObject(
-                restaurantServiceUrl + "/api/restaurants/discount/active",
-                Map.class
-            );
-            Map discountData = (Map) discountStatus.get("data");
-            boolean discountActive = (boolean) discountData.getOrDefault("active", false);
-
-            if (discountActive) {
-                discountPercent = ((Number) discountData.getOrDefault("percent", 0)).doubleValue();
-                discountAmount = Math.round((subtotal * discountPercent / 100) * 100.0) / 100.0;
-                discountUsed = true;
-                restTemplate.postForObject(
-                    restaurantServiceUrl + "/api/restaurants/discount/use",
-                    null, Map.class
-                );
-            }
-        }
-
         double deliveryFee = subtotal > 500 ? 0.0 : 30.0;
-        double total = Math.round((subtotal + surgeAmount - discountAmount + deliveryFee) * 100.0) / 100.0;
+
+        // Trust totalAmount from frontend (it already has discounts applied)
+        double total;
+        double discountAmount = 0;
+        double discountPercent = req.getDiscountPercent() != null ? req.getDiscountPercent() : 0;
+        boolean discountUsed = req.getUseDiscount() != null && req.getUseDiscount();
+
+        if (req.getTotalAmount() != null && req.getTotalAmount() > 0) {
+            total = req.getTotalAmount();
+            if (discountUsed && discountPercent > 0) {
+                discountAmount = Math.round((subtotal * discountPercent / 100) * 100.0) / 100.0;
+            }
+        } else {
+            total = Math.round((subtotal + surgeAmount - discountAmount + deliveryFee) * 100.0) / 100.0;
+        }
 
         if (req.getIsScheduled() && req.getScheduledFor() != null) {
             if (req.getScheduledFor().isBefore(LocalDateTime.now().plusMinutes(30))) {

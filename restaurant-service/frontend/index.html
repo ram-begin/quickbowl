@@ -521,6 +521,7 @@ function toggleSidebar() {
 }
 
 function showPage(name) {
+  sessionStorage.setItem('currentPage', name);
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
   document.getElementById(`page-${name}`).classList.add('active');
@@ -601,28 +602,34 @@ const items = rawItems.map(i => `${i.name} x${i.quantity || i.qty || 1}`).join('
       <div class="order-items">🍽️ ${items}</div>
       ${o.delivery_address ? `<div class="order-items">📍 ${o.delivery_address}</div>` : ''}
       <div class="order-footer">
-        <span class="order-amount">₹${o.total_amount || o.total || 0}</span>
+        <span class="order-amount">₹${o.totalAmount || o.total_amount || o.total || 0}</span>
         <span class="order-date">${fmtDate(o.created_at || o.createdAt)}</span>
       </div>
     </div>`;
 }
 
 // ── Date filter helpers ──────────────────────────────
-function filterOrdersByPeriod(orders, filter) {
+function filterOrdersByPeriod(orders, filter, customFrom, customTo) {
   const now = new Date();
   return orders.filter(o => {
     const d = new Date(o.created_at || o.createdAt);
     if (isNaN(d)) return filter === 'all';
-    if (filter === 'all')    return true;
-    if (filter === 'today')  return d.toDateString() === now.toDateString();
-    if (filter === 'week')   return (now - d) <= 7  * 24 * 60 * 60 * 1000;
-    if (filter === 'month')  return (now - d) <= 30 * 24 * 60 * 60 * 1000;
-    if (filter === '3months')return (now - d) <= 90 * 24 * 60 * 60 * 1000;
+    if (filter === 'all')     return true;
+    if (filter === 'today')   return d.toDateString() === now.toDateString();
+    if (filter === 'week')    return (now - d) <= 7  * 24 * 60 * 60 * 1000;
+    if (filter === 'month')   return (now - d) <= 30 * 24 * 60 * 60 * 1000;
+    if (filter === '3months') return (now - d) <= 90 * 24 * 60 * 60 * 1000;
+    if (filter === 'custom' && customFrom && customTo) {
+      const from = new Date(customFrom);
+      const to   = new Date(customTo);
+      to.setHours(23, 59, 59, 999);
+      return d >= from && d <= to;
+    }
     return true;
   });
 }
 
-function dateFilterHtml(fnName, active) {
+function dateFilterHtml(fnName, active, customFrom, customTo) {
   const filters = [
     { key: 'today',   label: 'Today' },
     { key: 'week',    label: '7 Days' },
@@ -630,45 +637,93 @@ function dateFilterHtml(fnName, active) {
     { key: '3months', label: '3 Months' },
     { key: 'all',     label: 'All Time' },
   ];
-  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-    ${filters.map(f => `
-      <button onclick="${fnName}('${f.key}')" style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ${active===f.key ? 'var(--gold)' : 'var(--border-mid)'};background:${active===f.key ? 'rgba(255,215,0,0.1)' : 'transparent'};color:${active===f.key ? 'var(--gold)' : 'var(--text-muted)'}">
-        ${f.label}
-      </button>`).join('')}
-  </div>`;
+  const isCustom = active === 'custom';
+  return `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${filters.map(f => `
+        <button onclick="${fnName}('${f.key}')" style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ${active===f.key ? 'var(--gold)' : 'var(--border-mid)'};background:${active===f.key ? 'rgba(255,215,0,0.1)' : 'transparent'};color:${active===f.key ? 'var(--gold)' : 'var(--text-muted)'}">
+          ${f.label}
+        </button>`).join('')}
+      <button onclick="toggleCustomDatePicker('${fnName}')" style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ${isCustom ? 'var(--gold)' : 'var(--border-mid)'};background:${isCustom ? 'rgba(255,215,0,0.1)' : 'transparent'};color:${isCustom ? 'var(--gold)' : 'var(--text-muted)'}">
+        📅 Date
+      </button>
+    </div>
+    <div id="custom-date-picker" style="display:${isCustom ? 'flex' : 'none'};align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md)">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <label style="font-size:11px;color:var(--text-muted);white-space:nowrap">From</label>
+        <input type="date" id="custom-date-from" value="${customFrom||''}"
+          style="padding:6px 10px;background:var(--bg-input);border:1px solid var(--border-mid);border-radius:var(--radius-sm);color:var(--white);font-size:12px;outline:none;color-scheme:dark;cursor:pointer"/>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <label style="font-size:11px;color:var(--text-muted);white-space:nowrap">To</label>
+        <input type="date" id="custom-date-to" value="${customTo||''}"
+          style="padding:6px 10px;background:var(--bg-input);border:1px solid var(--border-mid);border-radius:var(--radius-sm);color:var(--white);font-size:12px;outline:none;color-scheme:dark;cursor:pointer"/>
+      </div>
+      <button onclick="applyCustomDate('${fnName}')" style="padding:6px 14px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#1a0505;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer">Apply</button>
+      <div style="font-size:11px;color:var(--text-dim);width:100%">💡 Set same date for From and To to view a single day</div>
+    </div>`;
+}
+
+function toggleCustomDatePicker(fnName) {
+  const picker = document.getElementById('custom-date-picker');
+  if (!picker) return;
+  const isVisible = picker.style.display !== 'none';
+  if (isVisible) {
+    window[fnName]('all');
+  } else {
+    picker.style.display = 'flex';
+    const today = new Date().toISOString().split('T')[0];
+    const fromEl = document.getElementById('custom-date-from');
+    const toEl   = document.getElementById('custom-date-to');
+    if (fromEl && !fromEl.value) fromEl.value = today;
+    if (toEl   && !toEl.value)   toEl.value   = today;
+  }
+}
+
+function applyCustomDate(fnName) {
+  const from = document.getElementById('custom-date-from')?.value;
+  const to   = document.getElementById('custom-date-to')?.value;
+  if (!from || !to) { showToast('Please select both dates', 'error'); return; }
+  if (from > to) { showToast('From date must be before To date', 'error'); return; }
+  window[fnName]('custom', from, to);
 }
 
 // ── Drawer: All Orders ───────────────────────────────
-async function showAllOrders(filter = 'all') {
+async function showAllOrders(filter = 'all', customFrom = '', customTo = '') {
   openDrawer('📋 All Orders', async () => {
     const allOrders = await fetchOrders();
     const el = document.getElementById('drawer-body');
 
-    const filtered = filterOrdersByPeriod(allOrders, filter);
-    const total = filtered.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+    const filtered = filterOrdersByPeriod(allOrders, filter, customFrom, customTo);
+
+    const delivered = filtered.filter(o => (o.status||'').toUpperCase() === 'DELIVERED');
+    const cancelled = filtered.filter(o => (o.status||'').toUpperCase() === 'CANCELLED');
+    const revenue   = delivered.reduce((s, o) => s + (o.totalAmount || o.total_amount || o.total || 0), 0);
 
     el.innerHTML = `
-      ${dateFilterHtml('showAllOrders', filter)}
+      ${dateFilterHtml('showAllOrders', filter, customFrom, customTo)}
       <div class="drawer-summary">
-        <div class="drawer-stat"><div class="drawer-stat-val">${filtered.length}</div><div class="drawer-stat-lbl">Orders</div></div>
-        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Total</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">${filtered.length}</div><div class="drawer-stat-lbl">Total Orders</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(revenue)}</div><div class="drawer-stat-lbl">Revenue</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">${delivered.length}</div><div class="drawer-stat-lbl">Delivered</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-val">${cancelled.length}</div><div class="drawer-stat-lbl">Cancelled</div></div>
       </div>
       ${filtered.length ? filtered.map(orderCardHtml).join('') : '<div class="empty-state"><div class="empty-icon">📋</div><p>No orders in this period</p></div>'}`;
   });
 }
 
 // ── Drawer: Completed Orders ─────────────────────────
-async function showCompletedOrders(filter = 'all') {
+async function showCompletedOrders(filter = 'all', customFrom = '', customTo = '') {
   openDrawer('✅ Completed Orders', async () => {
     const allOrders = (await fetchOrders()).filter(o => (o.status||'').toLowerCase().includes('deliver'));
     const el = document.getElementById('drawer-body');
 
-    const filtered = filterOrdersByPeriod(allOrders, filter);
-    const total = filtered.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+    const filtered = filterOrdersByPeriod(allOrders, filter, customFrom, customTo);
+    const total = filtered.reduce((s, o) => s + (o.totalAmount || o.total_amount || o.total || 0), 0);
     const avg   = filtered.length ? Math.round(total / filtered.length) : 0;
 
     el.innerHTML = `
-      ${dateFilterHtml('showCompletedOrders', filter)}
+      ${dateFilterHtml('showCompletedOrders', filter, customFrom, customTo)}
       <div class="drawer-summary">
         <div class="drawer-stat"><div class="drawer-stat-val">${filtered.length}</div><div class="drawer-stat-lbl">Completed</div></div>
         <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Revenue</div></div>
@@ -680,20 +735,20 @@ async function showCompletedOrders(filter = 'all') {
 }
 
 // ── Drawer: Revenue ──────────────────────────────────
-async function showRevenue(filter = 'all') {
+async function showRevenue(filter = 'all', customFrom = '', customTo = '') {
   openDrawer('💰 Revenue Breakdown', async () => {
     const allOrders = (await fetchOrders()).filter(o => (o.status||'').toLowerCase().includes('deliver'));
     const el = document.getElementById('drawer-body');
 
-    const filtered = filterOrdersByPeriod(allOrders, filter);
-    const total = filtered.reduce((s, o) => s + (o.total_amount || o.total || 0), 0);
+    const filtered = filterOrdersByPeriod(allOrders, filter, customFrom, customTo);
+    const total = filtered.reduce((s, o) => s + (o.totalAmount || o.total_amount || o.total || 0), 0);
 
     const byDate = {};
     filtered.forEach(o => {
       const d = new Date(o.created_at || o.createdAt);
       if (isNaN(d)) return;
       const key = d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
-      byDate[key] = (byDate[key] || 0) + (o.total_amount || o.total || 0);
+      byDate[key] = (byDate[key] || 0) + (o.totalAmount || o.total_amount || o.total || 0);
     });
 
     const dateRows = Object.entries(byDate).map(([d, amt]) =>
@@ -703,7 +758,7 @@ async function showRevenue(filter = 'all') {
       </div>`).join('') || '<p style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px">No revenue in this period</p>';
 
     el.innerHTML = `
-      ${dateFilterHtml('showRevenue', filter)}
+      ${dateFilterHtml('showRevenue', filter, customFrom, customTo)}
       <div class="drawer-summary">
         <div class="drawer-stat"><div class="drawer-stat-val">₹${Math.round(total)}</div><div class="drawer-stat-lbl">Total Revenue</div></div>
         <div class="drawer-stat"><div class="drawer-stat-val">₹${filtered.length ? Math.round(total/filtered.length) : 0}</div><div class="drawer-stat-lbl">Avg per Order</div></div>
@@ -1276,6 +1331,14 @@ async function loadSettings() {
       </div>
       <button class="toggle ${r.is_active!==false?'on':''}" id="active-toggle" onclick="toggleActive('${rid(r)}')"></button>
     </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <h4>⏰ Auto Schedule</h4>
+        <p>Automatically activate at opening time and deactivate at closing time</p>
+        ${r.auto_schedule ? `<div style="font-size:11px;color:#4ade80;margin-top:4px">✅ Active: ${formatTime12h(r.opening_time)} – ${formatTime12h(r.closing_time)}</div>` : ''}
+      </div>
+      <button class="toggle ${r.auto_schedule?'on':''}" id="auto-schedule-toggle" onclick="toggleAutoSchedule('${rid(r)}')"></button>
+    </div>
     <div class="toggle-row" style="flex-wrap:wrap;gap:12px">
       <div class="toggle-info">
         <h4>🏷️ Discount Offer</h4>
@@ -1292,6 +1355,68 @@ async function loadSettings() {
         <button class="btn btn-gold btn-sm" onclick="saveDiscount('${rid(r)}')">Save</button>
       </div>
     </div>`;
+}
+
+async function toggleAutoSchedule(id) {
+  const btn = document.getElementById('auto-schedule-toggle');
+  const newValue = !btn.classList.contains('on');
+  btn.classList.toggle('on', newValue);
+  if (myRestaurant) myRestaurant.auto_schedule = newValue;
+  localStorage.setItem('myRestaurant', JSON.stringify(myRestaurant));
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ auto_schedule: newValue })
+    });
+    showToast(newValue ? '⏰ Auto schedule enabled!' : 'Auto schedule disabled', 'success');
+    if (newValue) startAutoSchedule(id);
+    else stopAutoSchedule();
+  } catch(e) {
+    btn.classList.toggle('on', !newValue);
+    if (myRestaurant) myRestaurant.auto_schedule = !newValue;
+    showToast('Could not update', 'error');
+  }
+}
+
+let _autoScheduleTimer = null;
+
+function startAutoSchedule(id) {
+  stopAutoSchedule();
+  checkAndSchedule(id);
+  _autoScheduleTimer = setInterval(() => checkAndSchedule(id), 60000);
+}
+
+function stopAutoSchedule() {
+  if (_autoScheduleTimer) { clearInterval(_autoScheduleTimer); _autoScheduleTimer = null; }
+}
+
+async function checkAndSchedule(id) {
+  const r = myRestaurant;
+  if (!r || !r.auto_schedule) return;
+
+  const now   = new Date();
+  const hhmm  = now.getHours() * 60 + now.getMinutes();
+
+  const [oh, om] = (r.opening_time || '09:00').split(':').map(Number);
+  const [ch, cm] = (r.closing_time || '23:00').split(':').map(Number);
+  const openMin  = oh * 60 + om;
+  const closeMin = ch * 60 + cm;
+
+  const shouldBeActive = hhmm >= openMin && hhmm < closeMin;
+
+  if (shouldBeActive === r.is_active) return; // no change needed
+
+  try {
+    await fetch(`${RAPI}/restaurants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ is_active: shouldBeActive })
+    });
+    if (myRestaurant) myRestaurant.is_active = shouldBeActive;
+    localStorage.setItem('myRestaurant', JSON.stringify(myRestaurant));
+    showToast(shouldBeActive ? '⏰ Restaurant auto-activated!' : '⏰ Restaurant auto-deactivated', shouldBeActive ? 'success' : '');
+  } catch(e) {}
 }
 
 async function toggleActive(id) {
@@ -1316,6 +1441,13 @@ async function quickActivate(id) {
   try {
     await fetch(`${RAPI}/restaurants/${id}`, { method:'PUT', headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`}, body:JSON.stringify({is_active:true}) });
     showToast('Restaurant activated!', 'success');
+
+   // Start auto schedule if enabled
+setTimeout(async () => {
+  const r = await fetchMyRestaurant();
+  if (r?.auto_schedule) startAutoSchedule(rid(r));
+}, 1000);
+
     loadOverview(); // refresh dashboard to remove the banner
   } catch(e) {
     if (myRestaurant) myRestaurant.is_active = false;
@@ -1387,7 +1519,7 @@ const ORDER_STATUS_NEXT = { 'PENDING':'CONFIRMED', 'CONFIRMED':'PREPARING', 'PRE
 const ORDER_STATUS_LABEL = { 'PENDING':'⏳ Pending', 'CONFIRMED':'✅ Confirmed', 'PREPARING':'👨‍🍳 Preparing', 'OUT_FOR_DELIVERY':'🛵 Out for Delivery', 'DELIVERED':'🎉 Delivered', 'CANCELLED':'❌ Cancelled', 'SCHEDULED':'📅 Scheduled' };
 const ORDER_STATUS_COLOR = { 'PENDING':'#FFA500', 'CONFIRMED':'#60a5fa', 'PREPARING':'#c084fc', 'OUT_FOR_DELIVERY':'#FFD700', 'DELIVERED':'#4ade80', 'CANCELLED':'#ff6b6b', 'SCHEDULED':'#a5b4fc' };
 
-async function loadOrders() {
+async function loadOrders(filter = 'all', customFrom = '', customTo = '') {
   const el = document.getElementById('orders-content');
   el.innerHTML = '<div class="spinner"></div>';
   const r = await fetchMyRestaurant();
@@ -1395,23 +1527,83 @@ async function loadOrders() {
   try {
     const res  = await fetch(`${API}/orders/restaurant/${rid(r)}`, { headers: { Authorization: `Bearer ${token}` } });
     const data = await res.json();
-    renderOrders(data.data || [], rid(r));
+    const allOrders = data.data || [];
+    const filtered = filterOrdersByPeriod(allOrders, filter, customFrom, customTo);
+    renderOrders(filtered, rid(r), filter, customFrom, customTo);
   } catch(e) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Could not load orders</p></div>`;
   }
 }
 
-function renderOrders(orders, restId) {
+function renderOrders(orders, restId, filter = 'all', customFrom = '', customTo = '') {
   const el = document.getElementById('orders-content');
+
+  // Build filter bar
+  const filterBar = dateFilterHtml('loadOrders', filter, customFrom, customTo);
+
   if (!orders.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>No orders yet — they'll appear here when customers order</p></div>`;
+    el.innerHTML = `
+      ${filterBar}
+      <div class="empty-state"><div class="empty-icon">📋</div><p>No orders in this period</p></div>`;
     return;
   }
+
+  // Sort newest first
+  orders.sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at));
+
+  // Group by date label
+  const groups = {};
+  const today     = new Date();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+
+  orders.forEach(o => {
+    const d = new Date(o.createdAt || o.created_at);
+    let label;
+    if (d.toDateString() === today.toDateString())     label = '📅 Today';
+    else if (d.toDateString() === yesterday.toDateString()) label = '📅 Yesterday';
+    else label = `📅 ${d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}`;
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(o);
+  });
+
   const active = orders.filter(o => !['DELIVERED','CANCELLED'].includes(o.status));
   const past   = orders.filter(o =>  ['DELIVERED','CANCELLED'].includes(o.status));
-  el.innerHTML = `
-    ${active.length ? `<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">🔴 Active Orders (${active.length})</div>${active.map(o => restOrderCardHtml(o, restId)).join('')}<div style="height:24px"></div>` : ''}
-    ${past.length   ? `<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">Past Orders (${past.length})</div>${past.map(o => restOrderCardHtml(o, restId)).join('')}` : ''}`;
+
+  let html = filterBar;
+
+  // Active orders first (no date grouping — they need immediate attention)
+  if (active.length) {
+    html += `<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:#ff6b6b;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">🔴 Active Orders (${active.length})</div>`;
+    html += active.map(o => restOrderCardHtml(o, restId)).join('');
+    html += `<div style="height:24px"></div>`;
+  }
+
+  // Past orders grouped by date
+  if (past.length) {
+    // Re-group only past orders
+    const pastGroups = {};
+    past.forEach(o => {
+      const d = new Date(o.createdAt || o.created_at);
+      let label;
+      if (d.toDateString() === today.toDateString())          label = '📅 Today';
+      else if (d.toDateString() === yesterday.toDateString()) label = '📅 Yesterday';
+      else label = `📅 ${d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}`;
+      if (!pastGroups[label]) pastGroups[label] = [];
+      pastGroups[label].push(o);
+    });
+
+    Object.entries(pastGroups).forEach(([dateLabel, dayOrders]) => {
+      const dayTotal = dayOrders.reduce((s, o) => s + (o.totalAmount || o.total_amount || 0), 0);
+      html += `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:8px">
+          <div style="font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">${dateLabel}</div>
+          <div style="font-size:11px;color:var(--text-dim)">${dayOrders.length} order${dayOrders.length>1?'s':''} • ₹${Math.round(dayTotal)}</div>
+        </div>`;
+      html += dayOrders.map(o => restOrderCardHtml(o, restId)).join('');
+    });
+  }
+
+  el.innerHTML = html;
 }
 
 function restOrderCardHtml(o, restId) {
@@ -1464,7 +1656,9 @@ const res  = await fetch(`${ORDER_API}/orders/${orderId}/status`, {
   } catch(e) { showToast('Server error', 'error'); }
 }
 
-loadOverview();
+// Restore last page on refresh
+const lastPage = sessionStorage.getItem('currentPage') || 'overview';
+showPage(lastPage);
 document.getElementById('cuisine-done-btn').addEventListener('click', (e) => {
   cuisineClosing = true;
   document.getElementById('cuisine-popup').classList.remove('open');

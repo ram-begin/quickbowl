@@ -397,6 +397,7 @@ let activeFilters = { cuisine: '' };
 
   // ── Tab switching ───────────────────────────────────
   function showTab(name) {
+    sessionStorage.setItem('currentTab', name);
     // Stop orders auto-refresh when leaving orders tab
 if (currentTab === 'orders' && name !== 'orders') {
   if (window.ordersRefreshTimer) clearInterval(window.ordersRefreshTimer);
@@ -693,13 +694,7 @@ if (!allOffers.length) {
         </div>`;
       return;
     }
-    el.innerHTML = `
-  ${platformOffers.length ? `
-    <div class="section-title">⚡ QuickBowl Offers</div>
-    ${platformOffers.map(o => offerCardHTML(o, false)).join('')}` : ''}
-  ${restaurantOffers.length ? `
-    <div class="section-title">🏪 Restaurant Deals</div>
-    ${restaurantOffers.map(o => offerCardHTML(o, true)).join('')}` : ''}`;
+    el.innerHTML = allOffers.map(o => offerCardHTML(o, o.tag === 'restaurant')).join('');
   }
         
 
@@ -710,7 +705,6 @@ if (!allOffers.length) {
         <div class="offer-info">
           <div class="offer-title">${o.title}</div>
           <div class="offer-desc">${o.desc}</div>
-          <span class="offer-tag ${o.tag}">${o.tag === 'platform' ? '⚡ QuickBowl Offer' : '🏪 Restaurant Deal'}</span>
           <div class="offer-valid">Valid: ${o.valid}</div>
         </div>
         <div style="text-align:right">
@@ -720,17 +714,22 @@ if (!allOffers.length) {
       </div>`;
   }
 
-  // Init
+ // Init
   let globalDiscount = null;
   async function initDashboard() {
     try {
       const res  = await fetch(`${API}/restaurants/settings/platform-discount`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
-      globalDiscount = data.data || null;
+      globalDiscount = data.data?.active ? data.data : null;
     } catch(e) { globalDiscount = null; }
     loadRestaurants();
   }
-  initDashboard();
+
+  // Restore last tab on refresh
+  const lastTab = sessionStorage.getItem('currentTab') || 'home';
+  initDashboard().then(() => {
+    if (lastTab !== 'home') showTab(lastTab);
+  });
 </script>
 </body>
 </html>

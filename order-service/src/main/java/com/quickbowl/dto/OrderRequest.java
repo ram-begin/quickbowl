@@ -23,4 +23,12 @@ public class OrderRequest {
 
     // Discount
     private Boolean useDiscount = false;
+    private Double discountPercent = 0.0;
+    private String discountType;
+
+    // Total from frontend (trusted, already has discounts applied)
+    private Double totalAmount;
+
+    // Payment
+    private String paymentMethod;
 }

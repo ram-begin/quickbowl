@@ -51,6 +51,7 @@ def restaurant_helper(r) -> dict:
         "admin_discount_active":  r.get("admin_discount_active", False),
         "admin_discount_percent": r.get("admin_discount_percent", 0),
         "admin_discount_tiers":   r.get("admin_discount_tiers", []),
+        "auto_schedule":          r.get("auto_schedule", False),
     }
 
 # ── Check if restaurant is open ───────────────────────

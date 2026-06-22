@@ -34,7 +34,11 @@ class RestaurantCreate(BaseModel):
     opening_time:  str = "09:00"
     closing_time:  str = "23:00"
     owner_id:      Optional[str] = None  # user_id from user service
-
+# ── Discount Tier (conditional) ───────────────────────
+class DiscountTier(BaseModel):
+    min_order: float
+    percent:   int
+    label:     Optional[str] = None
 # ── Restaurant Update ─────────────────────────────────
 class RestaurantUpdate(BaseModel):
     name:             Optional[str] = None
@@ -60,6 +64,7 @@ class RestaurantUpdate(BaseModel):
     admin_discount_active:  Optional[bool] = None
     admin_discount_percent: Optional[int] = None
     admin_discount_tiers:   Optional[List[DiscountTier]] = None
+    auto_schedule:          Optional[bool] = None
 
 # ── Menu Item Add ─────────────────────────────────────
 class MenuItemAdd(BaseModel):
