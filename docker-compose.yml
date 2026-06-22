@@ -189,8 +189,7 @@ services:
       DB_NAME: userdb
       DB_USER: postgres
       DB_PASSWORD: postgres
-      JWT_SECRET: your_jwt_secret_key
-      SERVICE_NAME: user-service
+      JWT_SECRET: ${JWT_SECRET}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres-user:
@@ -208,8 +207,7 @@ services:
       - "8001:8001"
     environment:
       MONGODB_URL: mongodb://mongodb:27017/restaurantdb
-      JWT_SECRET: your_jwt_secret_key
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -259,10 +257,10 @@ services:
       DB_NAME: paymentdb
       DB_USER: postgres
       DB_PASSWORD: postgres
-      JWT_SECRET: your_jwt_secret_key
+      JWT_SECRET: ${JWT_SECRET}
       KAFKA_BROKER: kafka:9092
-      RAZORPAY_KEY_ID: rzp_test_T3stjFSLus5zdy
-      RAZORPAY_KEY_SECRET: S0W3tSndeZOKSeR0Q0sGRSKW
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
       PLATFORM_FEE_PERCENT: 2
       ORDER_SERVICE_URL: http://order-service:8002
       SERVICE_NAME: payment-service
@@ -287,7 +285,7 @@ services:
       PORT: 8004
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_SECRET: your_jwt_secret_key
+      JWT_SECRET: ${JWT_SECRET}
       KAFKA_BROKER: kafka:9092
       SERVICE_NAME: notification-service
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317

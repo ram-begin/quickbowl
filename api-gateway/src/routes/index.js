@@ -30,8 +30,18 @@ const makeProxy = (target, pathRewrite) => {
     return (req, res, next) => proxy(req, res, next);
 };
 
+// Strict rate limiter for login
+const loginLimiter = require('express-rate-limit')({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // only 10 login attempts per 15 min
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many login attempts. Please try again after 15 minutes.' },
+    skip: (req) => !req.path.includes('/auth/login'), // only apply to login
+});
+
 // User Service
-router.use('/users', withCircuitBreaker(
+router.use('/users', loginLimiter, withCircuitBreaker(
     'user-service',
     makeProxy(process.env.USER_SERVICE_URL, { '^/api/users': '/api/users' })
 ));
