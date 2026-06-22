@@ -303,14 +303,23 @@
 </div>
 <!-- DELIVERY ADDRESS -->
   <div class="form-card">
-    <div class="form-card-title">📍 Saved Delivery Address</div>
-    <div id="address-view">
-      <div style="font-size:14px;color:var(--text-muted)" id="saved-address-text">No address saved yet</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-top:4px" id="saved-phone-text"></div>
+    <div class="form-card-title">📍 Saved Delivery Address
+      <button id="addr-change-btn" class="btn btn-outline" style="margin-left:auto;padding:6px 14px;font-size:12px;display:inline-flex" onclick="toggleAddressEdit()">✏️ Change</button>
     </div>
-    <div style="margin-top:14px;display:flex;gap:10px">
-      <input type="text" id="new-address" placeholder="Enter delivery address" style="flex:1;padding:11px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-md);color:var(--white);font-family:var(--font-body);font-size:13px;outline:none"/>
-      <button class="btn btn-gold" style="padding:11px 18px;font-size:12px" onclick="saveAddress()">Save</button>
+    <div style="font-size:14px;color:var(--text-muted)" id="saved-address-text">No address saved yet</div>
+    <div id="addr-edit-wrap" style="display:none;margin-top:14px">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="new-address" placeholder="Enter delivery address"
+          style="flex:1;padding:11px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-md);color:var(--white);font-family:var(--font-body);font-size:13px;outline:none"/>
+        <button onclick="detectLocation('new-address')"
+          style="padding:11px 14px;background:rgba(255,215,0,0.08);border:1.5px solid rgba(255,215,0,0.2);border-radius:var(--radius-md);color:var(--gold);font-size:16px;cursor:pointer;flex-shrink:0"
+          title="Use my location">📍</button>
+      </div>
+      <div id="addr-hint" style="font-size:11px;color:var(--text-dim);margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" style="padding:9px 16px;font-size:12px" onclick="toggleAddressEdit()">Cancel</button>
+        <button class="btn btn-gold" style="padding:9px 18px;font-size:12px" onclick="saveAddress()">Save Address</button>
+      </div>
     </div>
   </div>
   <!-- DANGER ZONE -->
@@ -323,7 +332,7 @@
 </div>
 
 <script>
-  const API   = 'http://localhost:3000/api';
+  const API   = 'http://localhost:3001/api';
   const token = localStorage.getItem('token');
   const user  = JSON.parse(localStorage.getItem('user') || '{}');
   if (!token) location.href = '/';
@@ -333,7 +342,7 @@
   // ── Load Profile ───────────────────────────────────
   async function loadProfile() {
     try {
-      const res  = await fetch(`${API}/users/profile`, { headers: { Authorization: `Bearer ${token}` } });
+      const res  = await fetch(`${API}/auth/profile`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       const u    = data.data || data.user || data;
 
@@ -356,6 +365,16 @@ document.getElementById('view-email').textContent = email || '—';
 document.getElementById('view-phone').textContent = phone || 'Not set';
 
       loadStats(u.id || u._id || user.id);
+
+      // Load address from DB
+      const addr = u.address || localStorage.getItem('saved_address') || '';
+      if (addr) {
+        document.getElementById('saved-address-text').textContent = addr;
+        document.getElementById('saved-address-text').style.color = 'var(--white)';
+        document.getElementById('new-address').value = addr;
+        localStorage.setItem('saved_address', addr);
+      }
+
     } catch (e) {
       // Fallback to localStorage
       const firstName = user.first_name || '';
@@ -415,10 +434,10 @@ const res = await fetch(`${ORDER_API}/orders/user/${id}`, { headers: { Authoriza
     btn.textContent = 'Saving...'; btn.disabled = true;
 
     try {
-      const res = await fetch(`${API}/users/profile`, {
+      const res = await fetch(`${API}/auth/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ first_name: firstName, last_name: lastName, phone }),
+        body: JSON.stringify({ first_name: firstName, last_name: lastName, phone, address: user.address || localStorage.getItem('saved_address') || null }),
       });
       const data = await res.json();
       if (data.success || data.user || data.data) {
@@ -471,7 +490,7 @@ function togglePassword() {
     btn.textContent = 'Updating...'; btn.disabled = true;
 
     try {
-      const res = await fetch(`${API}/users/change-password`, {
+      const res = await fetch(`${API}/auth/change-password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ current_password: current, new_password: newPw }),
@@ -493,29 +512,68 @@ function togglePassword() {
     }
     btn.textContent = 'Update Password'; btn.disabled = false;
   }
-// Load saved address
-const savedAddr  = localStorage.getItem('saved_address');
-const savedPhone = localStorage.getItem('saved_phone');
-if (savedAddr) {
-  document.getElementById('saved-address-text').textContent = savedAddr;
-  document.getElementById('new-address').value = savedAddr;
-}
-if (savedPhone) {
-  document.getElementById('saved-phone-text').textContent = '📞 ' + savedPhone;
+async function detectLocation(inputId) {
+  const hint = document.getElementById('addr-hint');
+  if (!navigator.geolocation) { hint.textContent = '⚠️ Geolocation not supported'; return; }
+  hint.textContent = '📍 Detecting location...'; hint.style.color = 'var(--text-dim)';
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    try {
+      const { latitude, longitude } = pos.coords;
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, {
+        headers: { 'Accept-Language': 'en' }
+      });
+      const data = await res.json();
+      document.getElementById(inputId).value = data.display_name || '';
+      hint.textContent = '✅ Location detected!'; hint.style.color = '#4ade80';
+      setTimeout(() => { hint.textContent = ''; }, 3000);
+    } catch(e) {
+      hint.textContent = '⚠️ Could not fetch address'; hint.style.color = '#ff6b6b';
+    }
+  }, () => {
+    hint.textContent = '⚠️ Location access denied'; hint.style.color = '#ff6b6b';
+  });
 }
 
-function saveAddress() {
+async function saveAddress() {
   const addr = document.getElementById('new-address').value.trim();
   if (!addr) return;
-  localStorage.setItem('saved_address', addr);
-  document.getElementById('saved-address-text').textContent = addr;
-  document.getElementById('saved-address-text').style.color = 'var(--white)';
-  // Show success toast
+  try {
+    const res = await fetch(`${API}/auth/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ 
+        first_name: user.first_name, last_name: user.last_name,
+        phone: user.phone, address: addr
+      })
+    });
+    const data = await res.json();
+    if (data.success || data.user) {
+      // Update localStorage
+      const updated = { ...user, address: addr };
+      localStorage.setItem('user', JSON.stringify(updated));
+      localStorage.setItem('saved_address', addr);
+      document.getElementById('saved-address-text').textContent = addr;
+      document.getElementById('saved-address-text').style.color = 'var(--white)';
+      document.getElementById('addr-edit-wrap').style.display = 'none';
+      document.getElementById('addr-change-btn').style.display = 'inline-flex';
+      showAddrToast('✅ Address saved!');
+    } else { showAddrToast('⚠️ Could not save address', true); }
+  } catch(e) { showAddrToast('⚠️ Server error', true); }
+}
+
+function showAddrToast(msg, isErr = false) {
   const t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a0808;border:1px solid rgba(255,215,0,0.3);border-radius:10px;padding:12px 20px;color:var(--gold);font-size:13px;font-weight:600;z-index:999';
-  t.textContent = '✅ Address saved!';
-  document.body.appendChild(t);
+  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a0808;border:1px solid ${isErr ? 'rgba(220,38,38,0.3)' : 'rgba(255,215,0,0.3)'};border-radius:10px;padding:12px 20px;color:${isErr ? '#ff6b6b' : 'var(--gold)'};font-size:13px;font-weight:600;z-index:999`;
+  t.textContent = msg; document.body.appendChild(t);
   setTimeout(() => t.remove(), 2500);
+}
+
+function toggleAddressEdit() {
+  const wrap = document.getElementById('addr-edit-wrap');
+  const btn  = document.getElementById('addr-change-btn');
+  const isHidden = wrap.style.display === 'none';
+  wrap.style.display = isHidden ? 'block' : 'none';
+  btn.style.display  = isHidden ? 'none' : 'inline-flex';
 }
   loadProfile();
 </script>

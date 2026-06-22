@@ -15,6 +15,8 @@ const createUsersTable = async () => {
       updated_at      TIMESTAMP DEFAULT NOW()
     );
 
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT DEFAULT NULL;
+
     CREATE TABLE IF NOT EXISTS restaurant_owners (
       id              SERIAL PRIMARY KEY,
       user_id         INTEGER REFERENCES users(id) ON DELETE CASCADE,

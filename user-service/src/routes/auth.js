@@ -5,6 +5,8 @@ const {
   registerRestaurantOwner,
   login,
   getProfile,
+  updateProfile,
+  changePassword,
   verifyToken,
   updatePenalty,
   clearPenalty
@@ -72,6 +74,12 @@ router.post('/penalty/add', updatePenalty);
 
 // POST /api/auth/penalty/clear (called by payment service)
 router.post('/penalty/clear', clearPenalty);
+
+// PUT /api/auth/profile (protected)
+router.put('/profile', protect, updateProfile);
+
+// PUT /api/auth/change-password (protected)
+router.put('/change-password', protect, changePassword);
 
 // GET /api/auth/users/all (admin only)
 router.get('/users/all', protect, async (req, res) => {

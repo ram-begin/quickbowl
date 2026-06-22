@@ -17,7 +17,7 @@ const generateToken = (user) => {
 
 // ── Register Customer ─────────────────────────────────
 const register = async (req, res) => {
-  const { first_name, last_name, email, phone, password } = req.body;
+  const { first_name, last_name, email, phone, password, address } = req.body;
 
   try {
     const existing = await pool.query(
@@ -36,10 +36,10 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const result = await pool.query(
-      `INSERT INTO users (first_name, last_name, email, phone, password, role)
-       VALUES ($1, $2, $3, $4, $5, 'customer')
-       RETURNING id, first_name, last_name, email, phone, role, created_at`,
-      [first_name, last_name, email, phone, hashedPassword]
+      `INSERT INTO users (first_name, last_name, email, phone, password, role, address)
+       VALUES ($1, $2, $3, $4, $5, 'customer', $6)
+       RETURNING id, first_name, last_name, email, phone, role, address, created_at`,
+      [first_name, last_name, email, phone, hashedPassword, address || null]
     );
 
     const user  = result.rows[0];
@@ -56,6 +56,7 @@ const register = async (req, res) => {
         email:      user.email,
         phone:      user.phone,
         role:       user.role,
+        address:    user.address,
         created_at: user.created_at
       }
     });
@@ -183,6 +184,7 @@ const login = async (req, res) => {
         email:         user.email,
         phone:         user.phone,
         role:          user.role,
+        address:       user.address,
         penalty_amount: user.penalty_amount,
         restaurant:    restaurantDetails,
         created_at:    user.created_at
@@ -203,7 +205,7 @@ const getProfile = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, first_name, last_name, email,
-       phone, role, penalty_amount, created_at
+       phone, role, address, penalty_amount, created_at
        FROM users WHERE id = $1`,
       [req.user.id]
     );
@@ -239,6 +241,42 @@ const getProfile = async (req, res) => {
       success: false,
       message: 'Server error'
     });
+  }
+};
+
+// ── Update Profile ────────────────────────────────────
+const updateProfile = async (req, res) => {
+  const { first_name, last_name, phone, address } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE users SET first_name=$1, last_name=$2, phone=$3, address=$4, updated_at=NOW()
+       WHERE id=$5
+       RETURNING id, first_name, last_name, email, phone, role, address, created_at`,
+      [first_name, last_name, phone, address || null, req.user.id]
+    );
+    const user = result.rows[0];
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// ── Change Password ───────────────────────────────────
+const changePassword = async (req, res) => {
+  const { current_password, new_password } = req.body;
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    if (!result.rows.length) return res.status(404).json({ success: false, message: 'User not found' });
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(current_password, user.password);
+    if (!isMatch) return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    const hashed = await bcrypt.hash(new_password, 12);
+    await pool.query('UPDATE users SET password=$1, updated_at=NOW() WHERE id=$2', [hashed, req.user.id]);
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -323,6 +361,8 @@ module.exports = {
   registerRestaurantOwner,
   login,
   getProfile,
+  updateProfile,
+  changePassword,
   verifyToken,
   updatePenalty,
   clearPenalty

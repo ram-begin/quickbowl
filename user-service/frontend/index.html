@@ -434,6 +434,11 @@
   </style>
 </head>
 <body>
+<div style="position:fixed;top:16px;left:16px;z-index:999">
+  <a href="/landing.html" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(255,255,255,0.04);border:1px solid #2a1010;border-radius:8px;color:#aaaaaa;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;text-decoration:none;transition:all 0.2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#aaa'">
+    ← Home
+  </a>
+</div>
 <div class="container">
   <div class="gold-line"></div>
   <div class="card">
@@ -585,6 +590,17 @@
           <div class="strength-label" id="strength-label"></div>
         </div>
 
+        <div class="field" id="address-field-wrap">
+          <label><span class="dot dot-gold"></span> Delivery Address <span style="color:var(--text-dim);font-weight:400;text-transform:none">(optional)</span></label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="reg-address" placeholder="e.g. 12 MG Road, Bhubaneswar" style="flex:1"/>
+            <button type="button" onclick="detectLocation('reg-address')"
+              style="padding:12px 14px;background:rgba(255,215,0,0.08);border:1.5px solid rgba(255,215,0,0.2);border-radius:var(--radius-md);color:var(--gold);font-size:16px;cursor:pointer;flex-shrink:0;transition:all 0.2s"
+              title="Use my location">📍</button>
+          </div>
+          <div id="reg-address-hint" style="font-size:11px;color:var(--text-dim);margin-top:5px"></div>
+        </div>
+
         <button class="btn btn-gold" onclick="handleRegister()" id="register-btn">Create account</button>
 
         <div class="terms">
@@ -605,6 +621,29 @@
 
 <script>
   let currentRole = 'customer';
+
+  async function detectLocation(inputId) {
+    const hint = document.getElementById('reg-address-hint');
+    if (!navigator.geolocation) { if(hint) hint.textContent = '⚠️ Geolocation not supported'; return; }
+    if(hint) hint.textContent = '📍 Detecting location...';
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const { latitude, longitude } = pos.coords;
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, {
+          headers: { 'Accept-Language': 'en' }
+        });
+        const data = await res.json();
+        const addr = data.display_name || '';
+        document.getElementById(inputId).value = addr;
+        if(hint) { hint.textContent = '✅ Location detected!'; hint.style.color = '#4ade80'; }
+        setTimeout(() => { if(hint) hint.textContent = ''; }, 3000);
+      } catch(e) {
+        if(hint) { hint.textContent = '⚠️ Could not fetch address'; hint.style.color = '#ff6b6b'; }
+      }
+    }, () => {
+      if(hint) { hint.textContent = '⚠️ Location access denied'; hint.style.color = '#ff6b6b'; }
+    });
+  }
 
   function switchRole(role) {
     currentRole = role;
@@ -788,9 +827,10 @@
         ? '/api/auth/register/restaurant'
         : '/api/auth/register';
 
+      const address = document.getElementById('reg-address')?.value?.trim() || null;
       const body = currentRole === 'owner'
-        ? { first_name: first, last_name: last, email, phone, password: pass, restaurant_name: restaurantName }
-        : { first_name: first, last_name: last, email, phone, password: pass };
+        ? { first_name: first, last_name: last, email, phone, password: pass, restaurant_name: restaurantName, address }
+        : { first_name: first, last_name: last, email, phone, password: pass, address };
 
       const response = await fetch(endpoint, {
         method:  'POST',
@@ -803,6 +843,7 @@
       if (data.success) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user',  JSON.stringify(data.user));
+        if (data.user.address) localStorage.setItem('saved_address', data.user.address);
         success.classList.add('show');
         setTimeout(() => {
   if (currentRole === 'owner') {

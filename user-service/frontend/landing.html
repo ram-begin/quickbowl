@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><defs><linearGradient id='lb' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23dc2626'/><stop offset='100%25' stop-color='%237f1d1d'/></linearGradient><linearGradient id='lg' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23FFD700'/><stop offset='100%25' stop-color='%23FFA500'/></linearGradient></defs><path d='M13 38 Q13 58 36 58 Q59 58 59 38 Z' fill='url(%23lb)'/><rect x='11' y='33' width='50' height='8' rx='4' fill='url(%23lg)'/><line x1='24' y1='31' x2='16' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='32' y1='31' x2='26' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='40' y1='31' x2='46' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/><line x1='48' y1='31' x2='56' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/></svg>"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuickBowl — Hot food, fast delivery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --red: #dc2626; --red-dark: #991b1b;
+      --gold: #FFD700; --gold-dark: #FFA500;
+      --bg: #0f0505; --bg-card: #1a0808;
+      --border: #2a0a0a; --border-mid: #2a1010;
+      --white: #ffffff; --text-muted: #aaaaaa; --text-dim: #666666;
+      --font-display: 'Sora', sans-serif; --font-body: 'DM Sans', sans-serif;
+      --radius-sm: 8px; --radius-md: 10px; --radius-lg: 16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--white); overflow-x: hidden; }
+
+    /* ── BACKGROUND GLOW ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 800px 600px at 20% 10%, rgba(220,38,38,0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 600px 500px at 80% 80%, rgba(255,215,0,0.03) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px;
+      background: rgba(15,5,5,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.06);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-logo-name { font-family: var(--font-display); font-size: 20px; font-weight: 800; }
+    .nav-logo-name .q { color: var(--gold); }
+    .nav-logo-name .b { color: var(--white); }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-link {
+      padding: 8px 16px; border-radius: var(--radius-sm);
+      font-family: var(--font-body); font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; transition: all 0.2s; border: none;
+    }
+    .nav-link-ghost { background: transparent; color: var(--text-muted); }
+    .nav-link-ghost:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+    .nav-link-red {
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: var(--white);
+      box-shadow: 0 4px 14px rgba(220,38,38,0.3);
+    }
+    .nav-link-red:hover { box-shadow: 0 4px 20px rgba(220,38,38,0.5); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 100px 24px 60px;
+      position: relative; z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 20px;
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      font-size: 12px; font-weight: 700; color: var(--gold);
+      margin-bottom: 28px;
+      letter-spacing: 0.5px;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 7vw, 72px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
+      max-width: 800px;
+    }
+    .hero h1 .red { color: var(--red); }
+    .hero h1 .gold { color: var(--gold); }
+    .hero-sub {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--text-muted);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .btn-hero-primary {
+      padding: 16px 36px;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: var(--white); border: none; border-radius: var(--radius-md);
+      font-family: var(--font-display); font-size: 15px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      box-shadow: 0 6px 24px rgba(220,38,38,0.35);
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-hero-primary:hover { box-shadow: 0 8px 32px rgba(220,38,38,0.5); transform: translateY(-2px); }
+    .btn-hero-secondary {
+      padding: 16px 36px;
+      background: transparent;
+      color: var(--white); border: 1.5px solid var(--border-mid);
+      border-radius: var(--radius-md);
+      font-family: var(--font-display); font-size: 15px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-hero-secondary:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+
+    /* hero food emojis floating */
+    .hero-emojis {
+      display: flex; gap: 20px; margin-top: 56px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .hero-emoji-item {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      opacity: 0.7;
+    }
+    .hero-emoji-item span:first-child { font-size: 32px; }
+    .hero-emoji-item span:last-child { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      position: relative; z-index: 1;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 40px;
+      display: flex; justify-content: center; gap: 0;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      flex: 1; min-width: 150px;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 0 24px;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: var(--font-display); font-size: 32px; font-weight: 800;
+      color: var(--gold); margin-bottom: 4px;
+    }
+    .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+    /* ── SECTION COMMON ── */
+    section { position: relative; z-index: 1; }
+    .section-inner { max-width: 1100px; margin: 0 auto; padding: 80px 24px; }
+    .section-tag {
+      display: inline-block;
+      padding: 4px 14px; border-radius: 20px;
+      background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.2);
+      font-size: 11px; font-weight: 700; color: var(--red);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 800; letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+    .section-sub { font-size: 15px; color: var(--text-muted); max-width: 500px; line-height: 1.7; margin-bottom: 48px; }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      transition: all 0.3s;
+    }
+    .feature-card:hover {
+      border-color: var(--border-mid);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin-bottom: 18px;
+    }
+    .feature-icon-red { background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.2); }
+    .feature-icon-gold { background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.15); }
+    .feature-icon-green { background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.15); }
+    .feature-icon-blue { background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.15); }
+    .feature-icon-purple { background: rgba(192,132,252,0.08); border: 1px solid rgba(192,132,252,0.15); }
+    .feature-icon-orange { background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.15); }
+    .feature-title {
+      font-family: var(--font-display); font-size: 16px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .feature-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── HOW IT WORKS ── */
+    .how-section { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0;
+    }
+    .step {
+      padding: 32px 28px;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+    .step:last-child { border-right: none; }
+    .step-num {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: var(--white); font-family: var(--font-display);
+      font-size: 18px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      box-shadow: 0 4px 16px rgba(220,38,38,0.3);
+    }
+    .step-emoji { font-size: 36px; margin-bottom: 12px; }
+    .step-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+    .step-arrow {
+      position: absolute; right: -16px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim); font-size: 20px;
+    }
+
+    /* ── FOR RESTAURANTS ── */
+    .restaurant-section { background: linear-gradient(135deg, #1a0505, #0f0505); border-top: 1px solid var(--border); }
+    .restaurant-inner {
+      max-width: 1100px; margin: 0 auto; padding: 80px 24px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+    }
+    .restaurant-perks { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
+    .perk {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px; border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    }
+    .perk-icon {
+      width: 36px; height: 36px; flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.15);
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .perk-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+    .perk-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .restaurant-cta {
+      display: flex; flex-direction: column; gap: 16px;
+      background: var(--bg-card); border: 1px solid var(--border-mid);
+      border-radius: var(--radius-lg); padding: 36px;
+      text-align: center;
+    }
+    .restaurant-cta h3 { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .restaurant-cta p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px; }
+    .btn-gold-cta {
+      padding: 14px 28px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #1a0505; border: none; border-radius: var(--radius-md);
+      font-family: var(--font-display); font-size: 14px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      box-shadow: 0 4px 16px rgba(255,215,0,0.25);
+      transition: all 0.2s; display: inline-block;
+    }
+    .btn-gold-cta:hover { box-shadow: 0 6px 24px rgba(255,215,0,0.4); transform: translateY(-2px); }
+    .trust-badges {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px;
+    }
+    .trust-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-muted); font-weight: 600;
+    }
+
+    /* ── CUISINES ── */
+    .cuisines-row {
+      display: flex; flex-wrap: wrap; gap: 10px;
+    }
+    .cuisine-chip {
+      padding: 8px 16px; border-radius: 20px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      font-size: 13px; color: var(--text-muted); font-weight: 600;
+      cursor: default; transition: all 0.2s;
+    }
+    .cuisine-chip:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 40px 40px 28px;
+    }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 20px;
+      padding-bottom: 24px; border-bottom: 1px solid var(--border);
+    }
+    .footer-logo { display: flex; align-items: center; gap: 10px; }
+    .footer-tagline { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer-link { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+    .footer-link:hover { color: var(--white); }
+    .footer-bottom {
+      max-width: 1100px; margin: 20px auto 0;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-copy { font-size: 12px; color: var(--text-dim); }
+    .footer-made { font-size: 12px; color: var(--text-dim); }
+    .footer-made span { color: var(--red); }
+
+    /* ── GOLD DIVIDER ── */
+    .gold-divider {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red), var(--gold), var(--red), transparent);
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links .nav-link-ghost { display: none; }
+      .hero { padding: 90px 20px 50px; }
+      .hero h1 { letter-spacing: -1px; }
+      .hero-btns { flex-direction: column; align-items: center; }
+      .btn-hero-primary, .btn-hero-secondary { width: 100%; max-width: 320px; justify-content: center; }
+      .stats-strip { padding: 20px; gap: 0; }
+      .stat-item { padding: 12px 16px; border-right: none; border-bottom: 1px solid var(--border); }
+      .stat-item:last-child { border-bottom: none; }
+      .section-inner { padding: 56px 20px; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .step { border-right: none; border-bottom: 1px solid var(--border); }
+      .step:last-child { border-bottom: none; }
+      .restaurant-inner { grid-template-columns: 1fr; gap: 32px; }
+      footer { padding: 32px 20px 20px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-emojis { gap: 12px; }
+      .hero-emoji-item span:first-child { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="/landing.html">
+    <div class="nav-logo-icon">
+      <svg width="22" height="22" viewBox="0 0 72 72" fill="none">
+        <defs>
+          <linearGradient id="lb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient>
+          <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFA500"/></linearGradient>
+        </defs>
+        <path d="M13 38 Q13 58 36 58 Q59 58 59 38 Z" fill="url(#lb)"/>
+        <rect x="11" y="33" width="50" height="8" rx="4" fill="url(#lg)"/>
+        <line x1="24" y1="31" x2="16" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="32" y1="31" x2="26" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="31" x2="46" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+        <line x1="48" y1="31" x2="56" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="nav-logo-name"><span class="q">Quick</span><span class="b">Bowl</span></div>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link nav-link-ghost" href="#features">Features</a>
+    <a class="nav-link nav-link-ghost" href="#how-it-works">How it works</a>
+    <a class="nav-link nav-link-ghost" href="#restaurants">For Restaurants</a>
+    <a class="nav-link nav-link-red" href="/">Order Now →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section>
+  <div class="hero">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Now delivering across 40+ cities
+    </div>
+    <h1>
+      Hot food,<br/>
+      <span class="red">fast</span> <span class="gold">delivery</span>
+    </h1>
+    <p class="hero-sub">
+      Order from the best restaurants near you. Fresh meals delivered to your door in 30–45 minutes, every time.
+    </p>
+    <div class="hero-btns">
+      <a href="/" class="btn-hero-primary">🍽️ Order Now</a>
+      <a href="#restaurants" class="btn-hero-secondary">🏪 List Your Restaurant</a>
+    </div>
+    <div class="hero-emojis">
+      <div class="hero-emoji-item"><span>🍛</span><span>Biryani</span></div>
+      <div class="hero-emoji-item"><span>🍕</span><span>Pizza</span></div>
+      <div class="hero-emoji-item"><span>🍔</span><span>Burgers</span></div>
+      <div class="hero-emoji-item"><span>🍜</span><span>Chinese</span></div>
+      <div class="hero-emoji-item"><span>🥘</span><span>Curries</span></div>
+      <div class="hero-emoji-item"><span>🍣</span><span>Sushi</span></div>
+      <div class="hero-emoji-item"><span>🥗</span><span>Healthy</span></div>
+      <div class="hero-emoji-item"><span>🍮</span><span>Desserts</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="stat-item">
+    <div class="stat-num">500+</div>
+    <div class="stat-label">Restaurants</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">40+</div>
+    <div class="stat-label">Cities</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">30 min</div>
+    <div class="stat-label">Avg. Delivery</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">4.8 ⭐</div>
+    <div class="stat-label">Customer Rating</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-tag">Why QuickBowl</div>
+    <h2 class="section-title">Everything you need,<br/>nothing you don't</h2>
+    <p class="section-sub">Built for speed, designed for simplicity. QuickBowl makes ordering food as easy as it gets.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon feature-icon-red">🚀</div>
+        <div class="feature-title">Lightning Fast Delivery</div>
+        <div class="feature-desc">Real-time order tracking from kitchen to your door. Average delivery time of 30–45 minutes, guaranteed.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon feature-icon-gold">🏷️</div>
+        <div class="feature-title">Best Deals & Discounts</div>
+        <div class="feature-desc">Platform-wide offers, restaurant-specific deals, and tiered discounts — the more you order, the more you save.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon feature-icon-green">🍽️</div>
+        <div class="feature-title">500+ Restaurants</div>
+        <div class="feature-desc">From street food to fine dining, local favourites to popular chains — all your cravings in one place.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon feature-icon-blue">💳</div>
+        <div class="feature-title">Safe & Easy Payments</div>
+        <div class="feature-desc">Pay online via Razorpay or choose Cash on Delivery. Secure, instant, and hassle-free checkout every time.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon feature-icon-purple">📱</div>
+        <div class="feature-title">Works on Any Device</div>
+        <div class="feature-desc">Fully responsive on mobile, tablet, and desktop. Order from anywhere, anytime, on any screen.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon feature-icon-orange">⏰</div>
+        <div class="feature-title">Schedule Orders</div>
+        <div class="feature-desc">Plan ahead and schedule your order up to 7 days in advance. Your food, on your schedule.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-divider"></div>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="how-section">
+  <div class="section-inner" style="text-align:center">
+    <div class="section-tag" style="background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.2);color:var(--gold)">How it works</div>
+    <h2 class="section-title">Order in 3 simple steps</h2>
+    <p class="section-sub" style="margin:0 auto 48px">No confusion, no hassle. From craving to delivery in minutes.</p>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-emoji">🔍</div>
+        <div class="step-num">1</div>
+        <div class="step-title">Browse Restaurants</div>
+        <div class="step-desc">Explore hundreds of restaurants near you. Filter by cuisine, check ratings, browse menus.</div>
+      </div>
+      <div class="step">
+        <div class="step-emoji">🛒</div>
+        <div class="step-num">2</div>
+        <div class="step-title">Pick Your Items</div>
+        <div class="step-desc">Add your favourite dishes to cart, apply available discounts, and choose your payment method.</div>
+      </div>
+      <div class="step">
+        <div class="step-emoji">🛵</div>
+        <div class="step-num">3</div>
+        <div class="step-title">Get it Delivered</div>
+        <div class="step-desc">Sit back and track your order in real time as it goes from kitchen to your doorstep.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-divider"></div>
+
+<!-- CUISINES -->
+<section>
+  <div class="section-inner">
+    <div class="section-tag">Explore Cuisines</div>
+    <h2 class="section-title">What are you craving?</h2>
+    <p class="section-sub">From North Indian classics to Japanese fusion — we've got every cuisine covered.</p>
+    <div class="cuisines-row">
+      <div class="cuisine-chip">🍛 North Indian</div>
+      <div class="cuisine-chip">🥘 South Indian</div>
+      <div class="cuisine-chip">🍜 Chinese</div>
+      <div class="cuisine-chip">🍕 Pizza</div>
+      <div class="cuisine-chip">🍔 Burgers</div>
+      <div class="cuisine-chip">🍱 Biryani</div>
+      <div class="cuisine-chip">🌮 Street Food</div>
+      <div class="cuisine-chip">🍣 Japanese</div>
+      <div class="cuisine-chip">🥗 Healthy</div>
+      <div class="cuisine-chip">🍮 Desserts</div>
+      <div class="cuisine-chip">🥤 Beverages</div>
+      <div class="cuisine-chip">🍗 Mughlai</div>
+      <div class="cuisine-chip">🧆 Mediterranean</div>
+      <div class="cuisine-chip">🥙 Lebanese</div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-divider"></div>
+
+<!-- FOR RESTAURANTS -->
+<section id="restaurants" class="restaurant-section">
+  <div class="restaurant-inner">
+    <div>
+      <div class="section-tag" style="background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.2);color:var(--gold)">For Restaurant Owners</div>
+      <h2 class="section-title">Grow your restaurant<br/>with QuickBowl</h2>
+      <p class="section-sub" style="margin-bottom:0">Join hundreds of restaurants already earning more with our platform. Simple onboarding, powerful dashboard.</p>
+      <div class="restaurant-perks">
+        <div class="perk">
+          <div class="perk-icon">📊</div>
+          <div>
+            <div class="perk-title">Real-time Dashboard</div>
+            <div class="perk-desc">Track orders, revenue, and analytics in one place. Date filters, daily breakdowns, and export.</div>
+          </div>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">🏷️</div>
+          <div>
+            <div class="perk-title">Flexible Discount Controls</div>
+            <div class="perk-desc">Set your own discount offers to attract more customers. Full control over your pricing strategy.</div>
+          </div>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">⏰</div>
+          <div>
+            <div class="perk-title">Auto Schedule</div>
+            <div class="perk-desc">Set your opening and closing times — your restaurant activates and deactivates automatically.</div>
+          </div>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">🔥</div>
+          <div>
+            <div class="perk-title">Boost & Surge</div>
+            <div class="perk-desc">Get featured at the top of listings. Admin-managed boost and surge pricing during peak hours.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="restaurant-cta">
+      <div style="font-size:52px">🏪</div>
+      <h3>Start receiving orders today</h3>
+      <p>Register your restaurant in minutes. No setup fee, no hidden charges. Just more customers.</p>
+      <a href="/" class="btn-gold-cta">Register Your Restaurant →</a>
+      <div class="trust-badges">
+        <div class="trust-badge">✅ Free to join</div>
+        <div class="trust-badge">✅ No setup fee</div>
+        <div class="trust-badge">✅ Live in minutes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo">
+        <div class="nav-logo-icon">
+          <svg width="20" height="20" viewBox="0 0 72 72" fill="none">
+            <defs>
+              <linearGradient id="lb2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient>
+              <linearGradient id="lg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFA500"/></linearGradient>
+            </defs>
+            <path d="M13 38 Q13 58 36 58 Q59 58 59 38 Z" fill="url(#lb2)"/>
+            <rect x="11" y="33" width="50" height="8" rx="4" fill="url(#lg2)"/>
+            <line x1="24" y1="31" x2="16" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            <line x1="32" y1="31" x2="26" y2="8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            <line x1="40" y1="31" x2="46" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+            <line x1="48" y1="31" x2="56" y2="8" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="nav-logo-name"><span class="q">Quick</span><span class="b">Bowl</span></div>
+      </div>
+      <div class="footer-tagline">Hot food, fast delivery.</div>
+    </div>
+    <div class="footer-links">
+      <a href="#features" class="footer-link">Features</a>
+      <a href="#how-it-works" class="footer-link">How it works</a>
+      <a href="#restaurants" class="footer-link">For Restaurants</a>
+      <a href="/" class="footer-link">Sign In</a>
+      <a href="http://localhost:9000" class="footer-link">Admin</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 QuickBowl. All rights reserved.</div>
+    <div class="footer-made">Made with <span>♥</span> for fast food lovers</div>
+  </div>
+</footer>
+
+</body>
+</html>

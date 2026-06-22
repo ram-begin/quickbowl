@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>QuickBowl — Admin Panel</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><defs><linearGradient id='lb' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23dc2626'/><stop offset='100%25' stop-color='%237f1d1d'/></linearGradient><linearGradient id='lg' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23FFD700'/><stop offset='100%25' stop-color='%23FFA500'/></linearGradient></defs><path d='M13 38 Q13 58 36 58 Q59 58 59 38 Z' fill='url(%23lb)'/><rect x='11' y='33' width='50' height='8' rx='4' fill='url(%23lg)'/><line x1='24' y1='31' x2='16' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='32' y1='31' x2='26' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='40' y1='31' x2='46' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/><line x1='48' y1='31' x2='56' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/></svg>"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
@@ -150,7 +151,6 @@
       <div class="sidebar-item" onclick="showPage('restaurants')" id="nav-restaurants">🏪 Restaurants</div>
       <div class="sidebar-item" onclick="showPage('users')" id="nav-users">👥 Users</div>
       <div class="sidebar-item" onclick="showPage('orders')" id="nav-orders">📋 Orders</div>
-      <div class="sidebar-item" onclick="showPage('offers')" id="nav-offers">🎟️ Offers</div>
       <div class="sidebar-item" onclick="showPage('discounts')" id="nav-discounts">🏷️ Discounts</div>
     </div>
 
@@ -198,35 +198,26 @@
         </div>
       </div>
 
-      <!-- OFFERS -->
-      <div class="page" id="page-offers">
-        <div class="page-title">Offers</div>
-        <div class="page-sub">Manage platform-wide offers</div>
-        <button class="btn btn-accent" onclick="openAddOffer()" style="margin-bottom:20px">+ Add Offer</button>
-        <div id="offers-content"><div class="spinner"></div></div>
-      </div>
+      
 
     </div>
   </div>
 </div>
 
-<!-- Add Offer Modal -->
-<div class="modal-overlay" id="offer-modal">
-  <div class="modal">
-    <div class="modal-title">➕ Add Platform Offer</div>
-    <div class="field"><label>Title</label><input type="text" id="offer-title" placeholder="e.g. Monday Madness"/></div>
-    <div class="field"><label>Description</label><input type="text" id="offer-desc" placeholder="e.g. 10% off on all orders"/></div>
-    <div class="field"><label>Discount %</label><input type="number" id="offer-discount" placeholder="10"/></div>
-    <div class="field"><label>Valid Until</label><input type="date" id="offer-valid"/></div>
-    <div class="field"><label>Icon (emoji)</label><input type="text" id="offer-icon" placeholder="🎉"/></div>
-    <div class="btn-row">
-      <button class="btn btn-outline" onclick="closeOfferModal()">Cancel</button>
-      <button class="btn btn-accent" onclick="saveOffer()">Save Offer</button>
-    </div>
-  </div>
-</div>
+
 
 <div class="toast" id="toast"></div>
+
+<!-- Photo Modal -->
+<div class="modal-overlay" id="photo-modal">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">🖼️ Manage Photos</div>
+    <div id="photo-modal-content"><div style="text-align:center;padding:20px"><div class="spinner"></div></div></div>
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn btn-outline" onclick="closePhotoModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const API   = 'http://localhost:3000/api';
@@ -285,7 +276,9 @@ function showAdminPanel() {
   document.getElementById('login-page').style.display  = 'none';
   document.getElementById('admin-panel').style.display = 'block';
   document.getElementById('admin-name').textContent    = `👋 ${adminUser.first_name || 'Admin'}`;
-  loadDashboard();
+  const lastPage = sessionStorage.getItem('adminPage') || 'dashboard';
+  showPage(lastPage, false);
+  history.pushState({ page: lastPage }, '', '');
 }
 
 function adminLogout() {
@@ -294,16 +287,19 @@ function adminLogout() {
   location.reload();
 }
 
-function showPage(name) {
+function showPage(name, pushState = true) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
   document.getElementById(`page-${name}`).classList.add('active');
   document.getElementById(`nav-${name}`).classList.add('active');
+  if (pushState) {
+    sessionStorage.setItem('adminPage', name);
+    history.pushState({ page: name }, '', '');
+  }
   if (name === 'dashboard')   loadDashboard();
   if (name === 'restaurants') loadRestaurants();
   if (name === 'users')       loadUsers();
   if (name === 'orders')      loadOrders();
-  if (name === 'offers')      loadOffers();
   if (name === 'discounts')   loadDiscounts();
 }
 
@@ -312,40 +308,126 @@ async function loadDashboard() {
   const el = document.getElementById('dashboard-content');
   el.innerHTML = '<div class="spinner"></div>';
   try {
-   const restRes   = await fetch(`${RAPI}/restaurants`, { headers: { Authorization: `Bearer ${adminToken}` } });
-const restData  = await restRes.json();
-const userData  = {};
-const orderData = {};
-
-    const restaurants = [...(restData.all_restaurants?.data || []), ...(restData.customer_favourites?.data || [])];
-    const users       = userData.data || userData.users || [];
-    const orders      = orderData.data || orderData.orders || [];
-
-    const totalRevenue = orders.filter(o => o.status === 'DELIVERED').reduce((s, o) => s + (o.totalAmount || o.total_amount || 0), 0);
+    const allRestRes  = await fetch(`${RAPI}/restaurants/all`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const allRestData = await allRestRes.json();
+    const allRests    = allRestData.data || [];
+    const pendingCount = allRests.filter(r => !r.is_verified).length;
+    const surgeCount   = allRests.filter(r => r.is_surge).length;
+    const boostCount   = allRests.filter(r => r.boost_active).length;
 
     el.innerHTML = `
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-value">${restaurants.length}</div><div class="stat-label">Restaurants</div></div>
-        <div class="stat-card"><div class="stat-value" style="color:#4ade80">${restaurants.length}</div><div class="stat-label">Total Restaurants</div></div>
-<div class="stat-card"><div class="stat-value" style="color:var(--gold)">${restaurants.filter(r=>r.is_active).length}</div><div class="stat-label">Active</div></div>
-<div class="stat-card"><div class="stat-value" style="color:#f472b6">${restaurants.filter(r=>r.is_surge).length}</div><div class="stat-label">Surge Active</div></div>
+        <div class="stat-card" onclick="showDashboardDetail('all', ${JSON.stringify(allRests).replace(/"/g,'&quot;')})" style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div class="stat-value">${allRests.length}</div>
+          <div class="stat-label">Total Restaurants</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Tap to view all</div>
+        </div>
+        <div class="stat-card" onclick="showDashboardDetail('pending', ${JSON.stringify(allRests).replace(/"/g,'&quot;')})" style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#fbbf24'" onmouseout="this.style.borderColor='var(--border)'">
+          <div class="stat-value" style="color:#fbbf24">${pendingCount}</div>
+          <div class="stat-label">Pending Verification</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Tap to review</div>
+        </div>
+        <div class="stat-card" onclick="showDashboardDetail('surge', ${JSON.stringify(allRests).replace(/"/g,'&quot;')})" style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#f472b6'" onmouseout="this.style.borderColor='var(--border)'">
+          <div class="stat-value" style="color:#f472b6">${surgeCount}</div>
+          <div class="stat-label">Surge Active</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Tap to view</div>
+        </div>
+        <div class="stat-card" onclick="showDashboardDetail('boost', ${JSON.stringify(allRests).replace(/"/g,'&quot;')})" style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div class="stat-value" style="color:var(--gold)">${boostCount}</div>
+          <div class="stat-label">Boost Active</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Tap to view</div>
+        </div>
       </div>
-      <div class="card">
-        <div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:16px">🏪 Recent Restaurants</div>
-        ${restaurants.slice(0,5).map(r => `
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-            <div>
-              <div style="font-size:13px;font-weight:600">${r.name}</div>
-              <div style="font-size:11px;color:var(--text-muted)">${r.city} • ${r.cuisine || '—'}</div>
-            </div>
-            <span class="badge ${r.is_active ? 'badge-green' : 'badge-red'}">${r.is_active ? 'Active' : 'Inactive'}</span>
-          </div>`).join('')}
-      </div>`;
+      <div id="dashboard-detail"></div>`;
   } catch(e) {
     el.innerHTML = `<div class="empty-state">⚠️ Could not load dashboard data</div>`;
   }
 }
 
+function showDashboardDetail(type, allRests) {
+  const el = document.getElementById('dashboard-detail');
+
+  if (type === 'all') {
+    if (!allRests.length) { el.innerHTML = `<div class="card"><div class="empty-state">No restaurants registered yet</div></div>`; return; }
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:16px 20px;font-family:var(--font-display);font-size:14px;font-weight:700;border-bottom:1px solid var(--border)">🏪 All Restaurants (${allRests.length})</div>
+        <table class="table">
+          <thead><tr><th>Restaurant</th><th>City</th><th>Cuisine</th><th>Status</th><th>Verified</th></tr></thead>
+          <tbody>
+            ${allRests.map(r => `<tr>
+              <td style="font-weight:600">${r.name}</td>
+              <td style="color:var(--text-muted)">${r.city||'—'}</td>
+              <td style="color:var(--text-muted)">${r.cuisine||'—'}</td>
+              <td><span class="badge ${r.is_active ? 'badge-green' : 'badge-red'}">${r.is_active ? 'Active' : 'Inactive'}</span></td>
+              <td><span class="badge ${r.is_verified ? 'badge-green' : 'badge-yellow'}">${r.is_verified ? '✓ Verified' : '⏳ Pending'}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  else if (type === 'pending') {
+    const pending = allRests.filter(r => !r.is_verified);
+    if (!pending.length) { el.innerHTML = `<div class="card"><div class="empty-state">✅ No restaurants pending verification</div></div>`; return; }
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden;border-color:rgba(251,191,36,0.3)">
+        <div style="padding:16px 20px;font-family:var(--font-display);font-size:14px;font-weight:700;border-bottom:1px solid var(--border);color:#fbbf24">⏳ Pending Verification (${pending.length})</div>
+        <table class="table">
+          <thead><tr><th>Restaurant</th><th>City</th><th>Owner</th><th>Cuisine</th></tr></thead>
+          <tbody>
+            ${pending.map(r => `<tr>
+              <td style="font-weight:600">${r.name}</td>
+              <td style="color:var(--text-muted)">${r.city||'—'}</td>
+              <td style="color:var(--text-muted)">${r.owner_id||'—'}</td>
+              <td style="color:var(--text-muted)">${r.cuisine||'—'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="padding:14px 20px;font-size:12px;color:var(--text-dim)">Go to Restaurants tab to approve or reject</div>
+      </div>`;
+  }
+
+  else if (type === 'surge') {
+    const surge = allRests.filter(r => r.is_surge);
+    if (!surge.length) { el.innerHTML = `<div class="card"><div class="empty-state">⚡ No restaurants with surge active</div></div>`; return; }
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden;border-color:rgba(244,114,182,0.3)">
+        <div style="padding:16px 20px;font-family:var(--font-display);font-size:14px;font-weight:700;border-bottom:1px solid var(--border);color:#f472b6">⚡ Surge Active (${surge.length})</div>
+        <table class="table">
+          <thead><tr><th>Restaurant</th><th>City</th><th>Multiplier</th></tr></thead>
+          <tbody>
+            ${surge.map(r => `<tr>
+              <td style="font-weight:600">${r.name}</td>
+              <td style="color:var(--text-muted)">${r.city||'—'}</td>
+              <td style="color:#f472b6;font-weight:700">${r.surge_multiplier||1.5}x</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="padding:14px 20px;font-size:12px;color:var(--text-dim)">Go to Restaurants tab to manage surge</div>
+      </div>`;
+  }
+
+  else if (type === 'boost') {
+    const boosted = allRests.filter(r => r.boost_active);
+    if (!boosted.length) { el.innerHTML = `<div class="card"><div class="empty-state">🔥 No restaurants with boost active</div></div>`; return; }
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden;border-color:rgba(255,215,0,0.3)">
+        <div style="padding:16px 20px;font-family:var(--font-display);font-size:14px;font-weight:700;border-bottom:1px solid var(--border);color:var(--gold)">🔥 Boost Active (${boosted.length})</div>
+        <table class="table">
+          <thead><tr><th>Restaurant</th><th>City</th><th>Boost Until</th></tr></thead>
+          <tbody>
+            ${boosted.map(r => `<tr>
+              <td style="font-weight:600">${r.name}</td>
+              <td style="color:var(--text-muted)">${r.city||'—'}</td>
+              <td style="color:var(--gold);font-size:12px">${r.boost_end ? new Date(r.boost_end.replace(' ','T')+'Z').toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="padding:14px 20px;font-size:12px;color:var(--text-dim)">Go to Restaurants tab to manage boost</div>
+      </div>`;
+  }
+}
 // ── Restaurants ──────────────────────────────────────
 async function loadRestaurants() {
   const el = document.getElementById('restaurants-content');
@@ -356,6 +438,8 @@ async function loadRestaurants() {
     const all  = data.data || [...(data.all_restaurants?.data || []), ...(data.customer_favourites?.data || [])];
     const pending  = all.filter(r => !r.is_verified);
     const verified = all.filter(r => r.is_verified);
+    _allRestaurantsCache = verified;
+    _allRestaurantsCache = verified; // populate cache for photo modal
 
     if (!all.length) { el.innerHTML = `<div class="empty-state">No restaurants found</div>`; return; }
 
@@ -400,10 +484,11 @@ async function loadRestaurants() {
                 <td>
                   <button class="toggle ${r.boost_active ? 'on' : ''}" onclick="toggleBoost('${r._id || r.id}', this)"></button>
                 </td>
-                <td>
+                <td style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="btn btn-sm ${r.is_active ? 'btn-red' : 'btn-green'}" onclick="toggleRestaurantActive('${r._id || r.id}', ${!r.is_active}, this)">
                     ${r.is_active ? 'Deactivate' : 'Activate'}
                   </button>
+                  <button class="btn btn-sm btn-outline" onclick="openPhotoModal('${r._id || r.id}')">🖼️ Photos</button>
                 </td>
               </tr>`).join('')}
           </tbody>
@@ -463,37 +548,184 @@ async function toggleRestaurantActive(id, value, btn) {
 }
 
 // ── Users ────────────────────────────────────────────
-
 async function loadUsers() {
   const el = document.getElementById('users-content');
   el.innerHTML = '<div class="spinner"></div>';
   try {
-    const res  = await fetch(`${UAPI}/auth/users/all`, { headers: { Authorization: `Bearer ${adminToken}` } });
-    const data = await res.json();
-    const users = data.data || [];
+    const [usersRes, restsRes] = await Promise.all([
+      fetch(`${UAPI}/auth/users/all`, { headers: { Authorization: `Bearer ${adminToken}` } }),
+      fetch(`${RAPI}/restaurants/all`, { headers: { Authorization: `Bearer ${adminToken}` } })
+    ]);
+    const usersData = await usersRes.json();
+    const restsData = await restsRes.json();
+    const users = usersData.data || [];
+    const restaurants = restsData.data || [];
+
+    const customers = users.filter(u => u.role === 'customer');
+    const owners    = users.filter(u => u.role === 'restaurant_owner');
+
     if (!users.length) { el.innerHTML = `<div class="empty-state">No users found</div>`; return; }
+
     el.innerHTML = `
-      <div class="card" style="padding:0;overflow:hidden">
-        <table class="table">
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Penalty</th><th>Joined</th></tr></thead>
-          <tbody>
-            ${users.map(u => `
-              <tr>
-                <td style="font-weight:600">${u.first_name} ${u.last_name}</td>
-                <td style="color:var(--text-muted)">${u.email}</td>
-                <td style="color:var(--text-muted)">${u.phone || '—'}</td>
-                <td><span class="badge ${u.role === 'admin' ? 'badge-blue' : u.role === 'restaurant_owner' ? 'badge-yellow' : 'badge-green'}">${u.role}</span></td>
-                <td style="color:${u.penalty_amount > 0 ? '#ff6b6b' : 'var(--text-muted)'}">₹${u.penalty_amount || 0}</td>
-                <td style="color:var(--text-muted);font-size:12px">${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
+      <!-- SECTION CARDS -->
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;margin-bottom:24px">
+        <div class="stat-card" onclick="showUsersSection('customers')" style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#4ade80'" onmouseout="this.style.borderColor='var(--border)'">
+          <div class="stat-value" style="color:#4ade80">${customers.length}</div>
+          <div class="stat-label">Customers</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Tap to view all</div>
+        </div>
+        <div class="stat-card" onclick="showUsersSection('owners')" style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div class="stat-value" style="color:var(--gold)">${owners.length}</div>
+          <div class="stat-label">Restaurant Owners</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Tap to view all</div>
+        </div>
+      </div>
+      <div id="users-detail"></div>`;
+
+    // Store data for detail views
+    window._usersData = { customers, owners, restaurants };
+
   } catch(e) {
     el.innerHTML = `<div class="empty-state">⚠️ Could not load users</div>`;
   }
 }
-           
+
+function showUsersSection(type) {
+  const el = document.getElementById('users-detail');
+  const { customers, owners, restaurants } = window._usersData || {};
+
+  if (type === 'customers') {
+    if (!customers.length) { el.innerHTML = `<div class="card"><div class="empty-state">No customers yet</div></div>`; return; }
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:16px 20px;font-family:var(--font-display);font-size:14px;font-weight:700;border-bottom:1px solid var(--border);color:#4ade80">👤 Customers (${customers.length})</div>
+        <table class="table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Penalty</th><th>Joined</th><th></th></tr></thead>
+          <tbody>
+            ${customers.map(u => `
+              <tr style="cursor:pointer" onclick="showCustomerDetail('${u.id}')">
+                <td style="font-weight:600">${u.first_name} ${u.last_name}</td>
+                <td style="color:var(--text-muted)">${u.email}</td>
+                <td style="color:var(--text-muted)">${u.phone || '—'}</td>
+                <td style="color:${u.penalty_amount > 0 ? '#ff6b6b' : 'var(--text-muted)'}">₹${u.penalty_amount || 0}</td>
+                <td style="color:var(--text-muted);font-size:12px">${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
+                <td><span style="font-size:11px;color:var(--accent)">View →</span></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  else if (type === 'owners') {
+    if (!owners.length) { el.innerHTML = `<div class="card"><div class="empty-state">No restaurant owners yet</div></div>`; return; }
+    el.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:16px 20px;font-family:var(--font-display);font-size:14px;font-weight:700;border-bottom:1px solid var(--border);color:var(--gold)">🏪 Restaurant Owners (${owners.length})</div>
+        <table class="table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Restaurant</th><th>Status</th><th>Joined</th></tr></thead>
+          <tbody>
+            ${owners.map(u => {
+              const rest = restaurants.find(r => String(r.owner_id) === String(u.id));
+              return `
+              <tr>
+                <td style="font-weight:600">${u.first_name} ${u.last_name}</td>
+                <td style="color:var(--text-muted)">${u.email}</td>
+                <td style="color:var(--text-muted)">${u.phone || '—'}</td>
+                <td>
+                  ${rest
+                    ? `<div style="font-weight:600;font-size:13px">${rest.name}</div><div style="font-size:11px;color:var(--text-muted)">${rest.city||''} • ${rest.cuisine||''}</div>`
+                    : `<span style="color:var(--text-dim);font-size:12px">No restaurant</span>`}
+                </td>
+                <td>
+                  ${rest
+                    ? `<span class="badge ${rest.is_active ? 'badge-green' : 'badge-red'}">${rest.is_active ? 'Active' : 'Inactive'}</span>`
+                    : '—'}
+                </td>
+                <td style="color:var(--text-muted);font-size:12px">${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+}
+
+async function showCustomerDetail(userId) {
+  const el = document.getElementById('users-detail');
+  const { customers } = window._usersData || {};
+  const u = customers.find(c => String(c.id) === String(userId));
+  if (!u) return;
+
+  el.innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="showUsersSection('customers')" style="margin-bottom:16px">← Back to Customers</button>
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        👤 ${u.first_name} ${u.last_name}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Email</div><div>${u.email}</div></div>
+        <div><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Phone</div><div>${u.phone || '—'}</div></div>
+        <div><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Joined</div><div>${new Date(u.created_at).toLocaleDateString('en-IN')}</div></div>
+        <div><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Penalty</div><div style="color:${u.penalty_amount > 0 ? '#ff6b6b' : '#4ade80'}">₹${u.penalty_amount || 0}</div></div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:16px 20px;font-family:var(--font-display);font-size:14px;font-weight:700;border-bottom:1px solid var(--border)">📦 Order History</div>
+      <div id="customer-orders-${userId}"><div class="spinner"></div></div>
+    </div>`;
+
+  // Fetch orders
+  try {
+    const res  = await fetch(`${OAPI}/orders/user/${userId}`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const data = await res.json();
+    const orders = (data.data || []).sort((a, b) => new Date(b.createdAt||b.created_at) - new Date(a.createdAt||a.created_at));
+    const ordEl = document.getElementById(`customer-orders-${userId}`);
+    const statusColor = { PENDING:'badge-yellow', CONFIRMED:'badge-blue', PREPARING:'badge-blue', OUT_FOR_DELIVERY:'badge-yellow', DELIVERED:'badge-green', CANCELLED:'badge-red' };
+
+    if (!orders.length) {
+      ordEl.innerHTML = `<div class="empty-state">No orders yet</div>`;
+      return;
+    }
+
+    const totalSpent = orders.filter(o => o.status === 'DELIVERED').reduce((s, o) => s + (o.totalAmount || o.total_amount || 0), 0);
+
+    ordEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)">
+        <div style="text-align:center">
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--accent)">${orders.length}</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase">Total Orders</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#4ade80">${orders.filter(o=>o.status==='DELIVERED').length}</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase">Delivered</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--gold)">₹${Math.round(totalSpent)}</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase">Total Spent</div>
+        </div>
+      </div>
+      <table class="table">
+        <thead><tr><th>Order</th><th>Restaurant</th><th>Items</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+          ${orders.map(o => {
+            const items = typeof o.items === 'string' ? JSON.parse(o.items||'[]') : (o.items||[]);
+            const rawTs = (o.createdAt||o.created_at||'').replace(' ','T').replace(/(\.\d+)?$/,'Z');
+            return `<tr>
+              <td style="font-weight:600;font-family:monospace">#${o.id}</td>
+              <td>${o.restaurantName||o.restaurant_name||'—'}</td>
+              <td style="color:var(--text-muted);font-size:12px">${items.map(i=>i.name).join(', ')||'—'}</td>
+              <td style="color:var(--gold);font-weight:700">₹${o.totalAmount||o.total_amount||0}</td>
+              <td><span class="badge ${statusColor[o.status]||'badge-yellow'}">${o.status}</span></td>
+              <td style="color:var(--text-muted);font-size:12px">${new Date(rawTs).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) {
+    document.getElementById(`customer-orders-${userId}`).innerHTML = `<div class="empty-state">⚠️ Could not load orders</div>`;
+  }
+}
+
 // ── Orders ───────────────────────────────────────────
 async function loadOrders() {
   const el = document.getElementById('orders-content');
@@ -511,26 +743,130 @@ async function loadOrders() {
       } catch(e) {}
     }
     orders.sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at));
-    if (!orders.length) { el.innerHTML = `<div class="empty-state">No orders yet</div>`; return; }
-    const statusColor = { PENDING:'badge-yellow', CONFIRMED:'badge-blue', PREPARING:'badge-blue', OUT_FOR_DELIVERY:'badge-yellow', DELIVERED:'badge-green', CANCELLED:'badge-red' };
-    el.innerHTML = `
-      <div class="card" style="padding:0;overflow:hidden">
-        <table class="table">
-          <thead><tr><th>Order</th><th>Restaurant</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-          <tbody>
-            ${orders.map(o => `<tr>
-              <td style="font-weight:600;font-family:monospace">#${o.id}</td>
-              <td>${o.restaurantName || o.restaurant_name || '—'}</td>
-              <td style="color:var(--gold);font-weight:700">₹${o.totalAmount || o.total_amount || 0}</td>
-              <td><span class="badge ${statusColor[o.status] || 'badge-yellow'}">${o.status}</span></td>
-              <td style="color:var(--text-muted);font-size:12px">${new Date(o.createdAt || o.created_at).toLocaleDateString('en-IN')}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
+    window._allAdminOrders = orders;
+    renderAdminOrders(orders, 'all');
   } catch(e) {
     el.innerHTML = `<div class="empty-state">⚠️ Could not load orders</div>`;
   }
+}
+
+function renderAdminOrders(orders, activeFilter, customFrom, customTo) {
+  const el = document.getElementById('orders-content');
+  const statusColor = { PENDING:'badge-yellow', CONFIRMED:'badge-blue', PREPARING:'badge-blue', OUT_FOR_DELIVERY:'badge-yellow', DELIVERED:'badge-green', CANCELLED:'badge-red' };
+
+  const filters = [
+    { key: 'today',   label: 'Today' },
+    { key: 'week',    label: '7 Days' },
+    { key: 'month',   label: '30 Days' },
+    { key: 'all',     label: 'All Time' },
+  ];
+  const isCustom = activeFilter === 'custom';
+
+  const filterBar = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+      ${filters.map(f => `
+        <button onclick="filterAdminOrders('${f.key}')" style="padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ${activeFilter===f.key?'var(--accent)':'var(--border-mid)'};background:${activeFilter===f.key?'rgba(99,102,241,0.15)':'transparent'};color:${activeFilter===f.key?'#818cf8':'var(--text-muted)'}">
+          ${f.label}
+        </button>`).join('')}
+      <button onclick="toggleAdminDatePicker()" style="padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ${isCustom?'var(--accent)':'var(--border-mid)'};background:${isCustom?'rgba(99,102,241,0.15)':'transparent'};color:${isCustom?'#818cf8':'var(--text-muted)'}">
+        📅 Date Range
+      </button>
+      <span style="font-size:12px;color:var(--text-dim);margin-left:4px">${orders.length} orders</span>
+    </div>
+    <div id="admin-date-picker" style="display:${isCustom?'flex':'none'};align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md)">
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:11px;color:var(--text-muted)">From</label>
+        <input type="date" id="admin-date-from" value="${customFrom||''}" style="padding:6px 10px;background:var(--bg-input);border:1px solid var(--border-mid);border-radius:var(--radius-sm);color:var(--white);font-size:12px;outline:none;color-scheme:dark;cursor:pointer"/>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:11px;color:var(--text-muted)">To</label>
+        <input type="date" id="admin-date-to" value="${customTo||''}" style="padding:6px 10px;background:var(--bg-input);border:1px solid var(--border-mid);border-radius:var(--radius-sm);color:var(--white);font-size:12px;outline:none;color-scheme:dark;cursor:pointer"/>
+      </div>
+      <button onclick="applyAdminDateFilter()" style="padding:6px 14px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer">Apply</button>
+      <div style="font-size:11px;color:var(--text-dim)">💡 Set same date for single day view</div>
+    </div>`;
+
+  if (!orders.length) {
+    el.innerHTML = filterBar + `<div class="empty-state">No orders in this period</div>`;
+    return;
+  }
+
+  el.innerHTML = filterBar + `
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="table">
+        <thead><tr><th>Order</th><th>Restaurant</th><th>Customer</th><th>Amount</th><th>Status</th><th>Payment</th><th>Date</th></tr></thead>
+        <tbody>
+          ${orders.map(o => {
+            const rawTs = (o.createdAt||o.created_at||'').replace(' ','T').replace(/(\.\d+)?$/,'Z');
+            return `<tr>
+              <td style="font-weight:600;font-family:monospace">#${o.id}</td>
+              <td>${o.restaurantName||o.restaurant_name||'—'}</td>
+              <td style="color:var(--text-muted);font-size:12px">${o.deliveryPhone||o.delivery_phone||'—'}</td>
+              <td style="color:var(--gold);font-weight:700">₹${o.totalAmount||o.total_amount||0}</td>
+              <td><span class="badge ${statusColor[o.status]||'badge-yellow'}">${o.status}</span></td>
+              <td style="font-size:12px;color:${(o.paymentMethod||o.payment_method)==='cod'?'#60a5fa':'#4ade80'}">${(o.paymentMethod||o.payment_method)==='cod'?'💵 COD':'💳 Online'}</td>
+              <td style="color:var(--text-muted);font-size:12px">${new Date(rawTs).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function filterAdminOrders(filter, customFrom, customTo) {
+  const all = window._allAdminOrders || [];
+  const now = new Date();
+  let filtered = all;
+
+  if (filter === 'today') {
+    filtered = all.filter(o => {
+      const d = new Date((o.createdAt||o.created_at||'').replace(' ','T').replace(/(\.\d+)?$/,'Z'));
+      return d.toDateString() === now.toDateString();
+    });
+  } else if (filter === 'week') {
+    filtered = all.filter(o => {
+      const d = new Date((o.createdAt||o.created_at||'').replace(' ','T').replace(/(\.\d+)?$/,'Z'));
+      return (now - d) <= 7 * 24 * 60 * 60 * 1000;
+    });
+  } else if (filter === 'month') {
+    filtered = all.filter(o => {
+      const d = new Date((o.createdAt||o.created_at||'').replace(' ','T').replace(/(\.\d+)?$/,'Z'));
+      return (now - d) <= 30 * 24 * 60 * 60 * 1000;
+    });
+  } else if (filter === 'custom' && customFrom && customTo) {
+    const from = new Date(customFrom);
+    const to   = new Date(customTo); to.setHours(23,59,59,999);
+    filtered = all.filter(o => {
+      const d = new Date((o.createdAt||o.created_at||'').replace(' ','T').replace(/(\.\d+)?$/,'Z'));
+      return d >= from && d <= to;
+    });
+  }
+
+  renderAdminOrders(filtered, filter, customFrom, customTo);
+}
+
+function toggleAdminDatePicker() {
+  const picker = document.getElementById('admin-date-picker');
+  if (!picker) return;
+  const isVisible = picker.style.display !== 'none';
+  if (isVisible) {
+    filterAdminOrders('all');
+  } else {
+    picker.style.display = 'flex';
+    const today = new Date().toISOString().split('T')[0];
+    const f = document.getElementById('admin-date-from');
+    const t = document.getElementById('admin-date-to');
+    if (f && !f.value) f.value = today;
+    if (t && !t.value) t.value = today;
+  }
+}
+
+function applyAdminDateFilter() {
+  const from = document.getElementById('admin-date-from')?.value;
+  const to   = document.getElementById('admin-date-to')?.value;
+  if (!from || !to) { showToast('Select both dates', 'error'); return; }
+  if (from > to) { showToast('From must be before To', 'error'); return; }
+  filterAdminOrders('custom', from, to);
 }
 
 // ── Offers ───────────────────────────────────────────
@@ -867,6 +1203,7 @@ async function saveAdminRestDiscount(restId) {
   } catch(e) { showToast('Could not save', 'error'); }
 }
 
+
 // ── Toast ─────────────────────────────────────────────
 let toastTimer;
 function showToast(msg, type = '') {
@@ -875,6 +1212,133 @@ function showToast(msg, type = '') {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.className = `toast ${type}`, 2500);
 }
+
+
+// ── Photo Management ──────────────────────────────────
+function triggerPhotoUpload(inputId, onBase64) {
+  let input = document.getElementById(inputId);
+  if (!input) {
+    input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*';
+    input.id = inputId; input.style.display = 'none';
+    document.body.appendChild(input);
+  }
+  input.value = '';
+  input.onchange = () => {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { showToast('Image too large (max 5MB)', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800; let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        onBase64(canvas.toDataURL('image/jpeg', 0.78));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function closePhotoModal() {
+  document.getElementById('photo-modal').classList.remove('show');
+}
+
+function openPhotoModal(restId) {
+  document.getElementById('photo-modal').classList.add('show');
+  const el = document.getElementById('photo-modal-content');
+  const r = _allRestaurantsCache.find(x => (x._id||x.id) === restId);
+  if (!r) { el.innerHTML = '<p style="color:var(--text-dim);padding:12px 0">Open the Restaurants page first to load data.</p>'; return; }
+  const menu = r.menu || [];
+
+  el.innerHTML = `
+    <div style="margin-bottom:24px">
+      <div style="font-family:var(--font-display);font-size:13px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">🏪 Restaurant Profile Photo — ${r.name}</div>
+      <div onclick="triggerPhotoUpload('ap-rest-${restId}', (b64)=>{ window['_rp_${restId}']=b64; const i=document.getElementById('ap-ri-${restId}'); i.src=b64; i.style.display='block'; document.getElementById('ap-ric-${restId}').style.display='none'; this.style.background='none'; })"
+        style="width:110px;height:110px;border-radius:10px;border:2px dashed var(--border-mid);background:${r.image_url?'none':'var(--bg-input)'};cursor:pointer;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;transition:border-color 0.2s"
+        onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border-mid)'">
+        <img id="ap-ri-${restId}" src="${r.image_url||''}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:${r.image_url?'block':'none'}"/>
+        <div id="ap-ric-${restId}" style="display:${r.image_url?'none':'flex'};flex-direction:column;align-items:center;gap:5px;z-index:1">
+          <span style="font-size:28px">🏪</span>
+          <span style="font-size:10px;color:var(--text-dim);font-weight:600">Tap to upload</span>
+        </div>
+      </div>
+      <button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="adminSaveRestPhoto('${restId}')">Save Photo</button>
+    </div>
+
+    <div>
+      <div style="font-family:var(--font-display);font-size:13px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">🍽️ Menu Item Photos (${menu.length} items)</div>
+      ${!menu.length ? '<p style="color:var(--text-dim);font-size:13px">No menu items yet</p>' : ''}
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${menu.map(item => {
+          const rawId = item.item_id||item._id||item.id||'';
+          const sid = rawId.replace(/[^a-z0-9]/gi,'_');
+          return `
+          <div style="display:flex;gap:12px;align-items:center;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;flex-wrap:wrap">
+            <div onclick="triggerPhotoUpload('ap-item-${sid}', (b64)=>{ window['_ip_${sid}']=b64; const i=document.getElementById('ap-ii-${sid}'); i.src=b64; i.style.display='block'; document.getElementById('ap-iic-${sid}').style.display='none'; this.style.background='none'; })"
+              style="width:72px;height:72px;flex-shrink:0;border-radius:8px;border:2px dashed var(--border-mid);background:${item.image_url?'none':'var(--bg-input)'};cursor:pointer;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;transition:border-color 0.2s"
+              onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border-mid)'">
+              <img id="ap-ii-${sid}" src="${item.image_url||''}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:${item.image_url?'block':'none'}"/>
+              <div id="ap-iic-${sid}" style="display:${item.image_url?'none':'flex'};flex-direction:column;align-items:center;gap:3px;z-index:1">
+                <span style="font-size:22px">🍽️</span>
+                <span style="font-size:9px;color:var(--text-dim);font-weight:600">Upload</span>
+              </div>
+            </div>
+            <div style="flex:1;min-width:100px">
+              <div style="font-size:13px;font-weight:600;margin-bottom:2px">${item.name}</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">${item.category||''} • ₹${item.base_price||item.price||0}</div>
+              <button class="btn btn-gold btn-sm" onclick="adminSaveItemPhoto('${restId}','${rawId}','${sid}')">Save Photo</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+async function adminSaveRestPhoto(restId) {
+  const b64 = window[`_rp_${restId}`];
+  if (!b64) { showToast('Select a photo first', 'error'); return; }
+  try {
+    await fetch(`${RAPI}/restaurants/${restId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ image_url: b64 })
+    });
+    const r = _allRestaurantsCache.find(x => (x._id||x.id) === restId);
+    if (r) r.image_url = b64;
+    showToast('Restaurant photo saved!', 'success');
+  } catch(e) { showToast('Could not save photo', 'error'); }
+}
+
+async function adminSaveItemPhoto(restId, itemId, sid) {
+  const b64 = window[`_ip_${sid}`];
+  if (!b64) { showToast('Select a photo first', 'error'); return; }
+  try {
+    const res = await fetch(`${RAPI}/restaurants/${restId}/menu/${itemId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ image_url: b64 })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const r = _allRestaurantsCache.find(x => (x._id||x.id) === restId);
+      if (r) { const item = (r.menu||[]).find(i => (i.item_id||i._id||i.id) === itemId); if (item) item.image_url = b64; }
+      showToast('Item photo saved!', 'success');
+    } else showToast('Could not save', 'error');
+  } catch(e) { showToast('Could not save photo', 'error'); }
+}
+window.addEventListener('popstate', function(e) {
+  if (!adminToken) return;
+  const page = e.state?.page || 'dashboard';
+  showPage(page, false);
+});
 </script>
 </body>
 </html>

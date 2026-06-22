@@ -49,6 +49,39 @@ async def job_expire_boosts():
     if result.modified_count > 0:
         print(f"⏰ Expired {result.modified_count} restaurant boost(s)")
 
+
+async def job_auto_schedule():
+    """Every minute — auto activate/deactivate restaurants based on opening/closing time"""
+    from src.config.database import get_db
+    from datetime import datetime, timezone, timedelta
+    db = get_db()
+    if db is None:
+        return
+    # Use IST (UTC+5:30)
+    ist = timezone(timedelta(hours=5, minutes=30))
+    now = datetime.now(ist)
+    current_minutes = now.hour * 60 + now.minute
+
+    restaurants = await db.restaurants.find({"auto_schedule": True}).to_list(length=1000)
+    for r in restaurants:
+        opening = r.get("opening_time", "09:00")
+        closing = r.get("closing_time", "23:00")
+        try:
+            oh, om = map(int, opening.split(":"))
+            ch, cm = map(int, closing.split(":"))
+        except:
+            continue
+        open_min  = oh * 60 + om
+        close_min = ch * 60 + cm
+        should_be_active = open_min <= current_minutes < close_min
+        if r.get("is_active") != should_be_active:
+            await db.restaurants.update_one(
+                {"_id": r["_id"]},
+                {"$set": {"is_active": should_be_active}}
+            )
+            status = "activated" if should_be_active else "deactivated"
+            print(f"⏰ Auto-schedule: {r.get('name')} {status}")
+
 # ── Lifespan ──────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -77,12 +110,18 @@ async def lifespan(app: FastAPI):
         CronTrigger(minute=0)
     )
 
+    # Every minute → auto schedule restaurants
+    scheduler.add_job(
+        job_auto_schedule,
+        CronTrigger(minute="*")
+    )
+
     scheduler.start()
     print("✅ Scheduler started")
     print("   → Discount day picker: Every Monday midnight")
     print("   → WhatsApp alert:      Every day 9am")
     print("   → Boost expiry:        Every hour")
-
+    print("   → Auto schedule:       Every minute")
     yield
 
     # Shutdown

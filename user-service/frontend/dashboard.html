@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><defs><linearGradient id='lb' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23dc2626'/><stop offset='100%25' stop-color='%237f1d1d'/></linearGradient><linearGradient id='lg' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23FFD700'/><stop offset='100%25' stop-color='%23FFA500'/></linearGradient></defs><path d='M13 38 Q13 58 36 58 Q59 58 59 38 Z' fill='url(%23lb)'/><rect x='11' y='33' width='50' height='8' rx='4' fill='url(%23lg)'/><line x1='24' y1='31' x2='16' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='32' y1='31' x2='26' y2='8' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='40' y1='31' x2='46' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/><line x1='48' y1='31' x2='56' y2='8' stroke='%23FFD700' stroke-width='3' stroke-linecap='round'/></svg>"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>QuickBowl — Home</title>
+  <title>QuickBowl — Restaurants</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
@@ -287,14 +287,12 @@
   <div class="sidebar">
     <div class="sidebar-section">Menu</div>
     <div class="sidebar-item active" id="sb-home" onclick="showTab('home')">
-      <span class="sidebar-icon">🏠</span> Home
+      <span class="sidebar-icon">🍽️</span> Restaurants
     </div>
     <div class="sidebar-item" id="sb-orders" onclick="showTab('orders')">
       <span class="sidebar-icon">📦</span> My Orders
     </div>
-    <div class="sidebar-item" id="sb-offers" onclick="showTab('offers')">
-      <span class="sidebar-icon">🎟️</span> Offers
-    </div>
+    
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">Account</div>
     <div class="sidebar-item" id="sb-profile" onclick="location.href='/profile.html'">
@@ -312,7 +310,7 @@
     <div id="tab-home">
       <div class="hero">
         <div class="hero-inner">
-          <h1>What are you <span>craving</span> today?</h1>
+          <h1>Discover <span>Restaurants</span> near you</h1>
           <p>Fresh food from the best restaurants, delivered fast</p>
           <div class="search-wrap">
   <input type="text" id="search-input" placeholder="Search restaurants or cuisines..." oninput="filterRestaurants()"/>
@@ -347,14 +345,7 @@
       </div>
     </div>
 
-    <!-- OFFERS TAB -->
-    <div id="tab-offers" style="display:none">
-      <div class="offers-page">
-        <div class="section-title" style="font-size:20px;text-transform:none;letter-spacing:0;color:var(--white);font-family:var(--font-display);font-weight:800;margin-bottom:6px">Offers & Deals</div>
-        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">Exclusive deals from QuickBowl and our restaurant partners</p>
-        <div id="offers-list"><div class="loading-state"><div class="spinner"></div>Loading offers...</div></div>
-      </div>
-    </div>
+    
 
   </div>
 </div>
@@ -363,17 +354,14 @@
 <div class="bottom-nav">
   <div class="bottom-nav-inner">
     <button class="bottom-nav-item active" id="bn-home" onclick="showTab('home')">
-      <span class="bottom-nav-icon">🏠</span>
-      <span class="bottom-nav-label">Home</span>
+      <span class="bottom-nav-icon">🍽️</span>
+      <span class="bottom-nav-label">Restaurants</span>
     </button>
     <button class="bottom-nav-item" id="bn-orders" onclick="showTab('orders')">
       <span class="bottom-nav-icon">📦</span>
       <span class="bottom-nav-label">Orders</span>
     </button>
-    <button class="bottom-nav-item" id="bn-offers" onclick="showTab('offers')">
-      <span class="bottom-nav-icon">🎟️</span>
-      <span class="bottom-nav-label">Offers</span>
-    </button>
+    
     <button class="bottom-nav-item" id="bn-profile" onclick="location.href='/profile.html'">
       <span class="bottom-nav-icon">👤</span>
       <span class="bottom-nav-label">Profile</span>
@@ -396,18 +384,19 @@ let activeFilters = { cuisine: '' };
   function logout() { localStorage.clear(); location.href = '/'; }
 
   // ── Tab switching ───────────────────────────────────
-  function showTab(name) {
+  function showTab(name, pushState = true) {
     sessionStorage.setItem('currentTab', name);
+    if (pushState) history.pushState({ tab: name }, '', '');
     // Stop orders auto-refresh when leaving orders tab
 if (currentTab === 'orders' && name !== 'orders') {
   if (window.ordersRefreshTimer) clearInterval(window.ordersRefreshTimer);
 }
     // Hide all tabs
-    ['home','orders','offers'].forEach(t => {
+    ['home','orders'].forEach(t => {
       document.getElementById(`tab-${t}`).style.display = 'none';
     });
     // Deactivate sidebar items
-    ['home','orders','offers'].forEach(t => {
+    ['home','orders'].forEach(t => {
       const sb = document.getElementById(`sb-${t}`);
       if (sb) sb.classList.remove('active');
       const bn = document.getElementById(`bn-${t}`);
@@ -485,7 +474,9 @@ function setFilter(type, value) {
     return badges.join('');
   }
 
+
   const EMOJIS = ['🍛','🍕','🍜','🥘','🍱','🌮','🍔','🥗','🍣','🍲','🧆','🥙']; 
+
 
 
   function renderRestaurants(list) {
@@ -570,7 +561,8 @@ function setFilter(type, value) {
       const isCancelled = status === 'CANCELLED';
       const stepIndex   = STATUS_STEPS.indexOf(status);
       const items       = parseItems(order.items);
-      const date        = new Date(order.created_at || order.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      const rawDate = (order.created_at || order.createdAt || '').replace(' ', 'T').replace(/(\.\d+)?$/, 'Z');
+      const date = new Date(rawDate).toLocaleString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Kolkata' });
       const statusColors = { PENDING:'#FFA500', CONFIRMED:'#60a5fa', PREPARING:'#c084fc', OUT_FOR_DELIVERY:'#FFD700', DELIVERED:'#4ade80', CANCELLED:'#ff6b6b', SCHEDULED:'#a5b4fc' };
       const color = statusColors[status] || '#aaa';
 
@@ -730,6 +722,13 @@ if (!allOffers.length) {
   initDashboard().then(() => {
     if (lastTab !== 'home') showTab(lastTab);
   });
+
+// Handle browser back button
+  window.addEventListener('popstate', function(e) {
+    const tab = e.state?.tab || 'home';
+    showTab(tab, false);
+  });
+
 </script>
 </body>
 </html>
