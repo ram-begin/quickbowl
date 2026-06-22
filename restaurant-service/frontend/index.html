@@ -1476,9 +1476,7 @@ async function toggleAutoSchedule(id) {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ auto_schedule: newValue })
     });
-    showToast(newValue ? '⏰ Auto schedule enabled!' : 'Auto schedule disabled', 'success');
-    if (newValue) startAutoSchedule(id);
-    else stopAutoSchedule();
+    showToast(newValue ? '⏰ Auto schedule enabled! Backend will handle activation.' : 'Auto schedule disabled', 'success');
   } catch(e) {
     btn.classList.toggle('on', !newValue);
     if (myRestaurant) myRestaurant.auto_schedule = !newValue;
@@ -1486,45 +1484,7 @@ async function toggleAutoSchedule(id) {
   }
 }
 
-let _autoScheduleTimer = null;
 
-function startAutoSchedule(id) {
-  stopAutoSchedule();
-  checkAndSchedule(id);
-  _autoScheduleTimer = setInterval(() => checkAndSchedule(id), 60000);
-}
-
-function stopAutoSchedule() {
-  if (_autoScheduleTimer) { clearInterval(_autoScheduleTimer); _autoScheduleTimer = null; }
-}
-
-async function checkAndSchedule(id) {
-  const r = myRestaurant;
-  if (!r || !r.auto_schedule) return;
-
-  const now   = new Date();
-  const hhmm  = now.getHours() * 60 + now.getMinutes();
-
-  const [oh, om] = (r.opening_time || '09:00').split(':').map(Number);
-  const [ch, cm] = (r.closing_time || '23:00').split(':').map(Number);
-  const openMin  = oh * 60 + om;
-  const closeMin = ch * 60 + cm;
-
-  const shouldBeActive = hhmm >= openMin && hhmm < closeMin;
-
-  if (shouldBeActive === r.is_active) return; // no change needed
-
-  try {
-    await fetch(`${RAPI}/restaurants/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ is_active: shouldBeActive })
-    });
-    if (myRestaurant) myRestaurant.is_active = shouldBeActive;
-    localStorage.setItem('myRestaurant', JSON.stringify(myRestaurant));
-    showToast(shouldBeActive ? '⏰ Restaurant auto-activated!' : '⏰ Restaurant auto-deactivated', shouldBeActive ? 'success' : '');
-  } catch(e) {}
-}
 
 async function toggleActive(id) {
   const btn = document.getElementById('active-toggle');
@@ -1548,12 +1508,6 @@ async function quickActivate(id) {
   try {
     await fetch(`${RAPI}/restaurants/${id}`, { method:'PUT', headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`}, body:JSON.stringify({is_active:true}) });
     showToast('Restaurant activated!', 'success');
-
-   // Start auto schedule if enabled
-setTimeout(async () => {
-  const r = await fetchMyRestaurant();
-  if (r?.auto_schedule) startAutoSchedule(rid(r));
-}, 1000);
 
     loadOverview(); // refresh dashboard to remove the banner
   } catch(e) {

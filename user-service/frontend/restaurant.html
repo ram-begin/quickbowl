@@ -404,7 +404,8 @@
   const API       = 'http://localhost:3000/api';
   const ORDER_API = 'http://localhost:8002/api';
   const token     = localStorage.getItem('token');
-  const user      = JSON.parse(localStorage.getItem('user') || '{}');
+  let user = {};
+  try { user = JSON.parse(localStorage.getItem('user') || '{}'); } catch(e) { user = {}; }
   if (!token) location.href = '/';
 
   const params       = new URLSearchParams(location.search);
@@ -473,7 +474,7 @@
     document.getElementById('cart-restaurant-name').textContent = restaurant.name;
     document.title = `QuickBowl — ${restaurant.name}`;
 
-    const restEmoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    const restEmoji = EMOJIS[parseInt((restaurant._id||restaurant.id||'0').slice(-2), 16) % EMOJIS.length];
     let html = `
       <div class="rest-header">
         <div class="rest-emoji" id="rest-photo-wrap">
