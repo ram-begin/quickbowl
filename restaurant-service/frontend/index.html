@@ -993,7 +993,7 @@ async function fetchMyRestaurant(forceRefresh = false) {
 async function loadOverview() {
   const el = document.getElementById('overview-content');
   el.innerHTML = '<div class="spinner"></div>';
-  const r = myRestaurant || await fetchMyRestaurant();
+  const r = await fetchMyRestaurant(true);
   if (!r) {
     el.innerHTML = `
       <div class="no-restaurant">

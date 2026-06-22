@@ -381,7 +381,12 @@ let allRestaurants = [];
 let currentTab = 'home';
 let activeFilters = { cuisine: '' };
 
-  function logout() { localStorage.clear(); location.href = '/'; }
+  function logout() {
+  localStorage.removeItem('qb_cart');
+  localStorage.removeItem('qb_cart_restaurant');
+  localStorage.clear();
+  location.href = '/';
+}
 
   // ── Tab switching ───────────────────────────────────
   function showTab(name, pushState = true) {
@@ -416,7 +421,7 @@ if (currentTab === 'orders' && name !== 'orders') {
   if (window.ordersRefreshTimer) clearInterval(window.ordersRefreshTimer);
   window.ordersRefreshTimer = setInterval(loadOrders, 15000);
 }
-    if (name === 'offers') loadOffers();
+    
     // Scroll to top
     window.scrollTo(0, 0);
   }
@@ -489,7 +494,7 @@ function setFilter(type, value) {
       const emoji      = EMOJIS[i % EMOJIS.length];
       const discountBadges = getDiscountBadges(r);
       const hasDiscount = discountBadges.length > 0;
-      const rating     = r.rating ? r.rating.toFixed(1) : (4.0 + Math.random() * 0.9).toFixed(1);
+      const rating = r.rating ? r.rating.toFixed(1) : (4.0 + (parseInt((r._id||r.id||'0').slice(-2), 16) % 10) / 10).toFixed(1);
       const delivery   = r.delivery_time || '30–45 min';
       const minOrder   = r.min_order || 99;
       const cuisine    = r.cuisine_type || r.cuisine || 'Multi-cuisine';

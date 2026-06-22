@@ -735,13 +735,13 @@ async function loadOrders() {
     const restData = await restRes.json();
     const allRests = [...(restData.all_restaurants?.data || []), ...(restData.customer_favourites?.data || [])];
     let orders = [];
-    for (const r of allRests) {
+    await Promise.all(allRests.map(async r => {
       try {
         const res  = await fetch(`${OAPI}/orders/restaurant/${r._id || r.id}`, { headers: { Authorization: `Bearer ${adminToken}` } });
         const data = await res.json();
         orders = [...orders, ...(data.data || [])];
       } catch(e) {}
-    }
+    }));
     orders.sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at));
     window._allAdminOrders = orders;
     renderAdminOrders(orders, 'all');
@@ -869,82 +869,7 @@ function applyAdminDateFilter() {
   filterAdminOrders('custom', from, to);
 }
 
-// ── Offers ───────────────────────────────────────────
-let platformOffers = JSON.parse(localStorage.getItem('platform_offers') || '[]');
 
-async function loadOffers() {
-  const el = document.getElementById('offers-content');
-  el.innerHTML = '<div class="spinner"></div>';
-  try {
-    const res  = await fetch(`${RAPI}/restaurants/offers/platform`, { headers: { Authorization: `Bearer ${adminToken}` } });
-    const data = await res.json();
-    const offers = data.data || [];
-    if (!offers.length) { el.innerHTML = `<div class="empty-state">No platform offers yet. Click "Add Offer" to create one.</div>`; return; }
-    el.innerHTML = `
-      <div class="card" style="padding:0;overflow:hidden">
-        <table class="table">
-          <thead><tr><th>Offer</th><th>Discount</th><th>Valid Until</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody>
-            ${offers.map(o => `
-              <tr>
-                <td>
-                  <div style="font-size:18px;margin-bottom:2px">${o.icon || '🎟️'}</div>
-                  <div style="font-weight:600">${o.title}</div>
-                  <div style="font-size:11px;color:var(--text-muted)">${o.desc || ''}</div>
-                </td>
-                <td style="color:var(--gold);font-weight:700">${o.discount}% OFF</td>
-                <td style="color:var(--text-muted)">${o.validUntil || '—'}</td>
-                <td><span class="badge badge-green">Active</span></td>
-                <td><button class="btn btn-sm btn-red" onclick="deleteOffer('${o.id}')">Delete</button></td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  } catch(e) { el.innerHTML = `<div class="empty-state">⚠️ Could not load offers</div>`; }
-}
-
-function openAddOffer() {
-  document.getElementById('offer-modal').classList.add('show');
-}
-
-function closeOfferModal() {
-  document.getElementById('offer-modal').classList.remove('show');
-}
-
-async function saveOffer() {
-  const title    = document.getElementById('offer-title').value.trim();
-  const desc     = document.getElementById('offer-desc').value.trim();
-  const discount = document.getElementById('offer-discount').value;
-  const valid    = document.getElementById('offer-valid').value;
-  const icon     = document.getElementById('offer-icon').value.trim() || '🎟️';
-  if (!title || !discount) { showToast('Title and discount are required', 'error'); return; }
-  try {
-    const res  = await fetch(`${RAPI}/restaurants/offers/platform`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-      body: JSON.stringify({ title, desc, discount: parseInt(discount), validUntil: valid, icon })
-    });
-    const data = await res.json();
-    if (data.success) {
-      closeOfferModal();
-      loadOffers();
-      showToast('Offer added!', 'success');
-      ['offer-title','offer-desc','offer-discount','offer-valid','offer-icon'].forEach(id => document.getElementById(id).value = '');
-    }
-  } catch(e) { showToast('Could not save offer', 'error'); }
-}
-
-async function deleteOffer(id) {
-  if (!confirm('Delete this offer?')) return;
-  try {
-    await fetch(`${RAPI}/restaurants/offers/platform/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${adminToken}` }
-    });
-    loadOffers();
-    showToast('Offer deleted', 'success');
-  } catch(e) { showToast('Could not delete offer', 'error'); }
-}
 async function verifyRestaurant(id, approve) {
   try {
     await fetch(`${RAPI}/restaurants/${id}`, {
