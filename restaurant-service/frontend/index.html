@@ -7,6 +7,7 @@
   <title>QuickBowl — Restaurant Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     :root {
       --red: #dc2626; --red-dark: #991b1b;
@@ -398,13 +399,14 @@
             </div>
             <span class="admin-badge">🔒 Admin Only</span>
           </div>
-          <div class="toggle-row">
-            <div class="toggle-info">
-              <h4>🔥 Boost Listing</h4>
-              <p>Boosting your listing to appear at top is managed by admin.</p>
-            </div>
-            <span class="admin-badge">🔒 Admin Only</span>
+          <div class="toggle-row" style="flex-wrap:wrap;gap:12px">
+          <div class="toggle-info">
+            <h4>🔥 Boost Listing</h4>
+            <p>Appear at the top of the listing for 24 hours</p>
+            <div id="boost-status-label" style="font-size:12px;margin-top:4px"></div>
           </div>
+          <div id="boost-action-wrap"></div>
+        </div>
         </div>
       </div>
     </div>
@@ -840,49 +842,6 @@ async function showRevenue(filter = 'all', customFrom = '', customTo = '') {
   });
 }
 
-// ── Drawer: Surge info ───────────────────────────────
-function showSurgeInfo() {
-  openDrawer('⚡ Surge Pricing', () => {
-    const r = myRestaurant;
-    const el = document.getElementById('drawer-body');
-    el.innerHTML = `
-      <div style="text-align:center;padding:20px 0">
-        <div style="font-size:48px;margin-bottom:16px">${r?.is_surge ? '⚡' : '😴'}</div>
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:8px">
-          Surge is ${r?.is_surge ? 'ACTIVE' : 'INACTIVE'}
-        </div>
-        <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px">
-          ${r?.is_surge ? `${r?.surge_multiplier || 1.5}x multiplier is currently applied to all prices` : 'Normal pricing is currently active'}
-        </div>
-        <div class="admin-badge" style="margin:0 auto;display:inline-flex">🔒 Controlled by Admin</div>
-        <div style="font-size:12px;color:var(--text-dim);margin-top:16px">
-          Surge pricing is applied automatically by the platform admin during peak demand hours. Contact admin to request changes.
-        </div>
-      </div>`;
-  });
-}
-
-// ── Drawer: Boost info ───────────────────────────────
-function showBoostInfo() {
-  openDrawer('🔥 Boost Status', () => {
-    const r = myRestaurant;
-    const el = document.getElementById('drawer-body');
-    el.innerHTML = `
-      <div style="text-align:center;padding:20px 0">
-        <div style="font-size:48px;margin-bottom:16px">${r?.boost_active ? '🔥' : '⭐'}</div>
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:8px">
-          Boost is ${r?.boost_active ? 'ACTIVE' : 'INACTIVE'}
-        </div>
-        <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px">
-          ${r?.boost_active ? 'Your restaurant is currently featured at the top of the listing' : 'Your restaurant appears in regular listing order'}
-        </div>
-        <div class="admin-badge" style="margin:0 auto;display:inline-flex">🔒 Controlled by Admin</div>
-        <div style="font-size:12px;color:var(--text-dim);margin-top:16px">
-          Boost listing is managed by the platform admin. Contact admin to request a boost for your restaurant.
-        </div>
-      </div>`;
-  });
-}
 
 // ── Cuisine dropdown ────────────────────────────────
 const ALL_CUISINES = [
@@ -1066,16 +1025,12 @@ try {
         <div class="stat-label">Menu Items</div>
         <div class="stat-sublabel">Tap to manage</div>
       </div>
-      <div class="stat-card no-click" onclick="showSurgeInfo()" style="cursor:pointer" class="">
-        <div class="stat-value">${r.is_surge?'⚡ ON':'OFF'}</div>
-        <div class="stat-label">Surge</div>
-        <div class="stat-sublabel">🔒 Admin controlled</div>
-      </div>
-      <div class="stat-card" onclick="showBoostInfo()">
-        <div class="stat-value">${r.boost_active?'🔥 ON':'OFF'}</div>
-        <div class="stat-label">Boosted</div>
-        <div class="stat-sublabel">🔒 Admin controlled</div>
-      </div>
+      
+      <div class="stat-card" onclick="showPage('settings')">
+      <div class="stat-value">${r.boost_active?'🔥 ON':'OFF'}</div>
+      <div class="stat-label">Boosted</div>
+      <div class="stat-sublabel">${r.boost_active ? 'Active' : 'Tap to boost — ₹19'}</div>
+    </div>
     </div>`;
 }
 
@@ -1462,6 +1417,68 @@ async function loadSettings() {
         <button class="btn btn-gold btn-sm" onclick="saveDiscount('${rid(r)}')">Save</button>
       </div>
     </div>`;
+    renderBoostAction(r);
+}
+function renderBoostAction(r) {
+  const label = document.getElementById('boost-status-label');
+  const wrap  = document.getElementById('boost-action-wrap');
+  if (!label || !wrap) return;
+
+  if (r.boost_active) {
+    const exp = r.boost_end
+      ? new Date(r.boost_end.replace(' ','T')+'Z').toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+      : '—';
+    label.innerHTML = `<span style="color:#4ade80">🔥 Active until ${exp}</span>`;
+    wrap.innerHTML  = `<span class="admin-badge">Live</span>`;
+  } else {
+    label.innerHTML = `<span style="color:var(--text-dim)">Not active</span>`;
+    wrap.innerHTML  = `<button class="btn btn-gold btn-sm" onclick="payForBoost('${rid(r)}')">🔥 Boost — ₹19</button>`;
+  }
+}
+
+async function payForBoost(id) {
+  try {
+    const payRes  = await fetch('http://localhost:8003/api/payments/boost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ restaurant_id: id })
+    });
+    const payData = await payRes.json();
+    if (!payData.success) { showToast('Payment init failed', 'error'); return; }
+
+    const rzp = payData.data.razorpay;
+    const options = {
+      key: rzp.key, amount: rzp.amount, currency: rzp.currency, order_id: rzp.order_id,
+      name: 'QuickBowl Boost', description: '24hr Top Listing — ₹19',
+      prefill: { name: `${user.first_name||''} ${user.last_name||''}`.trim(), email: user.email||'' },
+      theme: { color: '#FFD700' },
+      handler: async function(response) {
+        try {
+          const verifyRes  = await fetch('http://localhost:8003/api/payments/boost/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({
+              restaurant_id: id,
+              razorpay_order_id:  response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature:  response.razorpay_signature,
+            })
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            showToast('🔥 Boost activated for 24 hours!', 'success');
+            await fetchMyRestaurant(true);
+            renderBoostAction(myRestaurant);
+            loadOverview();
+          } else {
+            showToast('Payment verification failed', 'error');
+          }
+        } catch(e) { showToast('Verification error', 'error'); }
+      },
+      modal: { ondismiss: () => showToast('Payment cancelled', 'error') }
+    };
+    new Razorpay(options).open();
+  } catch(e) { showToast('Server error', 'error'); }
 }
 
 async function toggleAutoSchedule(id) {
