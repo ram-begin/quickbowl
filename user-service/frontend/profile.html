@@ -177,6 +177,10 @@
       .field-row { grid-template-columns: 1fr; }
       .avatar-section { flex-direction: column; text-align: center; }
     }
+    @media (max-width: 360px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .stat-value { font-size: 20px; }
+}
   </style>
 </head>
 <body>
@@ -308,9 +312,9 @@
     </div>
     <div style="font-size:14px;color:var(--text-muted)" id="saved-address-text">No address saved yet</div>
     <div id="addr-edit-wrap" style="display:none;margin-top:14px">
-      <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
         <input type="text" id="new-address" placeholder="Enter delivery address"
-          style="flex:1;padding:11px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-md);color:var(--white);font-family:var(--font-body);font-size:13px;outline:none"/>
+          style="flex:1;min-width:0;padding:11px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-md);color:var(--white);font-family:var(--font-body);font-size:13px;outline:none"/>
         <button onclick="detectLocation('new-address')"
           style="padding:11px 14px;background:rgba(255,215,0,0.08);border:1.5px solid rgba(255,215,0,0.2);border-radius:var(--radius-md);color:var(--gold);font-size:16px;cursor:pointer;flex-shrink:0"
           title="Use my location">📍</button>
