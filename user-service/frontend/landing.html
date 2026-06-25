@@ -227,10 +227,12 @@
     /* ── HOW IT WORKS ── */
     .how-section { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
     .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 0;
-    }
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  max-width: 700px;
+  margin: 0 auto;
+}
     .step {
       padding: 32px 28px;
       border-right: 1px solid var(--border);
@@ -634,7 +636,7 @@
       <a href="#how-it-works" class="footer-link">How it works</a>
       <a href="#restaurants" class="footer-link">For Restaurants</a>
       <a href="/" class="footer-link">Sign In</a>
-      <a href="http://localhost:9000" class="footer-link">Admin</a>
+      
     </div>
   </div>
   <div class="footer-bottom">
